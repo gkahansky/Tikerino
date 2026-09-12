@@ -55,6 +55,13 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
+    // Bind IPv4 loopback explicitly. Vite's default is the name "localhost",
+    // which Node resolves verbatim - on a host whose resolver answers ::1 first
+    // (CI runners do) the dev server binds only to [::1] and everything in this
+    // repo that addresses 127.0.0.1 - the proxy target below, the browser
+    // suites, curl health checks - gets connection refused against a server the
+    // log says is ready.
+    host: '127.0.0.1',
     // The design tokens and the spec pack live above the client root.
     fs: { allow: [resolve(__dirname, '..')] },
     proxy: {

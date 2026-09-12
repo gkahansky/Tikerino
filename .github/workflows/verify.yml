@@ -77,17 +77,24 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Start server and client
+        # Both halves are polled on 127.0.0.1, the address the browser suites
+        # use. A ready banner in the log is not proof: a dev server can be up on
+        # an address nothing else in this repo talks to.
         run: |
           npm run dev > /tmp/dev.log 2>&1 &
           for i in $(seq 1 60); do
-            if curl -sf http://127.0.0.1:5173 >/dev/null \
-               && curl -sf http://127.0.0.1:8787/api/exercises/ex-001/window >/dev/null; then
+            client=$(curl -so /dev/null -w '%{http_code}' http://127.0.0.1:5173 || echo down)
+            api=$(curl -so /dev/null -w '%{http_code}' http://127.0.0.1:8787/api/exercises/ex-001/window || echo down)
+            if [ "$client" = 200 ] && [ "$api" = 200 ]; then
               echo "both up after ${i}s"
               exit 0
             fi
             sleep 1
           done
-          echo "servers did not come up:"
+          echo "servers did not come up (client=$client api=$api)"
+          echo "--- listening sockets ---"
+          ss -ltnp || true
+          echo "--- dev log ---"
           cat /tmp/dev.log
           exit 1
 

@@ -10,7 +10,7 @@ import {
 import rawPack from './content/pack.client.json';
 
 /**
- * The sanitised pack, generated from specs/tikerino-content-pack-v0.1.json by
+ * The sanitised pack, generated from specs/tikerino-content-pack-v0.2.json by
  * scripts/sanitize-content.mjs. It carries no answers and no exercise seeds.
  *
  * Validated here at load: a pack that fails validation throws, and the app shows

@@ -4,7 +4,7 @@
  *
  * The full pack holds the answers (correctOptionId, target.rule, feedback) and the
  * exercise chart seeds. None of that may reach the browser, so the client bundle
- * imports this generated file instead of specs/tikerino-content-pack-v0.1.json.
+ * imports this generated file instead of specs/tikerino-content-pack-v0.2.json.
  *
  * Runs before `dev` and `build`. The output is gitignored - it is derived, and the
  * spec pack is the single source of truth.

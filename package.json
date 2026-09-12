@@ -18,6 +18,7 @@
     "build": "npm run build --workspaces --if-present",
     "content:sanitize": "tsx scripts/sanitize-content.mjs",
     "goldens": "tsx scripts/generate-goldens.mjs",
+    "pretypecheck": "npm run content:sanitize",
     "typecheck": "tsc -p packages/engine --noEmit && tsc -p packages/content --noEmit && tsc -p packages/grading --noEmit && tsc -p packages/state --noEmit && tsc -p server --noEmit && tsc -p client --noEmit",
     "test": "vitest run",
     "verify": "npm run typecheck && npm run test && npm run content:check",

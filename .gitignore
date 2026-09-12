@@ -13,7 +13,7 @@ Thumbs.db
 # Runtime audit log (JSONL). Learner answer records are not source.
 server/data/audit.jsonl
 
-# Generated, derived from specs/tikerino-content-pack-v0.1.json at build time.
+# Generated, derived from specs/tikerino-content-pack-v0.2.json at build time.
 client/src/content/pack.client.json
 
 # Playwright / axe artifacts
