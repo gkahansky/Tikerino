@@ -8,7 +8,10 @@
     "- including a NEW one in the same lesson - still stops the process.",
     "",
     "These are debts, not exemptions. Delete the entry when the content is fixed.",
-    "Code must never be changed to accommodate one of these."
+    "Code must never be changed to accommodate one of these.",
+    "",
+    "guidedAnnotations lists steps whose annotateCandleIndex contradicts the step's own",
+    "text, checked by scripts/check-content-charts.mjs. Same rule: these are debts."
   ],
   "deviations": [
     {
@@ -18,6 +21,36 @@
       "raisedOn": "2026-09-12",
       "detail": "The principle card body is 76 words; content schema v1 section 3 caps it at 60. It teaches five terms (bid, ask, spread, market vs limit order, long vs short) in one card, which also strains the locked 'one idea per screen' rule.",
       "suggestedFix": "Trim to <= 60 words, or split orders and long/short into their own lesson. The card renders in full meanwhile - nothing is truncated."
+    }
+  ],
+  "guidedAnnotations": [
+    {
+      "id": "lesson-6-bullish-bearish#0",
+      "owner": "content (Instinct)",
+      "raisedOn": "2026-09-12",
+      "detail": "Step text says 'Hollow green body: close is the top edge of the body. Price rose.' but candle 2 of cp0.1/l6-guided is bearish (solid red).",
+      "suggestedFix": "Point at candle 4 (bullish) for the minimal swap, or candle 1 (bullish, body 67% of range) for the clearest green body."
+    },
+    {
+      "id": "lesson-6-bullish-bearish#1",
+      "owner": "content (Instinct)",
+      "raisedOn": "2026-09-12",
+      "detail": "Step text says 'Solid red body: close is the bottom edge. Price fell.' but candle 4 of cp0.1/l6-guided is bullish (hollow green). The two indices are simply the wrong way round.",
+      "suggestedFix": "Point at candle 2 (bearish) for the minimal swap, or candle 3 (bearish, body 80% of range) for the clearest red body."
+    },
+    {
+      "id": "lesson-7-range-and-limits#0",
+      "owner": "content (Instinct)",
+      "raisedOn": "2026-09-12",
+      "detail": "Step text says 'Find the candle with the smallest body. Long wicks, tiny body' but candle 6 of cp0.1/l7-guided has the LARGEST body in the window, filling 91% of its range.",
+      "suggestedFix": "Point at candle 2 (body 1% of range, a textbook doji). Candle 3 (3%) is the next best."
+    },
+    {
+      "id": "lesson-7-range-and-limits#1",
+      "owner": "content (Instinct)",
+      "raisedOn": "2026-09-12",
+      "detail": "Step text says 'Even a strong run of bullish candles...' but candle 9 of cp0.1/l7-guided is bearish.",
+      "suggestedFix": "Point at candle 8, which ends the window's longest bullish run (candles 5-8)."
     }
   ]
 }
