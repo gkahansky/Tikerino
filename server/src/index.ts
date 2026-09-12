@@ -1,16 +1,33 @@
 import { buildApp } from './app.js';
+import { createAuditStore } from './store.js';
 
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '127.0.0.1';
 
-const app = buildApp({ logger: true });
+// Before the app: a bad DATABASE_URL should fail here, loudly, rather than on the
+// first learner's answer.
+const { store, description } = await createAuditStore();
+
+const app = buildApp({ auditStore: store, logger: true });
+
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.once(signal, () => {
+    void (async () => {
+      await app.close();
+      // Drain the pool, so a rolling deploy does not leave sessions open on the
+      // database until it times them out.
+      await store.close();
+      process.exit(0);
+    })();
+  });
+}
 
 try {
   await app.listen({ port, host });
   app.log.info(
     `Tikerino server ready. Content: ${app.tikerinoContent.pack.packVersion}, ` +
       `${app.tikerinoContent.pack.exercises.length} exercises, ` +
-      `${app.tikerinoAudit.size} answers already recorded.`,
+      `${await store.size()} answers already recorded. Audit store: ${description}.`,
   );
 } catch (error) {
   // A content-validation failure lands here: refuse to run rather than serve a
