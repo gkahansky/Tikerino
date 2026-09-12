@@ -24,7 +24,7 @@ import { indexPack, loadContentPack } from '@tikerino/content';
 import { loadDeviations, warn } from './deviations.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const packPath = resolve(here, '../specs/tikerino-content-pack-v0.1.json');
+const packPath = resolve(here, '../specs/tikerino-content-pack-v0.2.json');
 
 const pack = loadContentPack(JSON.parse(readFileSync(packPath, 'utf8')), {
   engineGeneratorVersion: GENERATOR_VERSION,
@@ -148,7 +148,7 @@ for (const lesson of pack.lessons) {
           `of its range - candle ${smallest.i} is the smallest at ${Math.round(bodyShare(smallest) * 100)}%`,
       );
     }
-    if (/run of bullish candles/.test(text) && !isBullish) {
+    if (/run of (bullish|green) candles/.test(text) && !isBullish) {
       problems.push('text talks about bullish candles, but this one is not bullish');
     }
 

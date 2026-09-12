@@ -84,6 +84,15 @@
       "sha256": "d25797375ec1077f5c4186c69530010baf1a7dad18544da67e9750c1be16d1cb"
     },
     {
+      "id": "lesson-orders-and-direction/guided",
+      "seed": "cp0.2/orders-guided-4",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "f3550dd9fa57cbf156319a06bdd04cc9e227c7e8eeb227b1b3419b8083d9872a"
+    },
+    {
       "id": "lesson-5-candle-anatomy/card",
       "seed": "cp0.1/l5-card",
       "family": "range_bound",

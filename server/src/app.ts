@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -63,11 +64,17 @@ function seriesFor(exercise: Exercise) {
   });
 }
 
+/**
+ * Resolved against this module, not the working directory: `npm run dev` starts the
+ * server with cwd=server/ while a bare `tsx server/src/index.ts` starts it at the
+ * repo root, and a cwd-relative default quietly wrote the audit log to two
+ * different places depending on which you used.
+ */
+const DEFAULT_AUDIT_PATH = resolve(dirname(fileURLToPath(import.meta.url)), '../data/audit.jsonl');
+
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   const content: LoadedContent = loadContent(options.contentPackPath);
-  const audit = new AuditLog(
-    options.auditPath ?? resolve(process.cwd(), 'server/data/audit.jsonl'),
-  );
+  const audit = new AuditLog(options.auditPath ?? DEFAULT_AUDIT_PATH);
 
   const app = Fastify({ logger: options.logger ?? false });
   app.register(cors, { origin: true });

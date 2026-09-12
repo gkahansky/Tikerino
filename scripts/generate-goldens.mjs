@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { GENERATOR_VERSION, SCENARIO_SPEC_VERSION, generateSeries } from '@tikerino/engine';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const packPath = resolve(here, '../specs/tikerino-content-pack-v0.1.json');
+const packPath = resolve(here, '../specs/tikerino-content-pack-v0.2.json');
 const outPath = resolve(here, '../tests/goldens/series.json');
 
 const pack = JSON.parse(readFileSync(packPath, 'utf8'));

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Play all 15 starter exercises through the real UI, in order, answering each one
+ * Play every starter exercise through the real UI, in order, answering each one
  * correctly, and check the reveal every time.
  *
  * The harness knows the answers (it loads the full pack and the engine directly);
@@ -17,7 +17,7 @@ import { cutWindow, generateSeries, resolveCandleRule } from '@tikerino/engine';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pack = JSON.parse(
-  readFileSync(resolve(here, '../../specs/tikerino-content-pack-v0.1.json'), 'utf8'),
+  readFileSync(resolve(here, '../../specs/tikerino-content-pack-v0.2.json'), 'utf8'),
 );
 const BASE = process.env.CLIENT_URL ?? 'http://127.0.0.1:5173';
 
@@ -140,7 +140,13 @@ try {
   const progress = await page.getByLabel(/Your progress/).innerText();
   console.log(`Played ${played.length} exercises. Final progress pill: ${progress.replace(/\n/g, ' ')}`);
 
-  check('all 15 starter exercises played', played.length === 15, `played ${played.length}`);
+  // Derived from the pack, not hard-coded: a content version bump should not
+  // need this file edited.
+  check(
+    `all ${pack.exercises.length} starter exercises played`,
+    played.length === pack.exercises.length,
+    `played ${played.length} of ${pack.exercises.length}`,
+  );
   check(
     'every lesson is marked done',
     (await page.getByText(/Done ·/).count()) === lessons.length,

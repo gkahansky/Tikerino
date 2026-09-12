@@ -7,8 +7,8 @@ chart exercises with instant feedback.
 data, no real tickers, no dates, and nothing here is investment advice. That is not a
 disclaimer bolted on at the end — it is the reason the engine exists.
 
-Day one covers two topics (trading fundamentals, candlestick reading), 8 lessons and 15
-exercises, on 6 phone-sized screens.
+Day one covers two topics (trading fundamentals, candlestick reading), 9 lessons and 16
+exercises, on 6 phone-sized screens. Content pack v0.2.0.
 
 ---
 
@@ -27,9 +27,9 @@ streak updated.
 ### Verifying it
 
 ```sh
-npm run verify         # typecheck, 152 unit/integration tests, regenerate every pack chart
+npm run verify         # typecheck, 156 unit/integration tests, regenerate every pack chart
 npm run test:browser   # full loop in a real browser + axe on every screen
-npm run test:play-all  # play all 15 starter exercises through the UI, checking each reveal
+npm run test:play-all  # play every starter exercise through the UI, checking each reveal
 npm run shots          # phone-sized screenshots of each screen
 ```
 
@@ -47,7 +47,10 @@ packages/content   content-pack types, loader, validation       (no React, no No
 packages/state     progress, XP, streaks, offline queue         (no React, no Node APIs)
 server/            one thin Fastify server, exactly two endpoints
 client/            Vite + React + TypeScript, Tailwind, installable PWA
-specs/             the authoritative specs, byte-identical to the Drive originals
+specs/             the authoritative specs, byte-identical to the Drive originals.
+                   Both content-pack versions are kept: v0.2.0 is what the app loads,
+                   v0.1.0 stays so answers audited against curriculumVersion 0.1.0 can
+                   still be replayed against the pack they were actually graded on.
 tests/             unit, integration and browser suites; tests/goldens holds the replay hashes
 ```
 
@@ -65,8 +68,13 @@ This is the product, not a feature of it.
 **Deterministic generation.** Every chart comes from `(scenarioFamily, seed,
 scenarioSpecVersion)` through the exact FNV-1a + mulberry32 pair in the engine spec. Same
 seed, same series, bit for bit, forever. `tests/goldens/series.json` pins SHA-256 hashes for
-29 series — all 24 charts the pack references plus coverage for families it does not use —
+30 series — all 25 charts the pack references plus coverage for families it does not use —
 and the replay test fails if any of them shifts.
+
+This survived its first real test. Content pack v0.2.0 restructured the curriculum (a lesson
+split in two, an exercise added, four guided-example indices corrected) and all 24 charts
+carried over from v0.1.0 regenerated to byte-identical hashes. A content version bump moves
+content; it must never move a chart, and now there is evidence rather than a promise.
 
 **The cut point holds.** The learner sees candles `0..windowSize-1`. Post-T candles are
 generated and held **only on the server** until an answer is recorded. Enforced in three
@@ -78,6 +86,13 @@ places:
   for `correctOptionId`, `target`, `seed`, `scenarioFamily` and `feedback`.
 - The client bundle is built from a *sanitised* pack (see below), so the answers and the
   exercise seeds are not sitting in devtools.
+
+**Guided examples say what the chart shows.** `annotateCandleIndex` points a walkthrough step
+at one candle, and nothing structural stops it pointing at the wrong one -- the indices in
+v0.1.0 were authored before this engine existed, so they were picked without anyone being
+able to see the generated chart. `scripts/check-content-charts.mjs` now reads each step for
+claims it can verify ("hollow green body", "smallest body", "a run of bullish candles") and
+fails if the candle contradicts them.
 
 **Grading is server-side.** `POST /api/answers` regenerates the series from the pack ref —
 the client's copy of the chart is never trusted — re-asserts invariants, resolves the target,
@@ -193,28 +208,30 @@ are distinct and strictly increasing.
 
 ---
 
-## Known content defect
+## Content defects found, and closed
 
-`specs/tikerino-content-pack-v0.1.json` breaks its own schema in one place:
+Nothing outstanding. Recorded because the history is the useful part.
 
-> `lesson-4-trading-words`: the principle card body is **76 words**; content schema v1 §3 caps
-> it at 60.
+The first build ran against content pack v0.1.0 and surfaced five defects, four of which were
+invisible until the engine could actually render a seed:
 
-The loader refuses to run on any validation failure, which would block the build. Rather than
-weaken the rule or edit content this repo does not own, the one reviewed violation is recorded
-in [`content-deviations.json`](./content-deviations.json), which downgrades *that specific
-issue* to a loud boot-time warning. Every other violation — including a new one in the same
-lesson — still stops the process, and a test asserts the pack would not load without the
-acknowledgement.
+- `lesson-4-trading-words`'s principle card was **76 words** against the schema's 60-word cap —
+  it taught five terms on one screen, which also strained the locked "one idea per screen" rule.
+- `lesson-6`'s two walkthrough steps were **inverted**: "Hollow green body... Price rose" pointed
+  at a bearish candle and "Solid red body... Price fell" at a bullish one, in the one lesson
+  whose entire subject is telling the two apart.
+- `lesson-7` step 0 said "smallest body... tiny body" over the **largest** body in the window
+  (91% of its range).
+- `lesson-7` step 1 talked about a run of bullish candles over a **bearish** one.
 
-Content owner's call. The card teaches five terms (bid, ask, spread, market vs limit order,
-long vs short) in one screen, which also strains the locked "one idea per screen" rule, so the
-fix is probably a split rather than a trim. Nothing is truncated in the meantime: the card
-renders in full.
+Content pack v0.2.0 fixed all of them: the lesson split into "Bid, ask, and spread" and
+"Orders, long and short" (31 and 48 words), lesson 6 moved to candles 1 and 3, lesson 7 to
+candles 2 and 8, and `ex-016` was added for order types.
 
-Delete the entry when the content is fixed.
-
----
+`content-deviations.json` is the ledger that tracked them, and it is now **empty** — which is
+the state to keep it in. It exists so a reviewed content defect can be acknowledged loudly
+instead of either blocking the build or being silently tolerated; a test asserts it is empty,
+so taking on new debt is a deliberate act rather than a drift.
 
 ## What is deliberately not here
 

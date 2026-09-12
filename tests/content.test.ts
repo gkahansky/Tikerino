@@ -23,7 +23,7 @@ import {
 
 const ROOT = resolve(__dirname, '..');
 const pack = JSON.parse(
-  readFileSync(resolve(ROOT, 'specs/tikerino-content-pack-v0.1.json'), 'utf8'),
+  readFileSync(resolve(ROOT, 'specs/tikerino-content-pack-v0.2.json'), 'utf8'),
 ) as ContentPack;
 
 const deviations = (
@@ -43,10 +43,18 @@ describe('the shipped content pack', () => {
     expect(() => loadContentPack(pack, loadOptions)).not.toThrow();
   });
 
-  it('has the locked MVP shape: 2 topics, 8 lessons, 15 exercises', () => {
+  it('has the locked MVP shape: 2 topics, 9 lessons, 16 exercises', () => {
+    // Still exactly 2 topics - the locked scope. v0.2.0 split lesson-4 in two and
+    // added ex-016, taking the starter pack to 9 lessons and 16 exercises.
     expect(pack.topics).toHaveLength(2);
-    expect(pack.lessons).toHaveLength(8);
-    expect(pack.exercises).toHaveLength(15);
+    expect(pack.lessons).toHaveLength(9);
+    expect(pack.exercises).toHaveLength(16);
+  });
+
+  it('keeps every principle card within 60 words', () => {
+    for (const lesson of pack.lessons) {
+      expect(countWords(lesson.principleCard.body), lesson.lessonId).toBeLessThanOrEqual(60);
+    }
   });
 
   it('uses only the two day-one exercise types', () => {
@@ -81,25 +89,51 @@ describe('the shipped content pack', () => {
   });
 });
 
-describe('known deviations', () => {
-  it('refuses the pack when the deviation is not acknowledged', () => {
-    // The escape hatch must be the ONLY reason this pack loads today. If this
-    // stops throwing, the content was fixed and the deviation can be deleted.
+describe('acknowledged deviations', () => {
+  it('has none: the shipped pack validates clean', () => {
+    // The strongest form of this test. Content pack v0.2.0 fixed every defect
+    // v0.1.0 carried, so the escape hatch is unused - the pack loads with no
+    // deviations allowed at all. If this fails, a new debt was taken on.
+    expect(deviations).toEqual([]);
     expect(() =>
       loadContentPack(pack, { ...loadOptions, knownDeviations: [] }),
-    ).toThrow(ContentValidationError);
+    ).not.toThrow();
   });
 
-  it('records each acknowledged deviation as a warning, not silence', () => {
+  it('reports no warnings', () => {
     const warnings: string[] = [];
     loadContentPack(pack, { ...loadOptions, onWarning: (w) => warnings.push(w) });
-    expect(warnings).toHaveLength(deviations.length);
-    expect(warnings[0]).toContain('lesson-4-principle-card-length');
+    expect(warnings).toEqual([]);
   });
 
-  it('still blocks a violation that is not on the list', () => {
+  it('still has a working escape hatch, should content ever need one again', () => {
     const broken = structuredClone(pack);
     broken.lessons[0]!.principleCard.body = 'word '.repeat(80);
+
+    expect(() => loadContentPack(broken, loadOptions)).toThrow(/principleCard body is 80 words/);
+
+    const warnings: string[] = [];
+    expect(() =>
+      loadContentPack(broken, {
+        ...loadOptions,
+        knownDeviations: [
+          {
+            id: 'test-only',
+            matches: `lesson ${broken.lessons[0]!.lessonId}: principleCard body is`,
+            owner: 'test',
+            detail: 'synthetic',
+            suggestedFix: 'none',
+          },
+        ],
+        onWarning: (w) => warnings.push(w),
+      }),
+    ).not.toThrow();
+    expect(warnings[0]).toContain('test-only');
+  });
+
+  it('blocks a violation that is not on the list', () => {
+    const broken = structuredClone(pack);
+    broken.lessons[1]!.principleCard.body = 'word '.repeat(80);
     expect(() => loadContentPack(broken, loadOptions)).toThrow(/principleCard body is 80 words/);
   });
 });
@@ -202,7 +236,7 @@ describe('the client pack', () => {
   });
 
   it('keeps what the offline lesson shell needs', () => {
-    expect(clientPack.lessons).toHaveLength(8);
+    expect(clientPack.lessons).toHaveLength(9);
     for (const lesson of clientPack.lessons) {
       expect(lesson.principleCard.body.length).toBeGreaterThan(0);
       expect(lesson.guidedExample.steps.length).toBeGreaterThan(0);

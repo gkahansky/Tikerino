@@ -18,7 +18,7 @@ import { loadDeviations, warn } from './deviations.mjs';
 import { loadContentPack, toClientPack } from '@tikerino/content';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const source = resolve(here, '../specs/tikerino-content-pack-v0.1.json');
+const source = resolve(here, '../specs/tikerino-content-pack-v0.2.json');
 const destination = resolve(here, '../client/src/content/pack.client.json');
 
 const pack = loadContentPack(JSON.parse(readFileSync(source, 'utf8')), {

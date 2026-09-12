@@ -1,56 +1,29 @@
 {
   "$comment": [
-    "Known places where specs/tikerino-content-pack-v0.1.json breaks its own schema.",
+    "Known places where the content pack breaks its own schema, or where a",
+    "guided-example step contradicts the candle it points at.",
     "",
-    "The loader refuses to run on ANY validation failure. Each entry here converts one",
-    "specific, reviewed failure into a loud boot-time warning instead, so the build is",
-    "not blocked by a defect that belongs to the content owner. Every other violation",
-    "- including a NEW one in the same lesson - still stops the process.",
+    "EMPTY IS THE GOAL, and as of content pack v0.2.0 it is empty.",
+    "",
+    "The loader refuses to run on ANY validation failure, and",
+    "scripts/check-content-charts.mjs fails on any annotation that contradicts its",
+    "own text. An entry here converts one specific, reviewed failure into a loud",
+    "warning instead, so the build is not blocked by a defect belonging to the",
+    "content owner. Every other violation still stops the process.",
     "",
     "These are debts, not exemptions. Delete the entry when the content is fixed.",
     "Code must never be changed to accommodate one of these.",
     "",
-    "guidedAnnotations lists steps whose annotateCandleIndex contradicts the step's own",
-    "text, checked by scripts/check-content-charts.mjs. Same rule: these are debts."
+    "Cleared 12 Sep 2026 by content pack v0.2.0, which fixed all five:",
+    "  - lesson-4-trading-words principle card was 76 words against a 60-word cap",
+    "    (split into 'Bid, ask, and spread' + 'Orders, long and short', now 31 and 48)",
+    "  - lesson-6 guided steps 0 and 1 pointed at candles of the wrong direction",
+    "    (now candles 1 and 3, the boldest bullish and bearish bodies in the window)",
+    "  - lesson-7 guided step 0 pointed at the largest body while saying 'smallest'",
+    "    (now candle 2, a 1%-of-range doji)",
+    "  - lesson-7 guided step 1 talked about bullish candles over a bearish one",
+    "    (now candle 8, which ends the window's longest bullish run)"
   ],
-  "deviations": [
-    {
-      "id": "lesson-4-principle-card-length",
-      "matches": "lesson lesson-4-trading-words: principleCard body is",
-      "owner": "content (Instinct)",
-      "raisedOn": "2026-09-12",
-      "detail": "The principle card body is 76 words; content schema v1 section 3 caps it at 60. It teaches five terms (bid, ask, spread, market vs limit order, long vs short) in one card, which also strains the locked 'one idea per screen' rule.",
-      "suggestedFix": "Trim to <= 60 words, or split orders and long/short into their own lesson. The card renders in full meanwhile - nothing is truncated."
-    }
-  ],
-  "guidedAnnotations": [
-    {
-      "id": "lesson-6-bullish-bearish#0",
-      "owner": "content (Instinct)",
-      "raisedOn": "2026-09-12",
-      "detail": "Step text says 'Hollow green body: close is the top edge of the body. Price rose.' but candle 2 of cp0.1/l6-guided is bearish (solid red).",
-      "suggestedFix": "Point at candle 4 (bullish) for the minimal swap, or candle 1 (bullish, body 67% of range) for the clearest green body."
-    },
-    {
-      "id": "lesson-6-bullish-bearish#1",
-      "owner": "content (Instinct)",
-      "raisedOn": "2026-09-12",
-      "detail": "Step text says 'Solid red body: close is the bottom edge. Price fell.' but candle 4 of cp0.1/l6-guided is bullish (hollow green). The two indices are simply the wrong way round.",
-      "suggestedFix": "Point at candle 2 (bearish) for the minimal swap, or candle 3 (bearish, body 80% of range) for the clearest red body."
-    },
-    {
-      "id": "lesson-7-range-and-limits#0",
-      "owner": "content (Instinct)",
-      "raisedOn": "2026-09-12",
-      "detail": "Step text says 'Find the candle with the smallest body. Long wicks, tiny body' but candle 6 of cp0.1/l7-guided has the LARGEST body in the window, filling 91% of its range.",
-      "suggestedFix": "Point at candle 2 (body 1% of range, a textbook doji). Candle 3 (3%) is the next best."
-    },
-    {
-      "id": "lesson-7-range-and-limits#1",
-      "owner": "content (Instinct)",
-      "raisedOn": "2026-09-12",
-      "detail": "Step text says 'Even a strong run of bullish candles...' but candle 9 of cp0.1/l7-guided is bearish.",
-      "suggestedFix": "Point at candle 8, which ends the window's longest bullish run (candles 5-8)."
-    }
-  ]
+  "deviations": [],
+  "guidedAnnotations": []
 }

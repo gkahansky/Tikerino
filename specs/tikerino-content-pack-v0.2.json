@@ -1,0 +1,1076 @@
+{
+  "packVersion": "0.2.0",
+  "curriculumVersion": "0.2.0",
+  "locale": "en",
+  "generatorVersionCompat": ">=1.0.0 <2.0.0",
+  "scenarioSpecVersion": "1.0",
+  "meta": {
+    "productName": "Tikerino",
+    "audience": "Beginner investors, 18+",
+    "syntheticDataLabel": "Practice chart - generated data, not a real stock.",
+    "revealDisclaimer": "This is generated practice data. Real markets do not move in reliable patterns. Nothing here is investment advice.",
+    "examDisclaimer": "Practice exam on generated data. Past patterns, real or simulated, do not predict future results. Not investment advice.",
+    "authoringNote": "Starter pack authored 12 Sep 2026 by Instinct for Guy's review. Tone and factual accuracy are his to sign off before friends/family. v0.2.0 (12 Sep 2026): corrected guided-example candle indices in lessons 6 and 7 (indices were authored before the chart engine existed and pointed at wrong candles); split lesson-4-trading-words into 'Bid, ask, and spread' and 'Orders, long and short' to bring the principle card under the 60-word schema cap and honor one idea per screen; added ex-016 for order types; ex-009 moved to the new lesson."
+  },
+  "topics": [
+    {
+      "topicId": "topic-fundamentals",
+      "title": "Trading fundamentals",
+      "order": 1,
+      "description": "What a security, ticker, and chart are; price and percent change; bid/ask and spread; market vs limit orders; long vs short as vocabulary; volume; timeframe; observation vs recommendation."
+    },
+    {
+      "topicId": "topic-candles",
+      "title": "Candlestick reading",
+      "order": 2,
+      "description": "OHLC, body, wicks, bullish/bearish conventions, range and body size, single-candle reading in context, and what short sequences can and cannot tell you."
+    }
+  ],
+  "lessons": [
+    {
+      "lessonId": "lesson-0-meet-the-chart",
+      "topicId": "topic-fundamentals",
+      "order": 0,
+      "title": "Meet the chart",
+      "estimatedMinutes": 2,
+      "crownLevelCap": 5,
+      "skills": [
+        "chart-axes",
+        "price-meaning"
+      ],
+      "principleCard": {
+        "title": "A chart is a story of trades",
+        "body": "A ticker is a short code for one thing you can trade, like one company's shares. A chart shows the price of that ticker over time. The bottom axis is time. The side axis is price. Every point is a moment when a trade happened.",
+        "miniChart": {
+          "syntheticSeriesId": "cp0.1/l0-card",
+          "scenarioFamily": "trend_up",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l0-card",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        }
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l0-guided",
+          "scenarioFamily": "trend_up",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l0-guided",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "Find the bottom axis. It runs from oldest on the left to newest on the right.",
+            "annotateCandleIndex": 0
+          },
+          {
+            "text": "Find the side axis. Higher on the chart means a higher price.",
+            "annotateCandleIndex": 11
+          },
+          {
+            "text": "The last candle on the right is the most recent moment. Its price is the latest trade.",
+            "annotateCandleIndex": 11
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-001",
+        "ex-002"
+      ]
+    },
+    {
+      "lessonId": "lesson-1-price-and-percent",
+      "topicId": "topic-fundamentals",
+      "order": 1,
+      "title": "Price moves and percent change",
+      "estimatedMinutes": 3,
+      "crownLevelCap": 5,
+      "skills": [
+        "percent-change"
+      ],
+      "principleCard": {
+        "title": "Percents make moves comparable",
+        "body": "A move from 40 to 44 and a move from 400 to 440 are both +4 in price, but they are not the same move. Percent change divides the change by the starting price, so you can compare moves across cheap and expensive shares. +4 on 40 is +10%. On 400 it is only +1%.",
+        "miniChart": {
+          "syntheticSeriesId": "cp0.1/l1-card",
+          "scenarioFamily": "trend_up",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l1-card",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        }
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l1-guided",
+          "scenarioFamily": "trend_up",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l1-guided",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "Pick the first candle's close and the last candle's close.",
+            "annotateCandleIndex": 0
+          },
+          {
+            "text": "Change = last close minus first close. Percent = change divided by first close, times 100.",
+            "annotateCandleIndex": 11
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-003",
+        "ex-004"
+      ]
+    },
+    {
+      "lessonId": "lesson-2-volume",
+      "topicId": "topic-fundamentals",
+      "order": 2,
+      "title": "Volume: how much changed hands",
+      "estimatedMinutes": 2,
+      "crownLevelCap": 5,
+      "skills": [
+        "volume"
+      ],
+      "principleCard": {
+        "title": "Volume is participation",
+        "body": "Volume counts how many shares changed hands in a period. High volume means many traders took part; low volume means few did. A price move on heavy volume had broad participation behind it. The same move on thin volume involved far fewer traders.",
+        "miniChart": {
+          "syntheticSeriesId": "cp0.1/l2-card",
+          "scenarioFamily": "volatile",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l2-card",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        }
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l2-guided",
+          "scenarioFamily": "volatile",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l2-guided",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "The bars under the chart are volume - one bar per candle.",
+            "annotateCandleIndex": 0
+          },
+          {
+            "text": "Compare bar heights. Taller bar, more shares traded that period.",
+            "annotateCandleIndex": 5
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-005",
+        "ex-006"
+      ]
+    },
+    {
+      "lessonId": "lesson-3-timeframes",
+      "topicId": "topic-fundamentals",
+      "order": 3,
+      "title": "Timeframes: same stock, different zoom",
+      "estimatedMinutes": 2,
+      "crownLevelCap": 5,
+      "skills": [
+        "timeframe"
+      ],
+      "principleCard": {
+        "title": "Each candle covers one fixed slice of time",
+        "body": "A chart's timeframe says how much time each candle covers. On a daily chart, one candle is one full trading day. On a 5-minute chart, one candle is five minutes. Same stock, different zoom level. Always check the timeframe before reading anything else.",
+        "miniChart": {
+          "syntheticSeriesId": "cp0.1/l3-card",
+          "scenarioFamily": "range_bound",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l3-card",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        }
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l3-guided",
+          "scenarioFamily": "range_bound",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l3-guided",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "This chart is daily: twelve candles is twelve trading days, about two and a half weeks.",
+            "annotateCandleIndex": 11
+          },
+          {
+            "text": "On a 5-minute chart, twelve candles would be just one hour.",
+            "annotateCandleIndex": 11
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-007"
+      ]
+    },
+    {
+      "lessonId": "lesson-4-trading-words",
+      "topicId": "topic-fundamentals",
+      "order": 4,
+      "title": "Bid, ask, and spread",
+      "estimatedMinutes": 3,
+      "crownLevelCap": 5,
+      "skills": [
+        "vocab-spread"
+      ],
+      "principleCard": {
+        "title": "Bid, ask, spread",
+        "body": "The bid is the highest price buyers offer right now. The ask is the lowest price sellers accept. The gap between them is the spread, roughly the cost of trading instantly.",
+        "miniChart": null
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l4-guided",
+          "scenarioFamily": "range_bound",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l4-guided",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "Example: bid 50.00, ask 50.10. The spread is 0.10 - the cost of trading instantly.",
+            "annotateCandleIndex": 11
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-008"
+      ]
+    },
+    {
+      "lessonId": "lesson-orders-and-direction",
+      "topicId": "topic-fundamentals",
+      "order": 5,
+      "title": "Orders, long and short",
+      "estimatedMinutes": 3,
+      "crownLevelCap": 5,
+      "skills": [
+        "vocab-orders",
+        "vocab-long-short"
+      ],
+      "principleCard": {
+        "title": "Market, limit, long, short",
+        "body": "A market order buys or sells right away at the current price. A limit order fills only at your chosen price or better. Going long means you profit if the price rises; going short means you profit if it falls. Vocabulary only, you will not place orders here.",
+        "miniChart": null
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.2/orders-guided-4",
+          "scenarioFamily": "trend_up",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.2/orders-guided-4",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "A market order fills right away at the current price. A limit order fills only at your chosen price or better.",
+            "annotateCandleIndex": 11
+          },
+          {
+            "text": "Going long means you profit when the price climbs, like this run of green candles. Going short means you profit when it falls.",
+            "annotateCandleIndex": 10
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-009",
+        "ex-016"
+      ]
+    },
+    {
+      "lessonId": "lesson-5-candle-anatomy",
+      "topicId": "topic-candles",
+      "order": 6,
+      "title": "Anatomy of a candle",
+      "estimatedMinutes": 3,
+      "crownLevelCap": 5,
+      "skills": [
+        "ohlc",
+        "wicks"
+      ],
+      "principleCard": {
+        "title": "Four prices in one candle",
+        "body": "Every candle packs four prices: open, high, low, close. The thick body runs from open to close. The thin lines above and below, called wicks, show the highest and lowest prices reached. One glance tells you the whole period's journey, not just where it ended.",
+        "miniChart": {
+          "syntheticSeriesId": "cp0.1/l5-card",
+          "scenarioFamily": "range_bound",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l5-card",
+          "windowSize": 8,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        }
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l5-guided",
+          "scenarioFamily": "range_bound",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l5-guided",
+          "windowSize": 8,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "Body edges: the open and the close. Which is on top depends on direction - next lesson.",
+            "annotateCandleIndex": 3
+          },
+          {
+            "text": "Wick tips: the highest and lowest prices anyone traded at during the period.",
+            "annotateCandleIndex": 5
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-010",
+        "ex-011"
+      ]
+    },
+    {
+      "lessonId": "lesson-6-bullish-bearish",
+      "topicId": "topic-candles",
+      "order": 7,
+      "title": "Bullish and bearish candles",
+      "estimatedMinutes": 3,
+      "crownLevelCap": 5,
+      "skills": [
+        "bullish-bearish"
+      ],
+      "principleCard": {
+        "title": "Direction lives in the body",
+        "body": "A candle that closes higher than it opened is bullish - buyers pushed the price up during that period. One that closes lower is bearish - sellers won. Bullish candles are always green with a hollow body; bearish candles are always red with a solid body. Color and fill always mean direction, never decoration.",
+        "miniChart": {
+          "syntheticSeriesId": "cp0.1/l6-card",
+          "scenarioFamily": "trend_up",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l6-card",
+          "windowSize": 10,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        }
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l6-guided",
+          "scenarioFamily": "trend_up",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l6-guided",
+          "windowSize": 10,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "Hollow green body: close is the top edge of the body. Price rose.",
+            "annotateCandleIndex": 1
+          },
+          {
+            "text": "Solid red body: close is the bottom edge. Price fell.",
+            "annotateCandleIndex": 3
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-012",
+        "ex-013"
+      ]
+    },
+    {
+      "lessonId": "lesson-7-range-and-limits",
+      "topicId": "topic-candles",
+      "order": 8,
+      "title": "Body size, range, and honest limits",
+      "estimatedMinutes": 3,
+      "crownLevelCap": 5,
+      "skills": [
+        "range-body",
+        "interpretation-limits"
+      ],
+      "principleCard": {
+        "title": "What candles can and cannot say",
+        "body": "A candle's range is high minus low: how far price traveled. A big body means a decisive move; a tiny body with long wicks means the period went back and forth and ended near where it started - indecision. Candles describe the past. They do not predict the future, and honest chart reading says so.",
+        "miniChart": {
+          "syntheticSeriesId": "cp0.1/l7-card",
+          "scenarioFamily": "ambiguous",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l7-card",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        }
+      },
+      "guidedExample": {
+        "chart": {
+          "syntheticSeriesId": "cp0.1/l7-guided",
+          "scenarioFamily": "ambiguous",
+          "scenarioSpecVersion": "1.0",
+          "seed": "cp0.1/l7-guided",
+          "windowSize": 12,
+          "revealSize": 0,
+          "timeframeLabel": "1 day per candle"
+        },
+        "steps": [
+          {
+            "text": "Find the candle with the smallest body. Long wicks, tiny body: buyers and sellers fought to a draw.",
+            "annotateCandleIndex": 2
+          },
+          {
+            "text": "Even a strong run of bullish candles only tells you what already happened.",
+            "annotateCandleIndex": 8
+          }
+        ]
+      },
+      "exerciseIds": [
+        "ex-014",
+        "ex-015"
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "exerciseId": "ex-001",
+      "lessonId": "lesson-0-meet-the-chart",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "chart-axes"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-001",
+        "scenarioFamily": "trend_up",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-001",
+        "windowSize": 12,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "Look at this practice chart. What does the horizontal (bottom) axis show?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "Time, from oldest on the left to newest on the right"
+        },
+        {
+          "optionId": "b",
+          "text": "Price per share"
+        },
+        {
+          "optionId": "c",
+          "text": "Number of shares traded"
+        },
+        {
+          "optionId": "d",
+          "text": "The company's name"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "One axis is time, the other is price. The bottom one runs left to right."
+      },
+      "feedback": {
+        "correct": "Right - the bottom axis is time. Charts always read oldest to newest, left to right, so the latest moment is the last candle on the right.",
+        "incorrect": "Not quite - the bottom axis is time. Charts read oldest to newest, left to right. Price lives on the side axis."
+      }
+    },
+    {
+      "exerciseId": "ex-002",
+      "lessonId": "lesson-0-meet-the-chart",
+      "order": 2,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "price-meaning"
+      ],
+      "chart": null,
+      "prompt": "A share's chart ends at a price of 48. What does 48 most likely mean?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "The most recent price paid for one share"
+        },
+        {
+          "optionId": "b",
+          "text": "The number of shares traded that day"
+        },
+        {
+          "optionId": "c",
+          "text": "The company's profit"
+        },
+        {
+          "optionId": "d",
+          "text": "The total value of the whole company"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "A chart's price is per single share."
+      },
+      "feedback": {
+        "correct": "Right - a chart's price is the price of one share, per period. 48 means the latest trades happened around 48 per share.",
+        "incorrect": "Not quite - the price on a chart is per single share. Volume, profit, and company value are different numbers, shown elsewhere."
+      }
+    },
+    {
+      "exerciseId": "ex-003",
+      "lessonId": "lesson-1-price-and-percent",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 2,
+      "skills": [
+        "percent-change"
+      ],
+      "chart": null,
+      "prompt": "A share rises from 40 to 44. What is the percent change?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "+4%"
+        },
+        {
+          "optionId": "b",
+          "text": "+10%"
+        },
+        {
+          "optionId": "c",
+          "text": "+40%"
+        },
+        {
+          "optionId": "d",
+          "text": "+44%"
+        }
+      ],
+      "correctOptionId": "b",
+      "hint": {
+        "text": "Divide the change (4) by the starting price (40), then multiply by 100."
+      },
+      "feedback": {
+        "correct": "Right - percent change is the change divided by the start: 4 / 40 = 0.10, so +10%. Percents let you compare moves across different share prices.",
+        "incorrect": "Not quite - percent change uses the starting price: 4 / 40 = +10%. The +4 is the price change, not the percent."
+      }
+    },
+    {
+      "exerciseId": "ex-004",
+      "lessonId": "lesson-1-price-and-percent",
+      "order": 2,
+      "type": "pick_the_candle",
+      "difficultyTier": 1,
+      "skills": [
+        "percent-change"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-004",
+        "scenarioFamily": "trend_up",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-004",
+        "windowSize": 12,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "Tap the candle with the highest closing price.",
+      "target": {
+        "rule": "highest_close"
+      },
+      "hint": {
+        "text": "For a bullish (hollow green) candle, the close is the top of the body. Look for the body that ends highest."
+      },
+      "feedback": {
+        "correct": "Right - that candle closed highest. The close is where the period ended: top of the body for bullish candles, bottom for bearish ones.",
+        "incorrect": "Not quite - the close is the body's top edge on bullish candles and bottom edge on bearish ones. Compare body edges, not wick tips."
+      }
+    },
+    {
+      "exerciseId": "ex-005",
+      "lessonId": "lesson-2-volume",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "volume"
+      ],
+      "chart": null,
+      "prompt": "What does volume measure?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "How many shares changed hands in a period"
+        },
+        {
+          "optionId": "b",
+          "text": "How much the price moved in a period"
+        },
+        {
+          "optionId": "c",
+          "text": "How many people own the share"
+        },
+        {
+          "optionId": "d",
+          "text": "How profitable the company is"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Volume is about trading activity, not price direction."
+      },
+      "feedback": {
+        "correct": "Right - volume counts shares traded in the period. High volume means broad participation behind that period's move.",
+        "incorrect": "Not quite - volume is the count of shares traded. Price movement is separate; volume tells you how many traders took part."
+      }
+    },
+    {
+      "exerciseId": "ex-006",
+      "lessonId": "lesson-2-volume",
+      "order": 2,
+      "type": "pick_the_candle",
+      "difficultyTier": 2,
+      "skills": [
+        "volume"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-006",
+        "scenarioFamily": "volatile",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-006",
+        "windowSize": 12,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "Tap the candle with the highest trading volume. Volume bars sit under the chart.",
+      "target": {
+        "rule": "highest_volume"
+      },
+      "hint": {
+        "text": "Compare the heights of the bars under the candles - tallest bar, most shares traded."
+      },
+      "feedback": {
+        "correct": "Right - that period had the tallest volume bar, so the most shares changed hands. Heavy volume means broad participation.",
+        "incorrect": "Not quite - read the bars under the chart, not the candles. The tallest bar marks the period with the most shares traded."
+      }
+    },
+    {
+      "exerciseId": "ex-007",
+      "lessonId": "lesson-3-timeframes",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "timeframe"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-007",
+        "scenarioFamily": "range_bound",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-007",
+        "windowSize": 12,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "This is a daily chart. What does each candle represent?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "One full trading day"
+        },
+        {
+          "optionId": "b",
+          "text": "One minute of trading"
+        },
+        {
+          "optionId": "c",
+          "text": "One single trade"
+        },
+        {
+          "optionId": "d",
+          "text": "One calendar week"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Daily means each candle covers one day."
+      },
+      "feedback": {
+        "correct": "Right - on a daily chart each candle is one trading day. Always check the timeframe first; it sets what every candle means.",
+        "incorrect": "Not quite - daily chart, daily candles: one full trading day each. The timeframe label tells you the slice of time per candle."
+      }
+    },
+    {
+      "exerciseId": "ex-008",
+      "lessonId": "lesson-4-trading-words",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 2,
+      "skills": [
+        "vocab-spread"
+      ],
+      "chart": null,
+      "prompt": "The bid is 50.00 and the ask is 50.10. What is the spread?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "0.10"
+        },
+        {
+          "optionId": "b",
+          "text": "50.05"
+        },
+        {
+          "optionId": "c",
+          "text": "100.10"
+        },
+        {
+          "optionId": "d",
+          "text": "0.10%"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Spread = ask minus bid."
+      },
+      "feedback": {
+        "correct": "Right - the spread is ask minus bid: 50.10 - 50.00 = 0.10. It is roughly the cost of trading instantly.",
+        "incorrect": "Not quite - spread is the gap between ask and bid: 50.10 minus 50.00 = 0.10, a price gap, not a percent."
+      }
+    },
+    {
+      "exerciseId": "ex-009",
+      "lessonId": "lesson-orders-and-direction",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "vocab-long-short"
+      ],
+      "chart": null,
+      "prompt": "You buy a share because you expect the price to rise. Traders call this going...",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "Long"
+        },
+        {
+          "optionId": "b",
+          "text": "Short"
+        },
+        {
+          "optionId": "c",
+          "text": "Flat"
+        },
+        {
+          "optionId": "d",
+          "text": "Wide"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Think of a long line going up."
+      },
+      "feedback": {
+        "correct": "Right - going long means you profit if the price rises. Going short is the opposite: profit if it falls. Vocabulary only for now.",
+        "incorrect": "Not quite - expecting a rise and buying is going long. Short is the opposite bet: you profit when the price falls."
+      }
+    },
+    {
+      "exerciseId": "ex-010",
+      "lessonId": "lesson-5-candle-anatomy",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "wicks"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-010",
+        "scenarioFamily": "range_bound",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-010",
+        "windowSize": 8,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "What does the top of a candle's upper wick show?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "The highest price reached during the period"
+        },
+        {
+          "optionId": "b",
+          "text": "The closing price"
+        },
+        {
+          "optionId": "c",
+          "text": "The opening price"
+        },
+        {
+          "optionId": "d",
+          "text": "The average price"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Wicks show the extremes; the body shows open and close."
+      },
+      "feedback": {
+        "correct": "Right - wick tips mark the extremes: the upper wick's top is the highest price traded that period. Open and close live in the body.",
+        "incorrect": "Not quite - the upper wick's top is the highest price reached. Open and close are the body's edges, not the wick tips."
+      }
+    },
+    {
+      "exerciseId": "ex-011",
+      "lessonId": "lesson-5-candle-anatomy",
+      "order": 2,
+      "type": "pick_the_candle",
+      "difficultyTier": 2,
+      "skills": [
+        "wicks"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-011",
+        "scenarioFamily": "volatile",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-011",
+        "windowSize": 12,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "Tap the candle with the longest upper wick.",
+      "target": {
+        "rule": "longest_upper_wick"
+      },
+      "hint": {
+        "text": "The upper wick is the thin line above the body. Compare only those lines."
+      },
+      "feedback": {
+        "correct": "Right - that candle's upper wick is longest, so price spiked furthest above its body before falling back. Long upper wicks show rejected highs.",
+        "incorrect": "Not quite - measure the thin line above each body, from body top to wick tip. The longest one marks the period's most rejected high."
+      }
+    },
+    {
+      "exerciseId": "ex-012",
+      "lessonId": "lesson-6-bullish-bearish",
+      "order": 1,
+      "type": "pick_the_candle",
+      "difficultyTier": 1,
+      "skills": [
+        "bullish-bearish"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-012",
+        "scenarioFamily": "range_bound",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-012",
+        "windowSize": 10,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "Tap the first bullish candle - the first one that closed higher than it opened.",
+      "target": {
+        "rule": "first_bullish"
+      },
+      "hint": {
+        "text": "Bullish candles are hollow and green. Scan left to right and stop at the first one."
+      },
+      "feedback": {
+        "correct": "Right - a bullish candle closes above its open, shown hollow and green. Direction lives in the body: close on top means buyers won that period.",
+        "incorrect": "Not quite - bullish means close higher than open: hollow green body, close on top. Red solid bodies closed lower - those are bearish."
+      }
+    },
+    {
+      "exerciseId": "ex-013",
+      "lessonId": "lesson-6-bullish-bearish",
+      "order": 2,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "bullish-bearish"
+      ],
+      "chart": null,
+      "prompt": "A candle opens at 52 and closes at 55. This candle is...",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "Bullish - it closed higher than it opened"
+        },
+        {
+          "optionId": "b",
+          "text": "Bearish - it moved 3 points"
+        },
+        {
+          "optionId": "c",
+          "text": "Neutral - the move is too small to count"
+        },
+        {
+          "optionId": "d",
+          "text": "Impossible to classify without volume"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Only two prices matter: open and close."
+      },
+      "feedback": {
+        "correct": "Right - close above open is bullish, always green and hollow here. The size of the move does not change the direction label.",
+        "incorrect": "Not quite - bullish or bearish comes from open versus close only. 55 is above 52, so bullish. Size and volume do not change that."
+      }
+    },
+    {
+      "exerciseId": "ex-014",
+      "lessonId": "lesson-7-range-and-limits",
+      "order": 1,
+      "type": "multiple_choice",
+      "difficultyTier": 2,
+      "skills": [
+        "range-body"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-014",
+        "scenarioFamily": "ambiguous",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-014",
+        "windowSize": 12,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "One candle here has a tiny body with long wicks on both sides. What does that shape usually suggest?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "Indecision - the period swung both ways and ended near where it started"
+        },
+        {
+          "optionId": "b",
+          "text": "A strong, decisive move"
+        },
+        {
+          "optionId": "c",
+          "text": "That trading was halted"
+        },
+        {
+          "optionId": "d",
+          "text": "That the price must reverse next"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Small body means open and close were nearly the same."
+      },
+      "feedback": {
+        "correct": "Right - a tiny body with long wicks means price traveled far both ways but closed near the open: indecision, a draw between buyers and sellers.",
+        "incorrect": "Not quite - tiny body plus long wicks is indecision: lots of travel, almost no net change. It describes that period only, not what comes next."
+      }
+    },
+    {
+      "exerciseId": "ex-015",
+      "lessonId": "lesson-7-range-and-limits",
+      "order": 2,
+      "type": "multiple_choice",
+      "difficultyTier": 2,
+      "skills": [
+        "interpretation-limits"
+      ],
+      "chart": {
+        "syntheticSeriesId": "cp0.1/ex-015",
+        "scenarioFamily": "trend_up",
+        "scenarioSpecVersion": "1.0",
+        "seed": "cp0.1/ex-015",
+        "windowSize": 12,
+        "revealSize": 6,
+        "timeframeLabel": "1 day per candle"
+      },
+      "prompt": "You spot five bullish candles in a row. What can you honestly conclude?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "Only what already happened - candles describe the past and cannot tell you what comes next"
+        },
+        {
+          "optionId": "b",
+          "text": "The price will keep rising tomorrow"
+        },
+        {
+          "optionId": "c",
+          "text": "The price must fall soon to balance out"
+        },
+        {
+          "optionId": "d",
+          "text": "The share is now a safe buy"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "Candles record history. Do they issue orders about the future?"
+      },
+      "feedback": {
+        "correct": "Right - candles describe the past. A run of bullish candles tells you buyers kept winning those periods, nothing more. Honest chart reading admits the limit.",
+        "incorrect": "Not quite - no candle pattern guarantees the future. Five bullish candles describe five past periods; treating them as a promise is the classic mistake."
+      }
+    },
+    {
+      "exerciseId": "ex-016",
+      "lessonId": "lesson-orders-and-direction",
+      "order": 2,
+      "type": "multiple_choice",
+      "difficultyTier": 1,
+      "skills": [
+        "vocab-orders"
+      ],
+      "chart": null,
+      "prompt": "You want to buy, but only if the price drops to 49.00. Which order waits for your price?",
+      "options": [
+        {
+          "optionId": "a",
+          "text": "A limit order"
+        },
+        {
+          "optionId": "b",
+          "text": "A market order"
+        },
+        {
+          "optionId": "c",
+          "text": "A spread order"
+        },
+        {
+          "optionId": "d",
+          "text": "A long order"
+        }
+      ],
+      "correctOptionId": "a",
+      "hint": {
+        "text": "One type fills right away. The other waits for your price."
+      },
+      "feedback": {
+        "correct": "Right, a limit order fills only at your chosen price or better. A market order would buy right away at the current price, whatever it is.",
+        "incorrect": "Not quite, a market order fills right away at the current price. To wait for 49.00 you need a limit order, which fills only at your price or better."
+      }
+    }
+  ]
+}

@@ -10,7 +10,7 @@ import type { ContentPack } from '@tikerino/content';
 
 import { buildApp } from '../server/src/app.js';
 
-const PACK_PATH = resolve(__dirname, '../specs/tikerino-content-pack-v0.1.json');
+const PACK_PATH = resolve(__dirname, '../specs/tikerino-content-pack-v0.2.json');
 const pack = JSON.parse(readFileSync(PACK_PATH, 'utf8')) as ContentPack;
 
 let app: FastifyInstance;

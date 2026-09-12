@@ -14,7 +14,7 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 
 /** The pack is a plain JSON file day one - no database. */
-export const CONTENT_PACK_PATH = resolve(here, '../../specs/tikerino-content-pack-v0.1.json');
+export const CONTENT_PACK_PATH = resolve(here, '../../specs/tikerino-content-pack-v0.2.json');
 export const DEVIATIONS_PATH = resolve(here, '../../content-deviations.json');
 
 export interface LoadedContent {
