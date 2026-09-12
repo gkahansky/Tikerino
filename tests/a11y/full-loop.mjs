@@ -9,7 +9,7 @@
  *
  * Expects the server (8787) and the client dev server (5173) to be running.
  */
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,6 +21,20 @@ const shots = resolve(here, '../../screenshots');
 const BASE = process.env.CLIENT_URL ?? 'http://127.0.0.1:5173';
 
 mkdirSync(shots, { recursive: true });
+
+/**
+ * Where Chromium lives.
+ *
+ * CI installs it through Playwright, which resolves it on its own, so returning
+ * undefined is the right answer there. This dev container ships a pre-installed,
+ * version-pinned copy that Playwright will not find by itself. CHROME_PATH
+ * overrides both.
+ */
+function resolveChrome() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  const preinstalled = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+  return existsSync(preinstalled) ? preinstalled : undefined;
+}
 
 const failures = [];
 const notes = [];
@@ -53,10 +67,7 @@ async function axeScan(page, label) {
   return results;
 }
 
-// The pre-installed browser is versioned; let Playwright find it, and fall back
-// to the known path if this Playwright build expects a different revision.
-const CHROME = process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const browser = await chromium.launch({ executablePath: CHROME });
+const browser = await chromium.launch({ executablePath: resolveChrome() });
 const context = await browser.newContext({
   viewport: { width: 390, height: 844 }, // iPhone-ish
   deviceScaleFactor: 2,

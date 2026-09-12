@@ -7,7 +7,7 @@
  * the app under test never does. That is the point - if the client could work the
  * answers out, the integrity contract would already be broken.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,6 +20,21 @@ const pack = JSON.parse(
   readFileSync(resolve(here, '../../specs/tikerino-content-pack-v0.2.json'), 'utf8'),
 );
 const BASE = process.env.CLIENT_URL ?? 'http://127.0.0.1:5173';
+
+/**
+ * Where Chromium lives.
+ *
+ * CI installs it through Playwright, which resolves it on its own, so returning
+ * undefined is the right answer there. This dev container ships a pre-installed,
+ * version-pinned copy that Playwright will not find by itself. CHROME_PATH
+ * overrides both.
+ */
+function resolveChrome() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  const preinstalled = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+  return existsSync(preinstalled) ? preinstalled : undefined;
+}
+
 
 const exerciseById = new Map(pack.exercises.map((e) => [e.exerciseId, e]));
 const lessons = [...pack.lessons].sort((a, b) => a.order - b.order);
@@ -48,9 +63,7 @@ function correctAnswerFor(exercise) {
   return { kind: 'candle', index: resolveCandleRule(exercise.target.rule, cutWindow(series)) };
 }
 
-const browser = await chromium.launch({
-  executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-});
+const browser = await chromium.launch({ executablePath: resolveChrome() });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 page.on('pageerror', (error) => failures.push(`FAIL page error: ${error.message}`));
 

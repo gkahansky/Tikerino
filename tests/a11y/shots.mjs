@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Viewport-sized screenshots of each screen, for eyeballing the real phone layout. */
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,11 +9,24 @@ import { chromium } from 'playwright';
 const here = dirname(fileURLToPath(import.meta.url));
 const shots = resolve(here, '../../screenshots/viewport');
 const BASE = process.env.CLIENT_URL ?? 'http://127.0.0.1:5173';
+
+/**
+ * Where Chromium lives.
+ *
+ * CI installs it through Playwright, which resolves it on its own, so returning
+ * undefined is the right answer there. This dev container ships a pre-installed,
+ * version-pinned copy that Playwright will not find by itself. CHROME_PATH
+ * overrides both.
+ */
+function resolveChrome() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  const preinstalled = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+  return existsSync(preinstalled) ? preinstalled : undefined;
+}
+
 mkdirSync(shots, { recursive: true });
 
-const browser = await chromium.launch({
-  executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-});
+const browser = await chromium.launch({ executablePath: resolveChrome() });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 
 await page.goto(BASE, { waitUntil: 'networkidle' });

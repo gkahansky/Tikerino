@@ -1,0 +1,110 @@
+name: verify
+
+# The integrity contract is only worth what enforces it. Until now it held
+# because someone ran the suites by hand; from here a machine refuses the merge.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck, tests, content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck every workspace
+        run: npm run typecheck
+
+      - name: Unit and integration tests
+        # Includes the golden-seed replay, the post-T leak scan over every
+        # exercise, and the client-pack sanitisation checks.
+        run: npm test
+
+      - name: Regenerate every pack chart
+        # Content CI rule: every pick_the_candle resolves uniquely with margin,
+        # and no guided-example step contradicts the candle it points at.
+        run: npm run content:check
+
+      - name: Content debt ledger is empty
+        # A reviewed content defect may be acknowledged in content-deviations.json,
+        # which keeps the build green. That is a debt, so it should be a deliberate
+        # act and visible in the diff - not something that quietly accumulates.
+        run: |
+          count=$(node -e "
+            const d = require('./content-deviations.json');
+            console.log((d.deviations?.length ?? 0) + (d.guidedAnnotations?.length ?? 0));
+          ")
+          if [ "$count" != "0" ]; then
+            echo "::warning::content-deviations.json carries $count acknowledged defect(s)."
+            node -e "
+              const d = require('./content-deviations.json');
+              for (const e of [...(d.deviations ?? []), ...(d.guidedAnnotations ?? [])]) {
+                console.log('  ' + e.id + ' (' + e.owner + '): ' + e.detail);
+              }
+            "
+          else
+            echo "No acknowledged content defects."
+          fi
+
+  browser:
+    name: full loop, axe, every exercise
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start server and client
+        run: |
+          npm run dev > /tmp/dev.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:5173 >/dev/null \
+               && curl -sf http://127.0.0.1:8787/api/exercises/ex-001/window >/dev/null; then
+              echo "both up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "servers did not come up:"
+          cat /tmp/dev.log
+          exit 1
+
+      - name: Full loop and axe on every screen
+        run: npm run test:browser
+
+      - name: Play every starter exercise through the UI
+        run: npm run test:play-all
+
+      - name: Dev server log
+        if: failure()
+        run: cat /tmp/dev.log
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
