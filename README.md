@@ -35,6 +35,46 @@ npm run shots          # phone-sized screenshots of each screen
 
 `npm run test:browser` and `npm run test:play-all` need `npm run dev` running.
 
+### Deploying it
+
+```sh
+npm ci
+npm run build --workspace @tikerino/client    # static files in client/dist
+HOST=0.0.0.0 PORT=8787 npm run start --workspace @tikerino/server
+```
+
+`HOST` defaults to `127.0.0.1`, which is right on a laptop and wrong in a container -
+nothing outside reaches it. Set it to `0.0.0.0` anywhere the process sits behind a
+proxy or an ingress.
+
+The client asks for `/api/...` **relative**, so the default deployment is one origin:
+serve `client/dist` and let the same host proxy `/api` to the server. To split them,
+build the client with an API origin baked in:
+
+```sh
+VITE_API_BASE_URL=https://api.tikerino.example npm run build --workspace @tikerino/client
+```
+
+It is read at build time and inlined, so a client built for one API origin cannot be
+repointed without rebuilding. The server already answers with permissive CORS, so
+nothing changes on its side. See `client/.env.example`.
+
+Two deployment facts worth knowing before the first attempt:
+
+- **The PWA needs https.** A service worker will not register over plain http (beyond
+  `localhost`), so the install prompt and offline shell simply do not appear. An https
+  page also may not call an http API - the client refuses to start on that mismatch
+  rather than letting it surface to the learner as "you appear to be offline".
+- **There is no health endpoint.** The engine spec locks the server to exactly two
+  endpoints, so rather than quietly adding a third, use
+  `GET /api/exercises/ex-001/window` as the readiness check - it exercises content
+  loading and chart generation, which is a better check than a bare `200 OK` anyway.
+
+The audit log is a JSONL file at `server/data/audit.jsonl`. It is the record of every
+answer, it is rebuilt into the idempotency index at boot, and it is on local disk - so
+it needs a mounted volume, or a deliberate decision that losing answer history on
+redeploy is acceptable.
+
 ---
 
 ## Layout
