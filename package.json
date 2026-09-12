@@ -1,0 +1,39 @@
+{
+  "name": "tikerino",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tikerino - a mobile game that teaches you to read markets one tiny principle at a time. Synthetic practice data only.",
+  "workspaces": [
+    "packages/*",
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev --workspace @tikerino/server",
+    "dev:client": "npm run dev --workspace @tikerino/client",
+    "build": "npm run build --workspaces --if-present",
+    "content:sanitize": "tsx scripts/sanitize-content.mjs",
+    "goldens": "tsx scripts/generate-goldens.mjs",
+    "typecheck": "tsc -p packages/engine --noEmit && tsc -p packages/content --noEmit && tsc -p packages/grading --noEmit && tsc -p packages/state --noEmit && tsc -p server --noEmit && tsc -p client --noEmit",
+    "test": "vitest run",
+    "verify": "npm run typecheck && npm run test && npm run content:check",
+    "content:check": "tsx scripts/check-content-charts.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "test:browser": "node tests/a11y/full-loop.mjs",
+    "test:play-all": "tsx tests/a11y/play-all.mjs",
+    "shots": "node tests/a11y/shots.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.0",
+    "playwright": "^1.63.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

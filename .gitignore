@@ -1,0 +1,24 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+.env
+.env.*
+!.env.example
+
+# Runtime audit log (JSONL). Learner answer records are not source.
+server/data/audit.jsonl
+
+# Generated, derived from specs/tikerino-content-pack-v0.1.json at build time.
+client/src/content/pack.client.json
+
+# Playwright / axe artifacts
+test-results/
+playwright-report/
+
+# Local verification artifacts (regenerate with `npm run shots`).
+screenshots/

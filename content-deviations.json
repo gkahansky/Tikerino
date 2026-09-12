@@ -1,0 +1,23 @@
+{
+  "$comment": [
+    "Known places where specs/tikerino-content-pack-v0.1.json breaks its own schema.",
+    "",
+    "The loader refuses to run on ANY validation failure. Each entry here converts one",
+    "specific, reviewed failure into a loud boot-time warning instead, so the build is",
+    "not blocked by a defect that belongs to the content owner. Every other violation",
+    "- including a NEW one in the same lesson - still stops the process.",
+    "",
+    "These are debts, not exemptions. Delete the entry when the content is fixed.",
+    "Code must never be changed to accommodate one of these."
+  ],
+  "deviations": [
+    {
+      "id": "lesson-4-principle-card-length",
+      "matches": "lesson lesson-4-trading-words: principleCard body is",
+      "owner": "content (Instinct)",
+      "raisedOn": "2026-09-12",
+      "detail": "The principle card body is 76 words; content schema v1 section 3 caps it at 60. It teaches five terms (bid, ask, spread, market vs limit order, long vs short) in one card, which also strains the locked 'one idea per screen' rule.",
+      "suggestedFix": "Trim to <= 60 words, or split orders and long/short into their own lesson. The card renders in full meanwhile - nothing is truncated."
+    }
+  ]
+}

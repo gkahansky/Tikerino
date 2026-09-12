@@ -1,0 +1,69 @@
+/* Tikerino design tokens v1 - 12 Sep 2026
+   Brand: Growth Green only (violet dropped, Guy 11 Sep 2026).
+   WCAG 2.1 AA rules baked in - read the comments before pairing colors.
+   Verified contrasts on --paper (#FAFAF7):
+   - --ink #0F2B46 on paper:   ~13.4:1 (AAA)
+   - --ink-2 #5B7186 on paper: ~4.8:1  (AA normal text - minimum size 16px)
+   - --brand #10B981 on paper: ~2.2:1  (graphics/decoration only, never text)
+   - --brand-ink #0B5643 on paper: ~6.4:1 (AA - use for green text/links on paper)
+   - ink on --brand:           ~5.7:1  (AA - CTA label color on green buttons)
+   - white on --brand:         ~2.5:1  FAILS - never put white text on green
+   - --data-down #DC2626 on paper: ~4.6:1 (AA - safe for chart text)
+   - --data-up #0E9F6E on paper:   ~3.3:1 (graphics + large text only) */
+
+:root {
+  /* brand.* - navigation, CTAs, rewards, surfaces, identity. Palette changes touch brand.* only. */
+  --brand: #10B981;          /* Growth Green - primary */
+  --brand-strong: #0B7B5C;   /* hover/pressed state for brand actions */
+  --brand-ink: #0B5643;      /* green that passes AA as text on paper */
+  --brand-soft: #E7F8F1;     /* mint surface for selected/reward states */
+
+  --ink: #0F2B46;            /* primary text + text on brand surfaces */
+  --ink-2: #5B7186;          /* secondary text (>=16px only) */
+
+  --accent-coral: #FF6B57;   /* sparing accent: streaks, celebrations. NEVER inside the chart canvas. Text on coral uses --ink (~5.2:1). */
+  --accent-sun: #FFB020;     /* XP, crowns, highlights. Text on sun uses --ink. NEVER inside the chart canvas. */
+  --accent-sun-soft: #FFF4DD;
+
+  --paper: #FAFAF7;          /* app background */
+  --surface: #FFFFFF;        /* cards */
+  --line: #E8E4DB;           /* borders, dividers */
+
+  /* data.* - chart meaning only. FROZEN (Guy, 11 Sep 2026): never retint, never swap with brand.*.
+     Non-color encoding is mandatory alongside color:
+     bullish = HOLLOW body (paper fill, 2px solid --data-up border + wick)
+     bearish = FILLED body (solid --data-down fill + wick)
+     Screen-reader text states direction in words for every candle. */
+  --data-up: #0E9F6E;
+  --data-down: #DC2626;
+  --data-wick-up: #0E9F6E;
+  --data-wick-down: #DC2626;
+  --data-volume: #B3BCC4;
+  --data-grid: #EDEAE3;
+
+  /* semantic */
+  --success: var(--data-up);
+  --error: var(--data-down);
+  --focus-ring: #2C5677;     /* 3px outline, offset 2px, on all interactive elements */
+
+  /* type - Baloo 2 (display) + Nunito (body), both OFL, Google Fonts.
+     Large-type rule (Guy): body base 18px, nothing under 16px anywhere, chart numerals tabular. */
+  --font-display: "Baloo 2", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --text-xs: 1rem;      /* 16px - floor, captions/labels only */
+  --text-sm: 1.0625rem; /* 17px */
+  --text-base: 1.125rem;/* 18px body */
+  --text-lg: 1.375rem;  /* 22px */
+  --text-xl: 1.75rem;   /* 28px headings */
+  --text-2xl: 2.25rem;  /* 36px display */
+
+  /* shape & motion */
+  --radius-card: 20px;
+  --radius-button: 16px;
+  --target-min: 48px;        /* all touch targets >= 48x48px, locked */
+  --motion-reveal: 200ms;    /* spring reveal, 150-250ms range */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-reveal: 0ms; }
+}

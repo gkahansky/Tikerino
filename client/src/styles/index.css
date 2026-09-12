@@ -1,0 +1,140 @@
+/* The design tokens are used verbatim - this is the spec file itself, not a copy. */
+@import '../../../specs/tikerino-design-tokens-v1.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    /* Body base is 18px; nothing anywhere goes under 16px. */
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  /* Focus-visible 3px ring on every interactive element, per the tokens file. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Chart numerals are tabular so columns of prices line up. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+}
+
+@layer components {
+  /* Every touch target is at least 48x48, locked. */
+  .target {
+    min-height: var(--target-min);
+    min-width: var(--target-min);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+  }
+
+  /*
+   * Text on brand green is ink navy, never white: white on #10B981 is ~2.5:1 and
+   * fails AA. Ink on green is ~5.7:1.
+   */
+  .btn-primary {
+    background: var(--brand);
+    color: var(--ink);
+    border-radius: var(--radius-button);
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+
+  .btn-primary:hover:not(:disabled),
+  .btn-primary:active:not(:disabled) {
+    background: var(--brand-strong);
+    /* brand-strong is dark enough that paper-on-it is the readable pairing. */
+    color: var(--paper);
+  }
+
+  .btn-primary:disabled {
+    background: var(--line);
+    color: var(--ink-2);
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--ink);
+    border: 2px solid var(--line);
+    border-radius: var(--radius-button);
+    font-weight: 600;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--brand);
+  }
+
+  .option {
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: var(--radius-button);
+    color: var(--ink);
+    text-align: left;
+  }
+
+  .option[aria-pressed='true'] {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+
+  .pill {
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* The reveal animation is the only motion that matters; honour the OS setting. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes candle-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-candle {
+  animation: candle-in var(--motion-reveal) ease-out both;
+}

@@ -1,0 +1,267 @@
+{
+  "generatorVersion": "1.0.0",
+  "scenarioSpecVersion": "1.0",
+  "goldens": [
+    {
+      "id": "lesson-0-meet-the-chart/card",
+      "seed": "cp0.1/l0-card",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "469994f7a8bdb7d938b0a2bd24982d62912bd74ba4456df1edd51d7d88d07ed6"
+    },
+    {
+      "id": "lesson-0-meet-the-chart/guided",
+      "seed": "cp0.1/l0-guided",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "128c9508b9edf3dc022020cdb6072848439461016bf2efc23f45bdbdd9ee63d2"
+    },
+    {
+      "id": "lesson-1-price-and-percent/card",
+      "seed": "cp0.1/l1-card",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "a7bcf3065f1999c6e2c88bb20e783e9151f22f9cbd9b1fc08eef890ce93c0497"
+    },
+    {
+      "id": "lesson-1-price-and-percent/guided",
+      "seed": "cp0.1/l1-guided",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "c1064af90b182cfdf1ca624ff7001185aa02556251c2f781851d93e7ce7544de"
+    },
+    {
+      "id": "lesson-2-volume/card",
+      "seed": "cp0.1/l2-card",
+      "family": "volatile",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "407328d1ac3fbcf13bd0ef173ccf17d4c442b266a450a11cf4ac57b08d603da3"
+    },
+    {
+      "id": "lesson-2-volume/guided",
+      "seed": "cp0.1/l2-guided",
+      "family": "volatile",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "01e4ea63e9df7e8ac4ce9595ba502cfa189c063ed1e73b82e145f218bc36990c"
+    },
+    {
+      "id": "lesson-3-timeframes/card",
+      "seed": "cp0.1/l3-card",
+      "family": "range_bound",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "5fc676cb4840f283f8b4cc4f695b7fa0516576c6650ddcdc67402d2532724d4a"
+    },
+    {
+      "id": "lesson-3-timeframes/guided",
+      "seed": "cp0.1/l3-guided",
+      "family": "range_bound",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "943f9bbd8a6f4fba5085673d4a98ec1f589b71ccf9cc4743d77849d9e0bf70de"
+    },
+    {
+      "id": "lesson-4-trading-words/guided",
+      "seed": "cp0.1/l4-guided",
+      "family": "range_bound",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "d25797375ec1077f5c4186c69530010baf1a7dad18544da67e9750c1be16d1cb"
+    },
+    {
+      "id": "lesson-5-candle-anatomy/card",
+      "seed": "cp0.1/l5-card",
+      "family": "range_bound",
+      "windowSize": 8,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "d8dc50a6381e501ae5689570a593923ba70ad28ff85c6173bc285cbffb75dca0"
+    },
+    {
+      "id": "lesson-5-candle-anatomy/guided",
+      "seed": "cp0.1/l5-guided",
+      "family": "range_bound",
+      "windowSize": 8,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "ba53a18c9af48f11294e6506b27bce919843f1af163098774d12fd729eda54fb"
+    },
+    {
+      "id": "lesson-6-bullish-bearish/card",
+      "seed": "cp0.1/l6-card",
+      "family": "trend_up",
+      "windowSize": 10,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "017ad1546aaccd7aff2bb0bb1d71b96a970d33427cacb83b4ec3d401b0722107"
+    },
+    {
+      "id": "lesson-6-bullish-bearish/guided",
+      "seed": "cp0.1/l6-guided",
+      "family": "trend_up",
+      "windowSize": 10,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "4b0762f480e6107d9ef481bd56ba2e8586afd9796139787bbe197cffac1d79df"
+    },
+    {
+      "id": "lesson-7-range-and-limits/card",
+      "seed": "cp0.1/l7-card",
+      "family": "ambiguous",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "ce0e9c045649999ade43cb7ae005364adc02d0171815601a456dc87c617439c1"
+    },
+    {
+      "id": "lesson-7-range-and-limits/guided",
+      "seed": "cp0.1/l7-guided",
+      "family": "ambiguous",
+      "windowSize": 12,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "af779403c34ce7cf9ef7ec5fa1d493051153fb4f56b7c429573340b1edd6172c"
+    },
+    {
+      "id": "ex-001",
+      "seed": "cp0.1/ex-001",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "cde0b9a62bff88907b9434250622f4525e00ec227aa590b3f6bce5dc406c2769"
+    },
+    {
+      "id": "ex-004",
+      "seed": "cp0.1/ex-004",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "6ba197ff3e71541dc640d342cc7460772e494585e0f23c4cf826c1a8dec17626"
+    },
+    {
+      "id": "ex-006",
+      "seed": "cp0.1/ex-006",
+      "family": "volatile",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "6d2836bc6dcdd65a47977ce8cd0ea0360243a20f3823b3b30a1d5fe328bf5739"
+    },
+    {
+      "id": "ex-007",
+      "seed": "cp0.1/ex-007",
+      "family": "range_bound",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "9b70229008a5732de503006692e82847921ff10fa437237cbe60b110e0e553ef"
+    },
+    {
+      "id": "ex-010",
+      "seed": "cp0.1/ex-010",
+      "family": "range_bound",
+      "windowSize": 8,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "8694927bd60b55e43dd806f6bfc349853345dc36e9c888802f0ac8094e0d5013"
+    },
+    {
+      "id": "ex-011",
+      "seed": "cp0.1/ex-011",
+      "family": "volatile",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "415d49e3c4dadf0ec32e99934e490345bd454f1fc552a047cb755a605f0d6139"
+    },
+    {
+      "id": "ex-012",
+      "seed": "cp0.1/ex-012",
+      "family": "range_bound",
+      "windowSize": 10,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "fcfb28afb68f0f9ce25a8e972359f0136f9a5d3bc20f10d020f5c2d215081523"
+    },
+    {
+      "id": "ex-014",
+      "seed": "cp0.1/ex-014",
+      "family": "ambiguous",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "c38f03ea765883ab9ed7314b0eb7a1176f30d67246bd90d20fb723a40944fae8"
+    },
+    {
+      "id": "ex-015",
+      "seed": "cp0.1/ex-015",
+      "family": "trend_up",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "3c965369a601202a74f08348de2dc8da6d057bfd55211a8d01c53068835ba611"
+    },
+    {
+      "id": "golden/trend-down-1",
+      "seed": "golden/trend-down-1",
+      "family": "trend_down",
+      "windowSize": 12,
+      "revealSize": 6,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "d13cdf533bec37139191d5ba9be27e261f90a540f259cd86e23c229af4077474"
+    },
+    {
+      "id": "golden/trend-down-2",
+      "seed": "golden/trend-down-2",
+      "family": "trend_down",
+      "windowSize": 8,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "dfe2c5321da17a428c6256c9c225c510ae1d1afb6021d3cf097efaea646ab66a"
+    },
+    {
+      "id": "golden/volatile-long",
+      "seed": "golden/volatile-long",
+      "family": "volatile",
+      "windowSize": 20,
+      "revealSize": 10,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "90e40f14e2be328f700d0099b799b61fec32863fb26bd8b9e94b146d4b9fc562"
+    },
+    {
+      "id": "golden/ambiguous-min",
+      "seed": "golden/ambiguous-min",
+      "family": "ambiguous",
+      "windowSize": 5,
+      "revealSize": 1,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "2d2d4034a2013e52e7e688e9fe0f00f53f9f268217c76d827e29fe47c447f31e"
+    },
+    {
+      "id": "golden/range-single",
+      "seed": "golden/range-single",
+      "family": "range_bound",
+      "windowSize": 1,
+      "revealSize": 0,
+      "scenarioSpecVersion": "1.0",
+      "sha256": "9d889ca17be38b08aa3a4a28ce54c0f677a27a58d12e577f968c96655574b34e"
+    }
+  ]
+}
