@@ -27,13 +27,19 @@ streak updated.
 ### Verifying it
 
 ```sh
-npm run verify         # typecheck, 156 unit/integration tests, regenerate every pack chart
+npm run verify         # typecheck, 172 unit/integration tests, regenerate every pack chart
 npm run test:browser   # full loop in a real browser + axe on every screen
 npm run test:play-all  # play every starter exercise through the UI, checking each reveal
 npm run shots          # phone-sized screenshots of each screen
 ```
 
-`npm run test:browser` and `npm run test:play-all` need `npm run dev` running.
+`npm run test:browser` and `npm run test:play-all` need `npm run dev` running - or a
+staging origin, via `CLIENT_URL` (see below).
+
+Ten of those 172 are the Postgres audit-store suite, which skips itself when
+`TEST_DATABASE_URL` is unset - right for a contributor without a database, and why CI
+fails the build if it sees the skip notice. Against a database it is 172 passed; without
+one, 162 passed and 10 skipped.
 
 ### Deploying it
 
@@ -69,6 +75,43 @@ Two deployment facts worth knowing before the first attempt:
   endpoints, so rather than quietly adding a third, use
   `GET /api/exercises/ex-001/window` as the readiness check - it exercises content
   loading and chart generation, which is a better check than a bare `200 OK` anyway.
+
+### Staging it
+
+```sh
+npm ci
+DATABASE_URL=postgres://... npm run staging     # http://127.0.0.1:4173
+```
+
+One command, the deployment shape: it builds the client, starts the server, and serves
+both on one origin - `client/dist` static, `/api` proxied to the server - which is the
+default deployment described above. It existed before only as something assembled by hand
+for one check, and a shape nobody can re-create is not something you can point a reviewer
+at.
+
+Three things it does the way a deployment does them, rather than the way development does:
+
+- **It runs on Postgres.** `DATABASE_URL` is required, because the JSONL store is
+  single-process by construction and staging on it would exercise a different audit store
+  than the one that records real answers. `npm run staging -- --jsonl` says out loud that
+  you are accepting the file-backed store for a screens-only pass.
+- **Readiness is `GET /api/exercises/ex-001/window`**, the same check a deployment uses,
+  for the same reason: there is no health endpoint on purpose.
+- **The bundle is the built one**, not a dev server, so the service worker is real. On
+  `127.0.0.1` - a secure context - it registers, which makes the PWA shell testable here.
+  It will not over plain http on any other host, and that is the one thing staging cannot
+  tell you about production.
+
+The browser suites take a `CLIENT_URL`, so the same evidence can be gathered against
+staging instead of the dev server:
+
+```sh
+CLIENT_URL=http://127.0.0.1:4173 npm run test:browser
+CLIENT_URL=http://127.0.0.1:4173 npm run test:play-all
+CLIENT_URL=http://127.0.0.1:4173 npm run shots
+```
+
+`STAGING_PORT` moves the origin; `PORT` moves the server behind it.
 
 ### The audit store
 
