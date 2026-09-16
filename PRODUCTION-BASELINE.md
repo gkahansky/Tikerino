@@ -97,7 +97,12 @@ worst available outcome, and it is silent.
   - It is **re-runnable**, and it reads one record back field by field to prove the round
     trip instead of treating "no error" as success.
 
-  Verified locally against a database seeded to production's shape (`audit_records` with
+  `tests/audit.migration.test.ts` guards it in CI - 19 tests, 17 of them on the mapping rule
+  itself (every required field refused when missing, a chartless record normalised to a null
+  series id, a JSONB column arriving as a string) and 2 inserting through a real Postgres for
+  idempotency and a field-for-field round trip.
+
+  Also verified by hand against a database seeded to production's shape (`audit_records` with
   `id BIGSERIAL`, the three key columns and `record JSONB`), never against production: the
   backup gate refuses; `--dry-run` reports 12 mappable records and writes nothing; the real
   run inserts 12 and verifies the round trip; a second run inserts 0 and skips 12; a record
@@ -124,11 +129,13 @@ any of this is unverified - §5.
 
 | Count | What it is | Status |
 |---|---|---|
-| **172** | `main` today, with `TEST_DATABASE_URL` set. 8 files: content 28, server.integrity 34, engine.replay 42, engine.rules 20, state 18, grading 14, audit.postgres 10, api.base-url 6 | **Verified** on a clean clone against Postgres 16 |
-| 162 | `main` with no database: the same run with the 10 Postgres tests skipping themselves | Verified |
-| 179 | Production, per the architecture record, "17 new narration/preference tests" | Not verifiable from here |
+| **191** | `main` at this PR's head, with `TEST_DATABASE_URL` set. 9 files: engine.replay 42, server.integrity 34, content 28, engine.rules 20, audit.migration 19, state 18, grading 14, audit.postgres 10, api.base-url 6 | **Verified** against Postgres 16 |
+| 179 | `main` at this PR's head with no database: the same run with the 12 database-backed tests skipping themselves | Verified |
+| 172 | `main` as this PR found it, with a database (162 without) - before the 19 migration tests this PR adds | Verified on a clean clone |
+| 179 | Production, per the architecture record, "17 new narration/preference tests". Coincidentally equal to `main`'s no-database count at this head; the two are unrelated numbers | Not verifiable from here |
 
-`162 + 17 = 179` exactly, which implies production's tree does **not** contain `main`'s 10
+`162 + 17 = 179` exactly - 162 being `main`'s no-database count at the time that record was
+written - which implies production's tree does **not** contain `main`'s 10
 Postgres audit-store tests - the store that records every live answer would then have no
 automated coverage in the tree that is actually deployed. That is arithmetic on someone
 else's numbers, not a measurement, and it should be confirmed against the real tree before

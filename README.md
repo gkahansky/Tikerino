@@ -27,7 +27,7 @@ streak updated.
 ### Verifying it
 
 ```sh
-npm run verify         # typecheck, 172 unit/integration tests, regenerate every pack chart
+npm run verify         # typecheck, 191 unit/integration tests, regenerate every pack chart
 npm run test:browser   # full loop in a real browser + axe on every screen
 npm run test:play-all  # play every starter exercise through the UI, checking each reveal
 npm run test:offline   # answer with the network cut, then restore it (needs a running app)
@@ -37,10 +37,11 @@ npm run shots          # phone-sized screenshots of each screen
 `npm run test:browser` and `npm run test:play-all` need `npm run dev` running - or a
 staging origin, via `CLIENT_URL` (see below).
 
-Ten of those 172 are the Postgres audit-store suite, which skips itself when
-`TEST_DATABASE_URL` is unset - right for a contributor without a database, and why CI
-fails the build if it sees the skip notice. Against a database it is 172 passed; without
-one, 162 passed and 10 skipped.
+Twelve of those 191 need a database - the Postgres audit-store suite and the two
+migration tests that insert through it - and skip themselves when `TEST_DATABASE_URL` is
+unset. That is right for a contributor without a database, and it is why CI fails the build
+if it sees the skip notice: a lost service container would otherwise look exactly like a
+pass. Against a database it is 191 passed; without one, 179 passed and 12 skipped.
 
 ### Deploying it
 
