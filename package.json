@@ -28,6 +28,7 @@
     "icons": "node scripts/make-icons.mjs",
     "test:browser": "node tests/a11y/full-loop.mjs",
     "test:play-all": "tsx tests/a11y/play-all.mjs",
+    "test:offline": "node tests/a11y/offline-recovery.mjs",
     "shots": "node tests/a11y/shots.mjs"
   },
   "devDependencies": {

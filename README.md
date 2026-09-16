@@ -30,6 +30,7 @@ streak updated.
 npm run verify         # typecheck, 172 unit/integration tests, regenerate every pack chart
 npm run test:browser   # full loop in a real browser + axe on every screen
 npm run test:play-all  # play every starter exercise through the UI, checking each reveal
+npm run test:offline   # answer with the network cut, then restore it (needs a staging origin)
 npm run shots          # phone-sized screenshots of each screen
 ```
 
@@ -214,10 +215,22 @@ grades, scores, appends one JSONL audit record, and returns grading + XP + revea
 disclaimer in one response. The client shows the reveal only after that response arrives.
 
 **Offline answers lock.** With no connection the answer is stored locally exactly as given
-and the reveal is deferred; when the connection returns the queue is flushed and the reveal
-is shown. Retries are idempotent on `(subjectId, exerciseId, assignmentSnapshotAt)`, so a
-resent answer never double-counts — the recorded result is replayed, even if the retry
-carries a different answer.
+and the reveal is deferred; when the connection returns the queue is flushed. Retries are
+idempotent on `(subjectId, exerciseId, assignmentSnapshotAt)`, so a resent answer never
+double-counts — the recorded result is replayed, even if the retry carries a different
+answer. Verified against a staging origin on Postgres, including across a server restart:
+the boot log reports the existing answers, a replayed answer adds no row, and a replay
+carrying a *different* answer returns the originally recorded result.
+
+**Known gap, and it is a real one:** the flush lands but the *reveal does not follow it*.
+`flushPending` grades the queued answer and credits XP and the streak, and `ExerciseScreen`
+stays in its `offline-locked` phase - so the learner is left looking at "Grading and the
+reveal happen when you reconnect" while the XP pill above it has already moved. They never
+see the reveal for that answer; they have to navigate away. `npm run test:offline`
+reproduces it against a staging origin (six checks pass, that one fails) and writes
+`screenshots/viewport/offline-recovered.png` as the evidence. The screen is inside the
+walkthrough rework that exists only in production, so the fix belongs with that baseline
+rather than ahead of it.
 
 ---
 
