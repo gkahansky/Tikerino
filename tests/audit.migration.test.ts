@@ -89,20 +89,41 @@ describe('the production record mapping', () => {
   });
 });
 
+/**
+ * Its own schema, not the public one.
+ *
+ * tests/audit.postgres.test.ts TRUNCATEs audit_answers between its own tests,
+ * and vitest runs test files in parallel - so two files sharing one table wipe
+ * each other's rows, and the counts each one asserts become whatever the other
+ * file happened to be doing at that moment. It passes locally and fails in CI,
+ * which is the worst version of that bug. A schema of its own costs one CREATE
+ * and makes the isolation structural rather than lucky.
+ */
+const TEST_SCHEMA = 'tikerino_migration_test';
+
 describeIfPg('migrating production rows into audit_answers', () => {
-  const pool = new pg.Pool({ connectionString: DATABASE_URL });
+  const admin = new pg.Pool({ connectionString: DATABASE_URL });
+  // search_path is per connection, so it goes on the pool: every connection it
+  // hands out resolves audit_answers to this schema's copy.
+  const pool = new pg.Pool({
+    connectionString: DATABASE_URL,
+    options: `-c search_path=${TEST_SCHEMA}`,
+  });
   const store = new PostgresAuditStore(pool);
 
   beforeAll(async () => {
+    await admin.query(`CREATE SCHEMA IF NOT EXISTS ${TEST_SCHEMA}`);
     await store.migrate();
   });
 
   beforeEach(async () => {
-    await pool.query('DELETE FROM audit_answers');
+    await pool.query('TRUNCATE audit_answers');
   });
 
   afterAll(async () => {
     await store.close();
+    await admin.query(`DROP SCHEMA IF EXISTS ${TEST_SCHEMA} CASCADE`);
+    await admin.end();
   });
 
   it('inserts every mapped record, and a second run inserts none of them', async () => {
