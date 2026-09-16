@@ -79,14 +79,31 @@ worst available outcome, and it is silent.
 
 **Do not deploy `main` onto the production database until one of these is decided.**
 
-- *Option A - carry the data across (recommended).* Write a forward migration that reads
-  `audit_records` and inserts into `audit_answers`, unpacking `record` JSONB into the typed
-  columns, through the same `ON CONFLICT DO NOTHING` path the server uses, so it is
-  re-runnable and resumable. `scripts/migrate-audit-to-postgres.mjs` is the working model -
-  it migrates JSONL into `audit_answers` and reads one record back field by field to prove
-  the round trip rather than treating "no error" as success. It cannot be reused as-is: its
-  source is a file, not a table. Rollback is clean while the old table is untouched: point
-  the previous build back at `audit_records`, which still holds every row.
+- *Option A - carry the data across (recommended, and now written).*
+  **`scripts/migrate-audit-records-to-answers.mjs`** reads `audit_records` and inserts into
+  `audit_answers`, unpacking `record` JSONB into the typed columns through the same
+  `ON CONFLICT DO NOTHING` path the server uses. It has not been run against production and
+  must not be until Guy picks an option.
+
+  - It **only reads** the source: `SELECT` on `audit_records`, no `DROP`, `ALTER`, `DELETE`
+    or rename. Rollback is therefore redeploying the previous build against rows that never
+    moved.
+  - It **refuses to write without a backup on the record** - the operator states the backup
+    they took and it is echoed into the run output, so the run and the backup are recorded
+    together. It prints the `pg_dump` command and asks for a restore-verified dump.
+  - `--dry-run` maps every row and writes nothing.
+  - It **stops** rather than quietly copying a record missing audit identity - a record that
+    cannot be replayed is not one to migrate silently.
+  - It is **re-runnable**, and it reads one record back field by field to prove the round
+    trip instead of treating "no error" as success.
+
+  Verified locally against a database seeded to production's shape (`audit_records` with
+  `id BIGSERIAL`, the three key columns and `record JSONB`), never against production: the
+  backup gate refuses; `--dry-run` reports 12 mappable records and writes nothing; the real
+  run inserts 12 and verifies the round trip; a second run inserts 0 and skips 12; a record
+  missing identity stops the run with nothing written; chartless exercises carry
+  `synthetic_series_id` as NULL; and `audit_records` still holds all its original rows
+  afterwards.
 - *Option B - keep production's schema.* Replace `main`'s `audit_answers` with production's
   `audit_records` shape as part of recovering commit 1, and drop the flattened columns.
   Cheaper operationally, and it discards the typed columns and the 10 tests that cover them.
@@ -129,8 +146,17 @@ The production-only code could not be recovered in this environment. Precisely:
   connect (the proxy answers 403 to CONNECT). So the deployed bundle could not be fetched
   and read either - which would otherwise have been a partial recovery route, since the
   client is built with `sourcemap: true`.
-- **No patch.** The architecture record states the two commits exist "as a patch held by
-  Instinct". Nothing in this repository or in Drive contains it.
+- **No patch, after an exhaustive search.** The architecture record states the two commits
+  exist "as a patch held by Instinct". Searched and not found in: this repository's full
+  history (every file ever tracked); GitHub branches, deployments and releases; the Drive
+  Tikerino folder and its `Source/` and `Previews/` subfolders; Drive titles matching
+  patch/diff/narration/walkthrough/deploy; a Drive full-text search for the identifiers the
+  record names (`useNarration`, `lessonMode`, `build-audio-sprite`, `walkthrough.mp3`),
+  which returns only the architecture document itself; and the mailbox - every Tikerino and
+  Railway thread, every message with an attachment in the period, and all correspondence
+  with the Instinct address. The only Tikerino hosting mail predates the deploy (12 Sep
+  14:35 and 17:47 IDT), describes `main` as it was, and carries no code. The Railway
+  notification mail in the mailbox is for other projects entirely.
 - **No iPhone.** Real iPhone/Safari verification is not possible from this environment at
   all; the iOS audio-sprite fix in §2.4 is precisely the change that cannot be verified
   anywhere else, since Chromium was explicitly unaffected by the bug it fixes.
@@ -146,8 +172,10 @@ Against `npm run staging` - the built bundle on one origin with Postgres behind 
   with post-T candles and the animation's left-to-right layout guard, profile counters.
 - Axe: no critical or serious violations on any screen.
 - All 16 exercises played, graded and revealed through the UI.
-- Offline capture and recovery: answer with the network cut, no grade shown, queue flushed
-  on reconnect - and the reveal gap recorded in the README.
+- Offline capture and recovery, all seven checks: answer with the network cut, no grade
+  shown while offline, the lock explained to the learner, the queue flushed on reconnect,
+  **the deferred reveal shown**, and the answer credited once. The reveal was the defect
+  found in the first pass; it is fixed in this PR and the test now runs in CI.
 - Postgres persistence across a restart: `2 answers already recorded` in the boot log, a
   replayed answer added no row, and a replay carrying a different answer returned the
   originally recorded result.

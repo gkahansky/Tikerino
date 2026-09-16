@@ -137,6 +137,16 @@ jobs:
       - name: Play every starter exercise through the UI
         run: npm run test:play-all
 
+      - name: Offline capture and recovery
+        # The half of the offline contract no unit test can reach: answer with
+        # the network cut, and get the grade when it returns. packages/state
+        # covers the queue and the server suite covers idempotent replay, but
+        # the reveal that the flush owes the learner only exists in the browser
+        # - and it was silently missing until this ran.
+        run: npm run test:offline
+        env:
+          CLIENT_URL: http://127.0.0.1:5173
+
       - name: Dev server log
         if: failure()
         run: cat /tmp/dev.log

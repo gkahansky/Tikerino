@@ -30,7 +30,7 @@ streak updated.
 npm run verify         # typecheck, 172 unit/integration tests, regenerate every pack chart
 npm run test:browser   # full loop in a real browser + axe on every screen
 npm run test:play-all  # play every starter exercise through the UI, checking each reveal
-npm run test:offline   # answer with the network cut, then restore it (needs a staging origin)
+npm run test:offline   # answer with the network cut, then restore it (needs a running app)
 npm run shots          # phone-sized screenshots of each screen
 ```
 
@@ -141,6 +141,22 @@ To carry an existing JSONL log across:
 DATABASE_URL=postgres://... node scripts/migrate-audit-to-postgres.mjs
 ```
 
+To carry across a database whose answers live in production's `audit_records` table - one
+row per answer with the identity in a `record` JSONB column, rather than this repository's
+flattened `audit_answers`:
+
+```sh
+DATABASE_URL=postgres://... npx tsx scripts/migrate-audit-records-to-answers.mjs --dry-run
+DATABASE_URL=postgres://... npx tsx scripts/migrate-audit-records-to-answers.mjs \
+  --backup="pg_dump custom, <where>, restore-verified <when>"
+```
+
+It only ever reads the source table, so the rollback is to redeploy the previous build
+against rows that never moved. It refuses to write until the operator states the backup
+they took, stops rather than copying a record missing audit identity, and is re-runnable.
+See `PRODUCTION-BASELINE.md` for why the two schemas differ and what a deploy does if this
+is skipped.
+
 It is safe to re-run: inserts go through the same `ON CONFLICT DO NOTHING` path the
 server uses, so a half-finished migration resumes rather than duplicating. It reports
 how many rows it skipped, and reads one record back field-by-field to prove the round
@@ -222,15 +238,14 @@ answer. Verified against a staging origin on Postgres, including across a server
 the boot log reports the existing answers, a replayed answer adds no row, and a replay
 carrying a *different* answer returns the originally recorded result.
 
-**Known gap, and it is a real one:** the flush lands but the *reveal does not follow it*.
-`flushPending` grades the queued answer and credits XP and the streak, and `ExerciseScreen`
-stays in its `offline-locked` phase - so the learner is left looking at "Grading and the
-reveal happen when you reconnect" while the XP pill above it has already moved. They never
-see the reveal for that answer; they have to navigate away. `npm run test:offline`
-reproduces it against a staging origin (six checks pass, that one fails) and writes
-`screenshots/viewport/offline-recovered.png` as the evidence. The screen is inside the
-walkthrough rework that exists only in production, so the fix belongs with that baseline
-rather than ahead of it.
+The reveal half of that was not true when it was first written. The flush landed - XP and
+the streak moved - and `ExerciseScreen` stayed in its `offline-locked` phase, so the learner
+read "Grading and the reveal happen when you reconnect" underneath a pill that had already
+moved to 12 XP, and never saw the reveal at all. `flushPending` now leaves the graded
+response where the locked screen can find it, and the screen shows the reveal it was owed.
+`npm run test:offline` drives exactly that in a browser - answer with the network cut,
+restore it, watch for the verdict - and runs in CI on every pull request, so it cannot
+quietly come back.
 
 ---
 

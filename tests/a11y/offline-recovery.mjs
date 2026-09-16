@@ -94,22 +94,28 @@ try {
   const xpBefore = await page.getByLabel(/Your progress/).innerText();
 
   await context.setOffline(false);
-  await page.waitForTimeout(5000);
 
-  const xpAfter = await page.getByLabel(/Your progress/).innerText();
+  // The reveal screen has no progress pill, so its heading is the signal that
+  // the deferred reveal arrived - not a change in the pill.
+  const verdict = page.getByRole('heading', { name: /Correct|Not this time/ });
+  await verdict.waitFor({ timeout: 20000 }).catch(() => {});
   check(
-    'the queue flushes when the connection returns',
-    xpBefore !== xpAfter,
-    `progress pill ${xpBefore.replace(/\n/g, ' ')} -> ${xpAfter.replace(/\n/g, ' ')}`,
-  );
-
-  body = await page.locator('body').innerText();
-  check(
-    'the deferred reveal is shown once the answer is graded',
-    /Correct|Not this time/.test(body),
-    'README, "The integrity contract": "when the connection returns the queue is flushed and the reveal is shown"',
+    'the deferred reveal arrives once the connection returns',
+    await verdict.count() > 0,
+    'README: "the reveal is shown" - the flush must reach the locked screen, not just the store',
   );
   await page.screenshot({ path: `${shots}/offline-recovered.png` });
+
+  // ...and the answer it was holding actually counted.
+  const back = page.getByRole('button', { name: /Next question|Back to the path|Back to the lesson/ });
+  if (await back.count() > 0) await back.first().click();
+  await page.getByRole('heading', { name: 'Your path' }).waitFor({ timeout: 20000 }).catch(() => {});
+  const xpAfter = await page.getByLabel(/Your progress/).innerText().catch(() => '');
+  check(
+    'the answer captured offline is credited once the queue flushes',
+    xpAfter !== '' && xpAfter !== xpBefore,
+    `progress pill ${xpBefore.replace(/\n/g, ' ')} -> ${xpAfter.replace(/\n/g, ' ') || '(not found)'}`,
+  );
 } catch (error) {
   check('the offline run completes', false, error.message);
 } finally {
