@@ -27,13 +27,21 @@ streak updated.
 ### Verifying it
 
 ```sh
-npm run verify         # typecheck, 156 unit/integration tests, regenerate every pack chart
+npm run verify         # typecheck, 191 unit/integration tests, regenerate every pack chart
 npm run test:browser   # full loop in a real browser + axe on every screen
 npm run test:play-all  # play every starter exercise through the UI, checking each reveal
+npm run test:offline   # answer with the network cut, then restore it (needs a running app)
 npm run shots          # phone-sized screenshots of each screen
 ```
 
-`npm run test:browser` and `npm run test:play-all` need `npm run dev` running.
+`npm run test:browser` and `npm run test:play-all` need `npm run dev` running - or a
+staging origin, via `CLIENT_URL` (see below).
+
+Twelve of those 191 need a database - the Postgres audit-store suite and the two
+migration tests that insert through it - and skip themselves when `TEST_DATABASE_URL` is
+unset. That is right for a contributor without a database, and it is why CI fails the build
+if it sees the skip notice: a lost service container would otherwise look exactly like a
+pass. Against a database it is 191 passed; without one, 179 passed and 12 skipped.
 
 ### Deploying it
 
@@ -70,6 +78,43 @@ Two deployment facts worth knowing before the first attempt:
   `GET /api/exercises/ex-001/window` as the readiness check - it exercises content
   loading and chart generation, which is a better check than a bare `200 OK` anyway.
 
+### Staging it
+
+```sh
+npm ci
+DATABASE_URL=postgres://... npm run staging     # http://127.0.0.1:4173
+```
+
+One command, the deployment shape: it builds the client, starts the server, and serves
+both on one origin - `client/dist` static, `/api` proxied to the server - which is the
+default deployment described above. It existed before only as something assembled by hand
+for one check, and a shape nobody can re-create is not something you can point a reviewer
+at.
+
+Three things it does the way a deployment does them, rather than the way development does:
+
+- **It runs on Postgres.** `DATABASE_URL` is required, because the JSONL store is
+  single-process by construction and staging on it would exercise a different audit store
+  than the one that records real answers. `npm run staging -- --jsonl` says out loud that
+  you are accepting the file-backed store for a screens-only pass.
+- **Readiness is `GET /api/exercises/ex-001/window`**, the same check a deployment uses,
+  for the same reason: there is no health endpoint on purpose.
+- **The bundle is the built one**, not a dev server, so the service worker is real. On
+  `127.0.0.1` - a secure context - it registers, which makes the PWA shell testable here.
+  It will not over plain http on any other host, and that is the one thing staging cannot
+  tell you about production.
+
+The browser suites take a `CLIENT_URL`, so the same evidence can be gathered against
+staging instead of the dev server:
+
+```sh
+CLIENT_URL=http://127.0.0.1:4173 npm run test:browser
+CLIENT_URL=http://127.0.0.1:4173 npm run test:play-all
+CLIENT_URL=http://127.0.0.1:4173 npm run shots
+```
+
+`STAGING_PORT` moves the origin; `PORT` moves the server behind it.
+
 ### The audit store
 
 Every graded answer is recorded with the full audit identity of its chart
@@ -96,6 +141,22 @@ To carry an existing JSONL log across:
 ```sh
 DATABASE_URL=postgres://... node scripts/migrate-audit-to-postgres.mjs
 ```
+
+To carry across a database whose answers live in production's `audit_records` table - one
+row per answer with the identity in a `record` JSONB column, rather than this repository's
+flattened `audit_answers`:
+
+```sh
+DATABASE_URL=postgres://... npx tsx scripts/migrate-audit-records-to-answers.mjs --dry-run
+DATABASE_URL=postgres://... npx tsx scripts/migrate-audit-records-to-answers.mjs \
+  --backup="pg_dump custom, <where>, restore-verified <when>"
+```
+
+It only ever reads the source table, so the rollback is to redeploy the previous build
+against rows that never moved. It refuses to write until the operator states the backup
+they took, stops rather than copying a record missing audit identity, and is re-runnable.
+See `PRODUCTION-BASELINE.md` for why the two schemas differ and what a deploy does if this
+is skipped.
 
 It is safe to re-run: inserts go through the same `ON CONFLICT DO NOTHING` path the
 server uses, so a half-finished migration resumes rather than duplicating. It reports
@@ -171,10 +232,21 @@ grades, scores, appends one JSONL audit record, and returns grading + XP + revea
 disclaimer in one response. The client shows the reveal only after that response arrives.
 
 **Offline answers lock.** With no connection the answer is stored locally exactly as given
-and the reveal is deferred; when the connection returns the queue is flushed and the reveal
-is shown. Retries are idempotent on `(subjectId, exerciseId, assignmentSnapshotAt)`, so a
-resent answer never double-counts — the recorded result is replayed, even if the retry
-carries a different answer.
+and the reveal is deferred; when the connection returns the queue is flushed. Retries are
+idempotent on `(subjectId, exerciseId, assignmentSnapshotAt)`, so a resent answer never
+double-counts — the recorded result is replayed, even if the retry carries a different
+answer. Verified against a staging origin on Postgres, including across a server restart:
+the boot log reports the existing answers, a replayed answer adds no row, and a replay
+carrying a *different* answer returns the originally recorded result.
+
+The reveal half of that was not true when it was first written. The flush landed - XP and
+the streak moved - and `ExerciseScreen` stayed in its `offline-locked` phase, so the learner
+read "Grading and the reveal happen when you reconnect" underneath a pill that had already
+moved to 12 XP, and never saw the reveal at all. `flushPending` now leaves the graded
+response where the locked screen can find it, and the screen shows the reveal it was owed.
+`npm run test:offline` drives exactly that in a browser - answer with the network cut,
+restore it, watch for the verdict - and runs in CI on every pull request, so it cannot
+quietly come back.
 
 ---
 

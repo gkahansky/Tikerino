@@ -15,7 +15,7 @@ import {
   type StorageAdapter,
 } from '@tikerino/state';
 
-import { submitAnswer, OfflineError } from './api';
+import { submitAnswer, OfflineError, type AnswerResponse } from './api';
 import { getLesson, orderedLessonIds } from './content';
 
 const browserStorage: StorageAdapter = {
@@ -42,10 +42,18 @@ interface AppStateValue {
   progress: ProgressState;
   displayStreak: number;
   pendingCount: number;
+  /**
+   * Grading results for answers that were captured offline and have since been
+   * sent. The exercise screen is sitting on a locked card with no way to know
+   * its answer came back, so the flush leaves the result here for it to find.
+   * Keyed by exercise, because that is what the screen knows about itself.
+   */
+  resolvedAnswers: Record<string, AnswerResponse>;
   completeOnboarding: () => void;
   applyGradedAnswer: (input: GradedAnswerInput) => void;
   queueOffline: (pending: PendingAnswer) => void;
   flushPending: () => Promise<void>;
+  clearResolvedAnswer: (exerciseId: string) => void;
   reset: () => void;
 }
 
@@ -56,6 +64,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
   const [progress, setProgress] = useState<ProgressState>(() =>
     loadProgress(browserStorage, subjectId),
   );
+  // Deliberately not persisted: a reveal is worth showing to the learner who is
+  // still looking at the screen, not worth restoring days later on another device.
+  const [resolvedAnswers, setResolvedAnswers] = useState<Record<string, AnswerResponse>>({});
 
   useEffect(() => {
     saveProgress(browserStorage, progress);
@@ -105,6 +116,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
             hintUsed: pending.hintUsed,
           });
         }
+        // Leave the result where the locked screen can find it. Without this the
+        // flush is invisible: XP and the streak move, and the learner keeps
+        // reading "the reveal happens when you reconnect".
+        setResolvedAnswers((current) => ({ ...current, [pending.exerciseId]: response }));
         setProgress((current) => dropPendingAnswer(current, pending.exerciseId));
       } catch (error) {
         // Still offline: leave the rest queued and try again later.
@@ -123,9 +138,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
     return () => window.removeEventListener('online', onOnline);
   }, [progress.pending.length, flushPending]);
 
+  const clearResolvedAnswer = useCallback((exerciseId: string) => {
+    setResolvedAnswers((current) => {
+      if (!(exerciseId in current)) return current;
+      const { [exerciseId]: _shown, ...rest } = current;
+      return rest;
+    });
+  }, []);
+
   const reset = useCallback(() => {
     clearProgress(browserStorage);
     setProgress(emptyProgress(subjectId));
+    setResolvedAnswers({});
   }, [subjectId]);
 
   const value = useMemo<AppStateValue>(
@@ -134,13 +158,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
       progress,
       displayStreak: streakForDisplay(progress.streak),
       pendingCount: progress.pending.length,
+      resolvedAnswers,
       completeOnboarding,
       applyGradedAnswer,
       queueOffline,
       flushPending,
+      clearResolvedAnswer,
       reset,
     }),
-    [subjectId, progress, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
+    [
+      subjectId,
+      progress,
+      resolvedAnswers,
+      completeOnboarding,
+      applyGradedAnswer,
+      queueOffline,
+      flushPending,
+      clearResolvedAnswer,
+      reset,
+    ],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

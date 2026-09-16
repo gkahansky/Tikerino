@@ -18,6 +18,7 @@ export function ExerciseScreen({
   total,
   onWindowLoaded,
   onGraded,
+  onRevealResolved,
   onBack,
   onOpenProfile,
 }: {
@@ -28,10 +29,17 @@ export function ExerciseScreen({
   /** The reveal screen renders the same window, so it is lifted on load. */
   onWindowLoaded: (response: WindowResponse) => void;
   onGraded: (response: AnswerResponse, hintUsed: boolean) => void;
+  /**
+   * Show the reveal for an answer the offline queue already flushed. Separate
+   * from onGraded because progress has been recorded once already - this only
+   * catches the screen up with what the flush did.
+   */
+  onRevealResolved: (response: AnswerResponse) => void;
   onBack: () => void;
   onOpenProfile: () => void;
 }): JSX.Element {
-  const { progress, displayStreak, subjectId, queueOffline } = useAppState();
+  const { progress, displayStreak, subjectId, queueOffline, resolvedAnswers, clearResolvedAnswer } =
+    useAppState();
   const exercise = getExercise(exerciseId);
 
   const [phase, setPhase] = useState<Phase>('loading');
@@ -76,6 +84,18 @@ export function ExerciseScreen({
     // onWindowLoaded is a stable setState from the parent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exerciseId]);
+
+  /**
+   * The answer given offline has come back graded. Until this existed the flush
+   * landed silently: XP and the streak moved while this screen went on saying
+   * the reveal happens when you reconnect, and the learner never saw it.
+   */
+  const resolved = resolvedAnswers[exerciseId];
+  useEffect(() => {
+    if (phase !== 'offline-locked' || !resolved) return;
+    clearResolvedAnswer(exerciseId);
+    onRevealResolved(resolved);
+  }, [phase, resolved, exerciseId, clearResolvedAnswer, onRevealResolved]);
 
   const descriptions = useMemo(
     () =>
