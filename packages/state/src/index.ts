@@ -52,6 +52,24 @@ export interface StreakState {
   lastActiveDay: string | null;
 }
 
+/**
+ * How a lesson is delivered: the principle card and guided example read as text,
+ * or narrated over a chart that draws itself candle by candle. The exercises are
+ * identical either way - the graded call is the product, and narration is only a
+ * different way into the lesson before it.
+ */
+export type LessonMode = 'text' | 'narrated';
+
+/**
+ * What a learner gets before they have expressed a preference.
+ *
+ * Narrated, per the architecture record (Guy, 12 Sep: "Narration should be
+ * default"). It is deliberately a separate constant from the stored value: an
+ * explicit pick is stored and always wins, so changing this default never
+ * overrides someone who has already chosen.
+ */
+export const DEFAULT_LESSON_MODE: LessonMode = 'narrated';
+
 export interface ProgressState {
   version: 1;
   subjectId: string;
@@ -61,6 +79,16 @@ export interface ProgressState {
   lessons: Record<string, LessonProgress>;
   answers: Record<string, AnswerRecord>;
   pending: PendingAnswer[];
+  /**
+   * The learner's explicit choice, or null if they have never made one.
+   *
+   * Null is not the same as the default value: it is the difference between
+   * "has not chosen" and "chose narrated". Storing it that way is what lets the
+   * default move without silently rewriting anyone's decision, and it is why
+   * progress saved before this field existed resolves to the default rather
+   * than to a choice nobody made.
+   */
+  lessonMode: LessonMode | null;
 }
 
 const STORAGE_KEY = 'tikerino.progress.v1';
@@ -75,7 +103,27 @@ export function emptyProgress(subjectId: string): ProgressState {
     lessons: {},
     answers: {},
     pending: [],
+    lessonMode: null,
   };
+}
+
+/** The mode to deliver a lesson in: the explicit choice if there is one. */
+export function resolveLessonMode(state: ProgressState): LessonMode {
+  return state.lessonMode ?? DEFAULT_LESSON_MODE;
+}
+
+/**
+ * Record an explicit choice. Writing the same mode twice is not a no-op in
+ * meaning: it turns "happens to be on the default" into "chose this", which is
+ * what stops a later change of default from moving them.
+ */
+export function setLessonMode(state: ProgressState, mode: LessonMode): ProgressState {
+  return { ...state, lessonMode: mode };
+}
+
+/** Has the learner ever chosen, as opposed to being carried by the default? */
+export function hasChosenLessonMode(state: ProgressState): boolean {
+  return state.lessonMode !== null;
 }
 
 /** Local calendar day. Streaks are a human, local-timezone idea, not a UTC one. */

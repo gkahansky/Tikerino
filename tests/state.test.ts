@@ -2,14 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import {
   advanceStreak,
+  DEFAULT_LESSON_MODE,
   dropPendingAnswer,
   emptyProgress,
+  hasChosenLessonMode,
   isLessonUnlocked,
   loadProgress,
   queuePendingAnswer,
   recordAnswer,
+  resolveLessonMode,
   saveProgress,
+  setLessonMode,
   streakForDisplay,
+  type ProgressState,
   type StorageAdapter,
 } from '@tikerino/state';
 
@@ -217,5 +222,82 @@ describe('persistence', () => {
     };
     expect(() => loadProgress(throwing, 's1')).not.toThrow();
     expect(() => saveProgress(throwing, emptyProgress('s1'))).not.toThrow();
+  });
+});
+
+describe('the lesson mode preference', () => {
+  const storage = (): StorageAdapter & { store: Map<string, string> } => {
+    const store = new Map<string, string>();
+    return {
+      store,
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => void store.set(k, v),
+      removeItem: (k) => void store.delete(k),
+    };
+  };
+
+  it('resolves to the default before the learner has chosen', () => {
+    const state = emptyProgress('s1');
+    expect(state.lessonMode).toBeNull();
+    expect(resolveLessonMode(state)).toBe(DEFAULT_LESSON_MODE);
+    expect(hasChosenLessonMode(state)).toBe(false);
+  });
+
+  it('resolves to the choice once one is made', () => {
+    const state = setLessonMode(emptyProgress('s1'), 'text');
+    expect(resolveLessonMode(state)).toBe('text');
+    expect(hasChosenLessonMode(state)).toBe(true);
+  });
+
+  it('records choosing the default as a choice, not as an absence', () => {
+    // The distinction the null is for: someone who picks narrated while narrated
+    // is the default must not be moved by a later change of default.
+    const state = setLessonMode(emptyProgress('s1'), DEFAULT_LESSON_MODE);
+    expect(state.lessonMode).toBe(DEFAULT_LESSON_MODE);
+    expect(hasChosenLessonMode(state)).toBe(true);
+  });
+
+  it('switches both ways and keeps the last choice', () => {
+    let state = setLessonMode(emptyProgress('s1'), 'text');
+    state = setLessonMode(state, 'narrated');
+    expect(resolveLessonMode(state)).toBe('narrated');
+    state = setLessonMode(state, 'text');
+    expect(resolveLessonMode(state)).toBe('text');
+  });
+
+  it('survives a save and load round trip', () => {
+    const s = storage();
+    saveProgress(s, setLessonMode(emptyProgress('s1'), 'text'));
+    expect(resolveLessonMode(loadProgress(s, 's1'))).toBe('text');
+  });
+
+  it('carries progress saved before the field existed to the default, not to a choice', () => {
+    // Exactly what a learner upgrading into this build has in storage.
+    const s = storage();
+    const legacy = emptyProgress('s1');
+    delete (legacy as Partial<ProgressState>).lessonMode;
+    s.setItem('tikerino.progress.v1', JSON.stringify(legacy));
+
+    const loaded = loadProgress(s, 's1');
+    expect(loaded.lessonMode).toBeNull();
+    expect(hasChosenLessonMode(loaded)).toBe(false);
+    expect(resolveLessonMode(loaded)).toBe(DEFAULT_LESSON_MODE);
+  });
+
+  it('leaves the rest of progress untouched when the mode changes', () => {
+    const before = recordAnswer(emptyProgress('s1'), {
+      exerciseId: 'ex-001',
+      lessonId: 'lesson-0-meet-the-chart',
+      lessonExerciseIds: ['ex-001'],
+      crownLevelCap: 3,
+      correct: true,
+      xp: 12,
+      hintUsed: false,
+    });
+    const after = setLessonMode(before, 'text');
+    expect(after.totalXp).toBe(before.totalXp);
+    expect(after.answers).toEqual(before.answers);
+    expect(after.lessons).toEqual(before.lessons);
+    expect(after.streak).toEqual(before.streak);
   });
 });
