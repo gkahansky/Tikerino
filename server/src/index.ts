@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import fastifyStatic from '@fastify/static';
 import { buildApp } from './app.js';
 import { createAuditStore } from './store.js';
+import { registerOps } from './ops.js';
 
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '127.0.0.1';
@@ -15,6 +16,7 @@ const { store, description } = await createAuditStore();
 
 
 const app = buildApp({ auditStore: store, logger: true });
+registerOps(app);
 const clientDist = resolve(process.env.CLIENT_DIST ?? resolve(dirname(fileURLToPath(import.meta.url)), '../../client/dist'));
 if (existsSync(resolve(clientDist, 'index.html'))) {
   await app.register(fastifyStatic, { root: clientDist });

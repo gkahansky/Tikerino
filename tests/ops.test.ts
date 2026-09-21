@@ -1,0 +1,11 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import Fastify from 'fastify';
+import { registerOps } from '../server/src/ops.js';
+const old={p:process.env.OPS_PASSWORD,s:process.env.OPS_SESSION_SECRET};
+afterEach(()=>{process.env.OPS_PASSWORD=old.p;process.env.OPS_SESSION_SECRET=old.s});
+function app(){const a=Fastify();registerOps(a);return a}
+describe('private /ops PWA',()=>{
+ it('fails closed when secrets are absent',async()=>{delete process.env.OPS_PASSWORD;delete process.env.OPS_SESSION_SECRET;expect((await app().inject('/ops')).statusCode).toBe(503)});
+ it('never serves the dashboard without owner auth',async()=>{process.env.OPS_PASSWORD='owner-pass';process.env.OPS_SESSION_SECRET='x'.repeat(32);const a=app();expect((await a.inject('/ops')).statusCode).toBe(401);expect((await a.inject('/ops/manifest.webmanifest')).statusCode).toBe(401);expect((await a.inject('/ops/sw.js')).statusCode).toBe(401)});
+ it('creates a hardened session and recovers expired sessions',async()=>{process.env.OPS_PASSWORD='owner-pass';process.env.OPS_SESSION_SECRET='x'.repeat(32);const a=app();expect((await a.inject({method:'POST',url:'/ops/login',payload:{password:'wrong'}})).statusCode).toBe(401);const login=await a.inject({method:'POST',url:'/ops/login',payload:{password:'owner-pass'}});const set=login.headers['set-cookie'] as string;expect(set).toContain('HttpOnly');expect(set).toContain('Secure');expect(set).toContain('SameSite=Strict');const c=set.split(';')[0]!;const page=await a.inject({url:'/ops',headers:{cookie:c}});expect(page.statusCode).toBe(200);expect(page.body).toContain('Offline snapshot');expect((await a.inject({url:'/ops',headers:{cookie:'tikerino_ops=1.invalid'}})).statusCode).toBe(401);expect((await a.inject({url:'/ops/manifest.webmanifest',headers:{cookie:c}})).statusCode).toBe(200);expect((await a.inject({url:'/ops/sw.js',headers:{cookie:c}})).statusCode).toBe(200)});
+});
