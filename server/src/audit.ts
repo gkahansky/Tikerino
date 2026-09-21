@@ -151,6 +151,21 @@ export class JsonlAuditStore implements AuditStore {
  * into a timestamp would let two distinct strings collide on one instant.
  */
 export const AUDIT_SCHEMA = `
+DO $$ BEGIN
+  IF to_regclass('public.audit_records') IS NOT NULL AND to_regclass('public.audit_answers') IS NULL THEN
+    CREATE TABLE audit_answers (
+      id bigserial PRIMARY KEY, subject_id text NOT NULL, exercise_id text NOT NULL,
+      assignment_snapshot_at text NOT NULL, synthetic_series_id text,
+      scenario_spec_version text NOT NULL, generator_version text NOT NULL,
+      curriculum_version text NOT NULL, answer jsonb NOT NULL, hint_used boolean NOT NULL,
+      time_to_answer_ms integer NOT NULL, captured_offline boolean NOT NULL,
+      server_received_at timestamptz NOT NULL, correct boolean NOT NULL, xp_total integer NOT NULL,
+      CONSTRAINT audit_answers_idempotency UNIQUE(subject_id,exercise_id,assignment_snapshot_at)
+    );
+    INSERT INTO audit_answers(subject_id,exercise_id,assignment_snapshot_at,synthetic_series_id,scenario_spec_version,generator_version,curriculum_version,answer,hint_used,time_to_answer_ms,captured_offline,server_received_at,correct,xp_total)
+    SELECT record->>'subjectId',record->>'exerciseId',record->>'assignmentSnapshotAt',record->>'syntheticSeriesId',record->>'scenarioSpecVersion',record->>'generatorVersion',record->>'curriculumVersion',record->'answer',coalesce((record->>'hintUsed')::boolean,false),coalesce((record->>'timeToAnswerMs')::integer,0),coalesce((record->>'capturedOffline')::boolean,false),(record->>'serverReceivedAt')::timestamptz,(record->>'correct')::boolean,(record->>'xpTotal')::integer FROM audit_records ON CONFLICT DO NOTHING;
+  END IF;
+END $$;
 CREATE TABLE IF NOT EXISTS audit_answers (
   id                     bigserial PRIMARY KEY,
   subject_id             text        NOT NULL,

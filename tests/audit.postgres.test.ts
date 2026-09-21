@@ -72,6 +72,19 @@ describeIfPg('PostgresAuditStore', () => {
     await expect(store.migrate()).resolves.toBeUndefined();
   });
 
+
+  it('migrates legacy production audit_records without deleting the source', async () => {
+    await pool.query('DROP TABLE IF EXISTS audit_answers');
+    await pool.query('DROP TABLE IF EXISTS audit_records');
+    await pool.query('CREATE TABLE audit_records(id bigserial PRIMARY KEY, subject_id text NOT NULL, exercise_id text NOT NULL, assignment_snapshot_at text NOT NULL, record jsonb NOT NULL, UNIQUE(subject_id,exercise_id,assignment_snapshot_at))');
+    const legacy = record();
+    await pool.query('INSERT INTO audit_records(subject_id,exercise_id,assignment_snapshot_at,record) VALUES($1,$2,$3,$4)', [legacy.subjectId, legacy.exerciseId, legacy.assignmentSnapshotAt, legacy]);
+    await store.migrate();
+    expect(await store.size()).toBe(1);
+    expect(await store.find(legacy.subjectId,legacy.exerciseId,legacy.assignmentSnapshotAt)).toEqual(legacy);
+    expect((await pool.query('SELECT count(*)::int AS n FROM audit_records')).rows[0]!.n).toBe(1);
+  });
+
   it('round-trips every field of a record', async () => {
     const original = record();
     await store.append(original);
