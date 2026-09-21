@@ -1,7 +1,7 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "buildCommand": "npm ci && npm run build --workspace @tikerino/client"
+    "buildCommand": "npm run build --workspace @tikerino/client"
   },
   "deploy": {
     "startCommand": "npm run start --workspace @tikerino/server",
