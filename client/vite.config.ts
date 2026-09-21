@@ -37,6 +37,9 @@ export default defineConfig({
         // Exercise windows are deliberately NOT cached: candles come from the
         // server, which is the only place that knows where the cut point is.
         navigateFallback: 'index.html',
+        // Never let the learner shell capture the private server-owned /ops route.
+        // This is also the upgrade path for clients that installed an older root SW.
+        navigateFallbackDenylist: [/^\/ops(?:\/|$)/],
         runtimeCaching: [
           {
             // iOS Safari fetches media with Range requests; without the

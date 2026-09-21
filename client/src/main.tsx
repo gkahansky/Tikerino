@@ -5,6 +5,22 @@ import './styles/index.css';
 
 const root = createRoot(document.getElementById('root')!);
 
+// Upgrade bridge: old root-scoped service workers used the learner shell as a
+// navigation fallback for every path, including the later server-owned /ops
+// surface. A client that was already open under that worker can therefore show
+// the learner UI at an /ops URL. Never render that mismatch: ask the root worker
+// to update, then perform one network reload so the server can return owner auth.
+if (location.pathname === '/ops' || location.pathname.startsWith('/ops/')) {
+  void navigator.serviceWorker?.getRegistration('/').then(async (registration) => {
+    await registration?.update().catch(() => undefined);
+    const key = 'tikerino_ops_upgrade_reload';
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1');
+      location.reload();
+    }
+  });
+}
+
 /**
  * The content pack is validated the moment ./content is imported. If it fails,
  * the app refuses to run and says why, rather than rendering a curriculum that
