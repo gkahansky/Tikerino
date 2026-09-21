@@ -6,6 +6,7 @@ import {
   emptyProgress,
   isLessonUnlocked,
   loadProgress,
+  setLessonMode,
   queuePendingAnswer,
   recordAnswer,
   saveProgress,
@@ -217,5 +218,30 @@ describe('persistence', () => {
     };
     expect(() => loadProgress(throwing, 's1')).not.toThrow();
     expect(() => saveProgress(throwing, emptyProgress('s1'))).not.toThrow();
+  });
+});
+
+describe('lesson mode preference', () => {
+  it('defaults to narrated for users who have never picked a mode', () => {
+    expect(emptyProgress('s1').lessonMode).toBe('narrated');
+  });
+
+  it('switches and persists through storage', () => {
+    const storage = memoryStorage();
+    saveProgress(storage, setLessonMode(emptyProgress('s1'), 'narrated'));
+    expect(loadProgress(storage, 's1').lessonMode).toBe('narrated');
+  });
+
+  it('backfills narrated for progress stored before the preference existed', () => {
+    const storage = memoryStorage();
+    const legacy = emptyProgress('s1') as Record<string, unknown>;
+    delete legacy.lessonMode;
+    storage.setItem('tikerino.progress.v1', JSON.stringify(legacy));
+    expect(loadProgress(storage, 's1').lessonMode).toBe('narrated');
+  });
+
+  it('is a no-op when the mode is unchanged', () => {
+    const state = emptyProgress('s1');
+    expect(setLessonMode(state, 'narrated')).toBe(state);
   });
 });

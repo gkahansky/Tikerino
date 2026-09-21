@@ -6,11 +6,12 @@ import type { AnswerResponse, WindowResponse } from '../api';
 import { useAppState } from '../app-state';
 import { meta } from '../content';
 import { CandleChart } from '../components/CandleChart';
-import { Disclaimer, PrimaryButton, Screen } from '../components/ui';
+import { PrimaryButton, Screen } from '../components/ui';
 
 /**
- * Grading, XP, the animated reveal of what happened after the cut, and the
- * disclaimer - in that order, on one screen.
+ * Grading, XP and the animated reveal of what happened after the cut, in
+ * that order, on one screen. No disclaimer here: Guy ruled 12 Sep that all
+ * legal text lives only in Terms of use and Privacy policy.
  *
  * The reveal candles arrive with the grading response and never before: until the
  * server answered, the client had no way to know them.
@@ -126,9 +127,6 @@ export function RevealScreen({
       <p className="mt-3 text-sm text-ink-2 tabular">
         {progress.totalXp} XP · {displayStreak} day streak · {meta.productName} practice data
       </p>
-
-      {/* Locked requirement: meta.revealDisclaimer, on every reveal. */}
-      <Disclaimer text={result.reveal.disclaimer} />
     </Screen>
   );
 }

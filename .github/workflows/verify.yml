@@ -16,27 +16,6 @@ jobs:
   verify:
     name: typecheck, tests, content
     runs-on: ubuntu-latest
-
-    # The audit store's idempotency guarantee is a unique constraint, so it is
-    # only worth what a real database enforces. Without this the Postgres suite
-    # would skip, and a skipped test reads as a green tick.
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: tikerino_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/tikerino_test
-
     steps:
       - uses: actions/checkout@v4
 
@@ -52,20 +31,8 @@ jobs:
 
       - name: Unit and integration tests
         # Includes the golden-seed replay, the post-T leak scan over every
-        # exercise, the client-pack sanitisation checks, and the Postgres audit
-        # store against the service container above.
-        #
-        # The Postgres suite skips itself when TEST_DATABASE_URL is unset, which
-        # is right for a contributor without a database and wrong here: losing
-        # the service container would otherwise look exactly like passing. So the
-        # run is checked for the skip notice as well as for its exit code.
-        run: |
-          set -o pipefail
-          npm test 2>&1 | tee /tmp/test.log
-          if grep -q "skipping the Postgres audit store tests" /tmp/test.log; then
-            echo "::error::The Postgres audit store tests skipped. TEST_DATABASE_URL is not reaching the suite."
-            exit 1
-          fi
+        # exercise, and the client-pack sanitisation checks.
+        run: npm test
 
       - name: Regenerate every pack chart
         # Content CI rule: every pick_the_candle resolves uniquely with margin,

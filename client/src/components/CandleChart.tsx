@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import type { Candle } from '@tikerino/engine';
 
+import { clampDrawCount } from '../narration';
+
 /**
  * Locked: every touch target is at least 48x48. That sets the column width when
  * the candles ARE targets (pick_the_candle), which means the chart scrolls
@@ -46,6 +48,12 @@ export interface CandleChartProps {
   showVolume?: boolean;
   /** Accessible name for the chart region. */
   label: string;
+  /**
+   * Narrated walkthrough: only the first N candles are on screen, each
+   * animating in as it appears. Layout (width, price scale) always comes from
+   * the full set, so nothing rescales while the chart draws in. Null = all.
+   */
+  drawCount?: number | null;
 }
 
 function useContainerWidth(): [React.RefObject<HTMLDivElement>, number] {
@@ -74,6 +82,7 @@ export function CandleChart(props: CandleChartProps): JSX.Element {
     timeframeLabel,
     syntheticDataLabel,
     highlightIndex = null,
+    drawCount = null,
     selection,
     descriptions,
     showVolume = true,
@@ -81,6 +90,8 @@ export function CandleChart(props: CandleChartProps): JSX.Element {
   } = props;
 
   const shown = [...candles, ...revealCandles];
+  const visible = clampDrawCount(drawCount, shown.length);
+  const drawn = visible === null ? shown : shown.slice(0, visible);
   const [containerRef, containerWidth] = useContainerWidth();
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -212,7 +223,7 @@ export function CandleChart(props: CandleChartProps): JSX.Element {
               );
             })}
 
-            {shown.map((candle, position) => {
+            {drawn.map((candle, position) => {
               const isReveal = position >= candles.length;
               const isHighlighted = highlightIndex === candle.i && !isReveal;
               const isSelected = selection?.selectedIndex === candle.i && !isReveal;
@@ -232,7 +243,7 @@ export function CandleChart(props: CandleChartProps): JSX.Element {
                   transform={`translate(${position * columnWidth}, 0)`}
                 >
                  <g
-                  className={isReveal ? 'reveal-candle' : undefined}
+                  className={isReveal || visible !== null ? 'reveal-candle' : undefined}
                   style={
                     isReveal
                       ? { animationDelay: `${(position - candles.length) * 60}ms` }
@@ -330,10 +341,12 @@ export function CandleChart(props: CandleChartProps): JSX.Element {
         </div>
       </div>
 
+      {/*
+        No generated-data caption chip: Guy ruled 12 Sep that the Terms page
+        carries it and it is not worth chart real estate. The label still
+        lives in the chart's accessible name for screen readers.
+      */}
       <figcaption className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="pill bg-sun-soft text-ink px-3 py-1 text-xs font-semibold">
-          {syntheticDataLabel}
-        </span>
         <span className="text-ink-2 text-xs tabular">{timeframeLabel}</span>
       </figcaption>
 
@@ -347,7 +360,7 @@ export function CandleChart(props: CandleChartProps): JSX.Element {
           Read the candles as text
         </summary>
         <ol className="mt-2 space-y-2 list-none p-0">
-          {shown.map((candle, position) => {
+          {drawn.map((candle, position) => {
             const isReveal = position >= candles.length;
             return (
               <li key={`${candle.i}-${isReveal ? 'r' : 'w'}`} className="text-sm leading-relaxed">

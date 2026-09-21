@@ -1,9 +1,16 @@
 import { useAppState } from '../app-state';
-import { lessons, meta } from '../content';
+import { lessons } from '../content';
+import type { LegalDoc } from './LegalScreen';
 import { Screen, SecondaryButton, TopBar } from '../components/ui';
 
-export function Profile({ onBack }: { onBack: () => void }): JSX.Element {
-  const { progress, displayStreak, pendingCount, reset } = useAppState();
+export function Profile({
+  onBack,
+  onOpenLegal,
+}: {
+  onBack: () => void;
+  onOpenLegal: (doc: LegalDoc) => void;
+}): JSX.Element {
+  const { progress, displayStreak, pendingCount, reset, lessonMode, setLessonMode } = useAppState();
 
   const completed = lessons.filter((l) => progress.lessons[l.lessonId]?.completed).length;
   const crowns = lessons.reduce(
@@ -55,9 +62,28 @@ export function Profile({ onBack }: { onBack: () => void }): JSX.Element {
         </p>
       )}
 
-      <p className="text-ink-2 text-sm mt-6">
-        Progress is stored on this device only - there are no accounts. {meta.syntheticDataLabel}
+      <h2 className="text-lg mt-6 mb-2">Lesson style</h2>
+      <p className="text-ink-2 text-sm mt-0 mb-3">
+        Narrated plays the lesson aloud while the chart animates. Text only is the silent
+        step-through. You can switch mid-lesson too.
       </p>
+      <div className="flex gap-3" role="group" aria-label="Lesson style">
+        <SecondaryButton onClick={() => setLessonMode('text')}>
+          {lessonMode === 'text' ? '\u2713 Text only' : 'Text only'}
+        </SecondaryButton>
+        <SecondaryButton onClick={() => setLessonMode('narrated')}>
+          {lessonMode === 'narrated' ? '\u2713 Narrated' : 'Narrated'}
+        </SecondaryButton>
+      </div>
+
+      <p className="text-ink-2 text-sm mt-6">
+        Progress is stored on this device only - there are no accounts.
+      </p>
+
+      <div className="flex gap-3 mt-4">
+        <SecondaryButton onClick={() => onOpenLegal('terms')}>Terms of use</SecondaryButton>
+        <SecondaryButton onClick={() => onOpenLegal('privacy')}>Privacy</SecondaryButton>
+      </div>
     </Screen>
   );
 }

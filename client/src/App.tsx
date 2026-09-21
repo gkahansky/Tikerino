@@ -4,6 +4,7 @@ import type { AnswerResponse, WindowResponse } from './api';
 import { useAppState } from './app-state';
 import { exercisesForLesson, getLesson } from './content';
 import { ExerciseScreen } from './screens/ExerciseScreen';
+import { LegalScreen, type LegalDoc } from './screens/LegalScreen';
 import { LessonCard } from './screens/LessonCard';
 import { Onboarding } from './screens/Onboarding';
 import { PathHome } from './screens/PathHome';
@@ -13,6 +14,7 @@ import { RevealScreen } from './screens/RevealScreen';
 type Route =
   | { name: 'path' }
   | { name: 'profile' }
+  | { name: 'legal'; doc: LegalDoc }
   | { name: 'lesson'; lessonId: string }
   | { name: 'exercise'; lessonId: string; index: number }
   | {
@@ -55,7 +57,15 @@ export function App(): JSX.Element {
 
   switch (route.name) {
     case 'profile':
-      return <Profile onBack={() => setRoute({ name: 'path' })} />;
+      return (
+        <Profile
+          onBack={() => setRoute({ name: 'path' })}
+          onOpenLegal={(doc) => setRoute({ name: 'legal', doc })}
+        />
+      );
+
+    case 'legal':
+      return <LegalScreen doc={route.doc} onBack={() => setRoute({ name: 'profile' })} />;
 
     case 'lesson':
       return (

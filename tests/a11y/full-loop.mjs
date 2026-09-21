@@ -68,10 +68,38 @@ async function axeScan(page, label) {
 }
 
 const browser = await chromium.launch({ executablePath: resolveChrome() });
+
+// Probe real audio playback: capture every Audio element and the fate of
+// every play() promise, so the narration checks below can tell real chained
+// playback apart from the silent estimated-timing fallback.
+async function instrumentAudio(context) {
+  await context.addInitScript(() => {
+    window.__audioPlays = [];
+    window.__audios = [];
+    const OrigAudio = window.Audio;
+    window.Audio = function instrumentedAudio(...args) {
+      const a = new OrigAudio(...args);
+      window.__audios.push(a);
+      const origPlay = a.play.bind(a);
+      a.play = () =>
+        origPlay()
+          .then((r) => {
+            window.__audioPlays.push('resolved');
+            return r;
+          })
+          .catch((e) => {
+            window.__audioPlays.push(`rejected:${e && e.name}`);
+            throw e;
+          });
+      return a;
+    };
+  });
+}
 const context = await browser.newContext({
   viewport: { width: 390, height: 844 }, // iPhone-ish
   deviceScaleFactor: 2,
 });
+await instrumentAudio(context);
 const page = await context.newPage();
 
 page.on('pageerror', (error) => failures.push(`FAIL page error: ${error.message}`));
@@ -86,21 +114,28 @@ try {
   await page.screenshot({ path: `${shots}/1-onboarding.png` });
   await axeScan(page, 'onboarding');
 
-  let sawSyntheticPromise = false;
-  let sawNoAdvicePromise = false;
+  // The walkthrough explains what the app DOES. The legal text (generated
+  // data, no advice) moved to Terms of use and Privacy - checked in section 10.
+  let sawLearnLoop = false;
+  let sawStreaks = false;
+  let legalInWalkthrough = false;
   for (let step = 0; step < 3; step++) {
     const text = await page.locator('body').innerText();
-    if (text.includes('made up') || text.includes('generates its practice charts')) {
-      sawSyntheticPromise = true;
+    if (text.includes('You call what the chart') && text.includes('XP broken down')) {
+      sawLearnLoop = true;
     }
-    if (text.includes('never tell you what to buy') || text.includes('Nothing here is advice')) {
-      sawNoAdvicePromise = true;
+    if (text.includes('grows your streak') && text.includes('unlock the next')) {
+      sawStreaks = true;
+    }
+    if (text.includes('made up') || text.includes('Nothing here is advice')) {
+      legalInWalkthrough = true;
     }
     const next = page.getByRole('button', { name: /Next|Start learning/ });
     if (await next.isVisible()) await next.click();
   }
-  check('onboarding says the charts are generated', sawSyntheticPromise);
-  check('onboarding says nothing here is advice', sawNoAdvicePromise);
+  check('walkthrough explains the learn loop', sawLearnLoop);
+  check('walkthrough explains streaks and progression', sawStreaks);
+  check('walkthrough carries no legal disclaimers', !legalInWalkthrough);
 
   /* ---------------------------------------------------------------- 2. path home */
   await page.getByRole('heading', { name: 'Your path' }).waitFor();
@@ -119,13 +154,41 @@ try {
   await page.getByRole('heading', { name: 'A chart is a story of trades' }).waitFor();
   check('principle card shows its chart', (await page.locator('svg[role="img"]').count()) > 0);
   check(
-    'chart is labelled as practice data',
-    (await page.getByText('Practice chart - generated data, not a real stock.').count()) > 0,
+    'no practice-data caption chip takes chart real estate (Terms carries it)',
+    (await page.getByText('Practice chart - generated data, not a real stock.').count()) === 0,
   );
   await page.screenshot({ path: `${shots}/3-lesson-card.png`, fullPage: true });
   await axeScan(page, 'lesson card');
 
   /* ---------------------------------------------------------------- 4. guided example */
+  await page.getByRole('button', { name: 'Show me' }).click();
+  // Narrated is the default mode: the walkthrough auto-plays for a user who
+  // never picked a mode.
+  await page.getByText('Narrated walkthrough').waitFor();
+  check('narrated is the default lesson mode (auto-plays)', true);
+  // The whole walkthrough chains off ONE audio sprite: every segment must
+  // advance with REAL playback, no rejections. Per-segment src swaps broke
+  // this on iOS (Guy, 13 Sep: only the intro voiced, the rest silent text).
+  // 8x speed so the test does not sit through the 32s sprite.
+  await page.evaluate(() => {
+    for (const a of window.__audios ?? []) a.playbackRate = 8;
+  });
+  await page.getByRole('button', { name: 'Practise this' }).waitFor({ timeout: 30000 });
+  const plays = await page.evaluate(() => window.__audioPlays ?? []);
+  check(
+    'narration chains all segments with real playback (no rejected plays)',
+    plays.length > 0 && plays.every((p) => p === 'resolved'),
+    JSON.stringify(plays),
+  );
+  check('narrated walkthrough completes to the practise prompt', true);
+  // Restart the narration so the switch below happens mid-intro again.
+  await page.getByRole('button', { name: 'Watch again' }).click();
+  await page.getByRole('button', { name: 'Switch to text only' }).waitFor();
+  // Switching during the intro lands on the equivalent position - the
+  // principle card - then the manual step-through drives as before.
+  await page.getByRole('button', { name: 'Switch to text only' }).click();
+  await page.getByRole('heading', { name: 'A chart is a story of trades' }).waitFor();
+  check('switching to text mid-intro lands on the principle card', true);
   await page.getByRole('button', { name: 'Show me' }).click();
   await page.getByText(/Walkthrough . step 1 of/).waitFor();
   check('guided example steps through', true);
@@ -216,7 +279,7 @@ try {
   await page.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
 
   const revealText = await page.locator('body').innerText();
-  check('reveal shows the disclaimer from meta.revealDisclaimer', revealText.includes('Nothing here is investment advice.'));
+  check('reveal carries no legal text (Terms/Privacy are the only home for it)', !revealText.includes('Nothing here is investment advice.') && !revealText.includes('generated practice data'));
   check('reveal shows an XP breakdown', revealText.includes('Base') && revealText.includes('Total'));
   check('reveal shows what happened next', revealText.includes('What happened next'));
 
@@ -257,6 +320,32 @@ try {
   await page.screenshot({ path: `${shots}/9-profile.png`, fullPage: true });
   await axeScan(page, 'profile');
   check('profile shows XP and streak', (await page.getByText('Total XP').count()) > 0);
+
+  /* ---------------------------------------------------------------- 9b. legal pages */
+  await page.getByRole('button', { name: 'Terms of use' }).click();
+  await page.getByRole('heading', { name: 'Terms of use', exact: true }).waitFor();
+  const termsText = await page.locator('body').innerText();
+  check(
+    'terms of use carries the no-advice disclaimer',
+    termsText.includes('Nothing here is advice') && termsText.includes('investment advice'),
+  );
+  await page.screenshot({ path: `${shots}/10-terms.png`, fullPage: true });
+  await axeScan(page, 'terms of use');
+
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
+  await page.getByRole('button', { name: 'Privacy' }).click();
+  await page.getByRole('heading', { name: 'Privacy policy' }).waitFor();
+  const privacyText = await page.locator('body').innerText();
+  check(
+    'privacy policy carries the generated-data disclaimer',
+    privacyText.includes('Every chart here is made up'),
+  );
+  await page.screenshot({ path: `${shots}/11-privacy.png`, fullPage: true });
+  await axeScan(page, 'privacy policy');
+
+  // Back to the profile, where the next section picks up the flow.
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
+  await page.getByRole('heading', { name: 'Your progress' }).waitFor();
 
   /* ---------------------------------------------------------------- 10. pick-the-candle, by keyboard */
   await page.getByRole('button', { name: /Back|Path/ }).first().click();

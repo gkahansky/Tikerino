@@ -9,6 +9,8 @@ import {
   queuePendingAnswer,
   recordAnswer,
   saveProgress,
+  setLessonMode as setLessonModeState,
+  type LessonMode,
   streakForDisplay,
   type PendingAnswer,
   type ProgressState,
@@ -40,6 +42,8 @@ export interface GradedAnswerInput {
 interface AppStateValue {
   subjectId: string;
   progress: ProgressState;
+  lessonMode: LessonMode;
+  setLessonMode: (mode: LessonMode) => void;
   displayStreak: number;
   pendingCount: number;
   completeOnboarding: () => void;
@@ -60,6 +64,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
   useEffect(() => {
     saveProgress(browserStorage, progress);
   }, [progress]);
+
+  const setLessonMode = useCallback((mode: LessonMode) => {
+    setProgress((current) => setLessonModeState(current, mode));
+  }, []);
 
   const completeOnboarding = useCallback(() => {
     setProgress((current) => ({ ...current, onboardingComplete: true }));
@@ -132,6 +140,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
     () => ({
       subjectId,
       progress,
+      lessonMode: progress.lessonMode,
+      setLessonMode,
       displayStreak: streakForDisplay(progress.streak),
       pendingCount: progress.pending.length,
       completeOnboarding,
@@ -140,7 +150,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
       flushPending,
       reset,
     }),
-    [subjectId, progress, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
+    [subjectId, progress, setLessonMode, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

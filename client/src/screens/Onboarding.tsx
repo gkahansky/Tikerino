@@ -4,9 +4,11 @@ import { meta } from '../content';
 import { PrimaryButton, Screen, SecondaryButton } from '../components/ui';
 
 /**
- * Simple onboarding: three cards, one idea each. No accounts, no permissions,
- * no marketing. The honesty about generated data belongs here, before the first
- * chart, not buried in a settings screen.
+ * Simple onboarding: three cards, one idea each, and every card says what the
+ * app DOES. The legal text (generated data, no advice) lives in Terms of use
+ * and Privacy, linked from the profile - not in the first three screens a new
+ * learner sees. The small "generated practice data" captions inside lessons
+ * and exercises stay.
  */
 const CARDS = [
   {
@@ -15,14 +17,14 @@ const CARDS = [
     emoji: '📈',
   },
   {
-    title: 'Every chart here is made up',
-    body: 'Tikerino generates its practice charts. No real companies, no real prices, no real dates - just the shapes, so you can learn to read them.',
-    emoji: '🎲',
+    title: 'Make the call, see the grade',
+    body: 'Every exercise cuts a practice chart at one moment. You call what the chart is telling you, and the grade lands straight away - XP broken down by base, difficulty and speed.',
+    emoji: '🎯',
   },
   {
-    title: 'Nothing here is advice',
-    body: 'This teaches you to read what a chart already shows. It will never tell you what to buy, and no pattern predicts the future.',
-    emoji: '🧭',
+    title: 'Build your streak, climb the path',
+    body: 'One graded answer a day grows your streak. Finish a lesson to unlock the next one, and the path fills in as you go.',
+    emoji: '🔥',
   },
 ];
 

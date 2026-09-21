@@ -26,7 +26,8 @@
     "icons": "node scripts/make-icons.mjs",
     "test:browser": "node tests/a11y/full-loop.mjs",
     "test:play-all": "tsx tests/a11y/play-all.mjs",
-    "shots": "node tests/a11y/shots.mjs"
+    "shots": "node tests/a11y/shots.mjs",
+    "start": "npm run start --workspace @tikerino/server"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

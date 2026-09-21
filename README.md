@@ -70,41 +70,10 @@ Two deployment facts worth knowing before the first attempt:
   `GET /api/exercises/ex-001/window` as the readiness check - it exercises content
   loading and chart generation, which is a better check than a bare `200 OK` anyway.
 
-### The audit store
-
-Every graded answer is recorded with the full audit identity of its chart
-(`syntheticSeriesId`, `scenarioSpecVersion`, `generatorVersion`, `curriculumVersion`),
-so any answer can be replayed bit-for-bit years later. This is not a log. It is the
-evidence that a grade was correct.
-
-There are two backings, chosen by whether `DATABASE_URL` is set:
-
-| | `DATABASE_URL` unset | `DATABASE_URL` set |
-|---|---|---|
-| Store | JSONL at `server/data/audit.jsonl` | Postgres |
-| Idempotency | in-memory `Map`, rebuilt by reading the file at boot | `UNIQUE (subject_id, exercise_id, assignment_snapshot_at)` |
-| Processes | exactly one, by construction | any number |
-| For | dev, CI, the browser suites | **deployment** |
-
-A deployment sets `DATABASE_URL`. The schema is created on boot and the migration is
-idempotent, so every replica can run it. If `DATABASE_URL` is set and the database is
-unreachable the server refuses to start — it will not fall back to a file nobody is
-going to look at.
-
-To carry an existing JSONL log across:
-
-```sh
-DATABASE_URL=postgres://... node scripts/migrate-audit-to-postgres.mjs
-```
-
-It is safe to re-run: inserts go through the same `ON CONFLICT DO NOTHING` path the
-server uses, so a half-finished migration resumes rather than duplicating. It reports
-how many rows it skipped, and reads one record back field-by-field to prove the round
-trip rather than treating "no error" as success.
-
-**`DATABASE_URL` is a secret** — it carries a password. It is the only one this project
-has; everything else (`PORT`, `HOST`, `VITE_API_BASE_URL`) is plain configuration. See
-`server/.env.example`.
+The audit log is a JSONL file at `server/data/audit.jsonl`. It is the record of every
+answer, it is rebuilt into the idempotency index at boot, and it is on local disk - so
+it needs a mounted volume, or a deliberate decision that losing answer history on
+redeploy is acceptable.
 
 ---
 
@@ -307,17 +276,8 @@ so taking on new debt is a deliberate act rather than a drift.
 ## What is deliberately not here
 
 Day-one scope, locked: no drag or line-placement exercise types, no exam mode, no accounts or
-auth, no multi-service split, no analytics sink, no Hebrew or i18n, no real market data, no
-streak server sync, no marketing pages. The palette is Growth Green only.
-
-**One deliberate departure from that list: Postgres.** The engine+grading spec names it in
-its own out-of-scope line and states "No database day one." Guy overrode that explicitly
-before deployment, on the reasoning that the audit store is the one component where the
-day-one shortcut is expensive to unwind later — it is the evidence behind every grade, and
-the file-backed version is single-process by construction. Switching before any real learner
-data existed cost nothing; switching after would have meant migrating live records. The JSONL
-store is kept as the default when `DATABASE_URL` is unset, so development and CI still need
-no database. Nothing else on the locked list has moved.
+auth, no Postgres, no multi-service split, no analytics sink, no Hebrew or i18n, no real
+market data, no streak server sync, no marketing pages. The palette is Growth Green only.
 
 The bull logo is still one of three candidates awaiting a one-time pick, so the build ships a
 Tikerino text wordmark and a placeholder candle icon (`scripts/make-icons.mjs`).
@@ -331,13 +291,8 @@ GET  /api/exercises/:exerciseId/window
 POST /api/answers
 ```
 
-Still exactly two, which is why there is no `/healthz` — use
-`GET /api/exercises/ex-001/window` as the readiness check. It exercises content loading and
-chart generation, so it is a better check than a bare `200 OK` anyway.
-
-The content pack is a JSON file loaded at boot. Answer records go to the audit store
-described above — Postgres in a deployment, JSONL in development. Each record carries the full
-audit identity — `syntheticSeriesId`, `scenarioSpecVersion`, `generatorVersion`,
-`curriculumVersion` — so any answer can be replayed bit-for-bit years from now, and
-`(subjectId, exerciseId, assignmentSnapshotAt)` is enforced as unique, so a restart or a
-second replica cannot double-count an answer.
+No database: the content pack is a JSON file loaded at boot, and answer records append to
+`server/data/audit.jsonl`. Each record carries the full audit identity — `syntheticSeriesId`,
+`scenarioSpecVersion`, `generatorVersion`, `curriculumVersion` — so any answer can be replayed
+bit-for-bit years from now. The idempotency index is rebuilt from that log at startup, so a
+restart cannot double-count an answer.

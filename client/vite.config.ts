@@ -31,11 +31,20 @@ export default defineConfig({
       workbox: {
         // The lesson shell - app code, fonts, the sanitised content pack - is
         // precached so onboarding, the path and lesson cards work offline.
-        globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+        // Narration audio is precached too: a narrated lesson must play fully
+        // offline, same as the text one.
+        globPatterns: ['**/*.{js,css,html,png,svg,woff2,mp3}'],
         // Exercise windows are deliberately NOT cached: candles come from the
         // server, which is the only place that knows where the cut point is.
         navigateFallback: 'index.html',
         runtimeCaching: [
+          {
+            // iOS Safari fetches media with Range requests; without the
+            // range plugin a precached 200 can fail its media loader.
+            urlPattern: /\/audio\//,
+            handler: 'CacheFirst',
+            options: { cacheName: 'narration-audio', rangeRequests: true },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
             handler: 'StaleWhileRevalidate',

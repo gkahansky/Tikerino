@@ -52,10 +52,14 @@ export interface StreakState {
   lastActiveDay: string | null;
 }
 
+/** How lessons play: silent text step-through, or narrated with animation. */
+export type LessonMode = 'text' | 'narrated';
+
 export interface ProgressState {
   version: 1;
   subjectId: string;
   onboardingComplete: boolean;
+  lessonMode: LessonMode;
   totalXp: number;
   streak: StreakState;
   lessons: Record<string, LessonProgress>;
@@ -70,6 +74,9 @@ export function emptyProgress(subjectId: string): ProgressState {
     version: 1,
     subjectId,
     onboardingComplete: false,
+    // Narrated is the default (Guy, 12 Sep 22:16 IDT): users who have never
+    // picked a mode get narration; an explicit pick always wins.
+    lessonMode: 'narrated',
     totalXp: 0,
     streak: { current: 0, longest: 0, lastActiveDay: null },
     lessons: {},
@@ -188,6 +195,15 @@ export function recordAnswer(state: ProgressState, input: RecordAnswerInput): Pr
       },
     },
   };
+}
+
+/**
+ * The lesson-mode preference. Pure; persisted with the rest of progress.
+ * Switching mid-lesson is the same write - the lesson screen maps the
+ * current position across.
+ */
+export function setLessonMode(state: ProgressState, mode: LessonMode): ProgressState {
+  return state.lessonMode === mode ? state : { ...state, lessonMode: mode };
 }
 
 export function queuePendingAnswer(state: ProgressState, pending: PendingAnswer): ProgressState {

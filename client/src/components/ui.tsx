@@ -114,13 +114,3 @@ export function Callout({ children }: { children: ReactNode }): JSX.Element {
     <p className="card bg-sun-soft border-sun px-4 py-3 text-sm m-0">{children}</p>
   );
 }
-
-/**
- * The reveal disclaimer, straight from meta.revealDisclaimer. Shown on every
- * reveal - a locked requirement, never conditional.
- */
-export function Disclaimer({ text }: { text: string }): JSX.Element {
-  return (
-    <p className="mt-4 text-sm text-ink-2 border-t border-line pt-3 m-0">{text}</p>
-  );
-}
