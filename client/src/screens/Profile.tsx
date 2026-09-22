@@ -35,12 +35,13 @@ export function Profile({
         </SecondaryButton>
       }
     >
-      <TopBar onBack={onBack} backLabel="Path" xp={progress.totalXp} streak={displayStreak} />
+      <TopBar onBack={onBack} backLabel="Path" xp={progress.knowledgeIndexXp} streak={displayStreak} />
 
       <h1 className="text-xl mt-2 mb-4">Your progress</h1>
 
       <div className="grid grid-cols-2 gap-3">
-        <Stat label="Total XP" value={progress.totalXp} />
+        <Stat label="Knowledge Index" value={`${progress.knowledgeIndexXp} XP`} />
+        <Stat label="Exercise XP (legacy)" value={progress.totalXp} />
         <Stat label="Day streak" value={displayStreak} />
         <Stat label="Lessons done" value={`${completed}/${lessons.length}`} />
         <Stat label="Crowns" value={crowns} />

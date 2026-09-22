@@ -125,7 +125,7 @@ export function RevealScreen({
       </section>
 
       <p className="mt-3 text-sm text-ink-2 tabular">
-        {progress.totalXp} XP · {displayStreak} day streak · {meta.productName} practice data
+        Knowledge Index {progress.knowledgeIndexXp} XP · Exercise score +{xp.total} · {displayStreak} day persistence
       </p>
     </Screen>
   );

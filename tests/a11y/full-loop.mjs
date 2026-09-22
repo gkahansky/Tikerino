@@ -138,19 +138,19 @@ try {
   check('walkthrough carries no legal disclaimers', !legalInWalkthrough);
 
   /* ---------------------------------------------------------------- 2. path home */
-  await page.getByRole('heading', { name: 'Your path' }).waitFor();
-  check('path home lists both topics', (await page.getByRole('heading', { level: 2 }).count()) === 2);
+  await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  check('path home lists both topics', (await page.getByRole('button', { name: /Open lesson|unlock/ }).count()) === 9);
   check(
     'later lessons start locked',
-    (await page.getByRole('button', { name: /Finish the lesson before this one/ }).count()) > 0,
+    (await page.getByRole('button', { name: /Finish the previous lesson to unlock/ }).count()) > 0,
   );
   await page.screenshot({ path: `${shots}/2-path-home.png`, fullPage: true });
   await axeScan(page, 'path home');
 
-  const startingXp = await page.getByLabel(/Your progress/).innerText();
+  const startingXp = await page.locator('.journey-index').innerText();
 
   /* ---------------------------------------------------------------- 3. lesson card */
-  await page.getByRole('button', { name: /Meet the chart/ }).click();
+  await page.getByRole('button', { name: /^Meet the chart\./ }).click();
   await page.getByRole('heading', { name: 'A chart is a story of trades' }).waitFor();
   check('principle card shows its chart', (await page.locator('svg[role="img"]').count()) > 0);
   check(
@@ -308,9 +308,9 @@ try {
   }
 
   /* ---------------------------------------------------------------- 8. back to the path */
-  await page.getByRole('heading', { name: 'Your path' }).waitFor();
-  const endingXp = await page.getByLabel(/Your progress/).innerText();
-  check('XP and streak updated on the path', endingXp !== startingXp, `${startingXp} -> ${endingXp}`);
+  await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  const endingXp = await page.locator('.journey-index').innerText();
+  check('lesson completion awards canonical +25 once', endingXp === '25 XP', `${startingXp} -> ${endingXp}`);
   notes.push(`     progress pill: ${startingXp.replace(/\n/g, ' ')} -> ${endingXp.replace(/\n/g, ' ')}`);
   await page.screenshot({ path: `${shots}/8-path-after.png`, fullPage: true });
 
@@ -319,7 +319,7 @@ try {
   await page.getByRole('heading', { name: 'Your progress' }).waitFor();
   await page.screenshot({ path: `${shots}/9-profile.png`, fullPage: true });
   await axeScan(page, 'profile');
-  check('profile shows XP and streak', (await page.getByText('Total XP').count()) > 0);
+  check('profile separates Knowledge Index from legacy exercise XP', (await page.getByText('Knowledge Index').count()) > 0 && (await page.getByText('Exercise XP (legacy)').count()) > 0);
 
   /* ---------------------------------------------------------------- 9b. legal pages */
   await page.getByRole('button', { name: 'Terms of use' }).click();
@@ -349,10 +349,10 @@ try {
 
   /* ---------------------------------------------------------------- 10. pick-the-candle, by keyboard */
   await page.getByRole('button', { name: /Back|Path/ }).first().click();
-  await page.getByRole('heading', { name: 'Your path' }).waitFor();
+  await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
 
   // Lesson 0 is done, so lesson 1 (which holds the first pick-the-candle) is open.
-  await page.getByRole('button', { name: /Price moves and percent change/ }).click();
+  await page.getByRole('button', { name: /^Price moves and percent change\./ }).click();
   await page.getByRole('button', { name: 'Show me' }).click();
   for (let guard = 0; guard < 6; guard++) {
     const practise = page.getByRole('button', { name: 'Practise this' });

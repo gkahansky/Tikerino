@@ -5,6 +5,7 @@ import {
   dropPendingAnswer,
   emptyProgress,
   isLessonUnlocked,
+  LESSON_COMPLETION_XP,
   loadProgress,
   setLessonMode,
   queuePendingAnswer,
@@ -52,6 +53,20 @@ describe('recordAnswer', () => {
     expect(state.lessons['lesson-0']!.completed).toBe(true);
     expect(state.lessons['lesson-0']!.crownLevel).toBe(1);
     expect(state.totalXp).toBe(20);
+    expect(state.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(state.lessonAwards['lesson-0']?.xp).toBe(25);
+  });
+
+  it('awards canonical +25 exactly once when a lesson completes, separate from answer XP', () => {
+    let state = emptyProgress('s1');
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-001', correct: true, xp: 12, hintUsed: false });
+    expect(state.knowledgeIndexXp).toBe(0);
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 12, hintUsed: false });
+    expect(state.knowledgeIndexXp).toBe(25);
+    expect(state.totalXp).toBe(24);
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 12, hintUsed: false });
+    expect(state.knowledgeIndexXp).toBe(25);
+    expect(Object.keys(state.lessonAwards)).toEqual(['lesson-0']);
   });
 
   it('does not credit XP twice for the same exercise', () => {

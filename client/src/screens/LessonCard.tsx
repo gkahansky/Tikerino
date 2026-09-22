@@ -110,7 +110,7 @@ export function LessonCard({
       <TopBar
         onBack={onBack}
         backLabel="Path"
-        xp={progress.totalXp}
+        xp={progress.knowledgeIndexXp}
         streak={displayStreak}
         onProfile={onOpenProfile}
       />

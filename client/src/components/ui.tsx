@@ -96,10 +96,10 @@ export function TopBar({
         type="button"
         onClick={onProfile}
         className="target flex items-center gap-3 px-2"
-        aria-label={`Your progress: ${xp} XP, ${streak} day streak`}
+        aria-label={`Your progress: Knowledge Index ${xp} XP, ${streak} day persistence`}
       >
         <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">
-          {xp} XP
+          Knowledge {xp} XP
         </span>
         <span className="pill bg-brand-soft text-brand-ink px-3 py-1 text-sm font-bold tabular">
           <span aria-hidden="true">&#9670;</span> {streak}

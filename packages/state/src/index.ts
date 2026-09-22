@@ -55,8 +55,15 @@ export interface StreakState {
 /** How lessons play: silent text step-through, or narrated with animation. */
 export type LessonMode = 'text' | 'narrated';
 
+export const PROGRESSION_RULESET_VERSION = 'prog-rules-v1.0' as const;
+export const LESSON_COMPLETION_XP = 25;
+
 export interface ProgressState {
   version: 1;
+  progressionRuleset: typeof PROGRESSION_RULESET_VERSION;
+  /** Canonical semantic-event awards only. Legacy answer XP stays separate. */
+  knowledgeIndexXp: number;
+  lessonAwards: Record<string, { xp: number; awardedAt: string }>;
   subjectId: string;
   onboardingComplete: boolean;
   lessonMode: LessonMode;
@@ -72,6 +79,9 @@ const STORAGE_KEY = 'tikerino.progress.v1';
 export function emptyProgress(subjectId: string): ProgressState {
   return {
     version: 1,
+    progressionRuleset: PROGRESSION_RULESET_VERSION,
+    knowledgeIndexXp: 0,
+    lessonAwards: {},
     subjectId,
     onboardingComplete: false,
     // Narrated is the default (Guy, 12 Sep 22:16 IDT): users who have never
@@ -170,10 +180,17 @@ export function recordAnswer(state: ProgressState, input: RecordAnswerInput): Pr
       : lesson.crownLevel;
 
   const awardedXp = alreadyScored ? 0 : input.xp;
+  const lessonAlreadyAwarded = state.lessonAwards[input.lessonId] !== undefined;
+  const awardLesson = !wasCompleted && nowCompleted && !lessonAlreadyAwarded;
 
   return {
     ...state,
+    // Existing per-answer scoring remains available for audit/backward compatibility.
     totalXp: state.totalXp + awardedXp,
+    knowledgeIndexXp: state.knowledgeIndexXp + (awardLesson ? LESSON_COMPLETION_XP : 0),
+    lessonAwards: awardLesson
+      ? { ...state.lessonAwards, [input.lessonId]: { xp: LESSON_COMPLETION_XP, awardedAt: at.toISOString() } }
+      : state.lessonAwards,
     streak: advanceStreak(state.streak, dayKey(at)),
     lessons: {
       ...state.lessons,
@@ -244,7 +261,13 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
     if (parsed.version !== 1 || typeof parsed.subjectId !== 'string') {
       return emptyProgress(subjectId);
     }
-    return { ...emptyProgress(parsed.subjectId), ...parsed };
+    return {
+      ...emptyProgress(parsed.subjectId),
+      ...parsed,
+      progressionRuleset: PROGRESSION_RULESET_VERSION,
+      knowledgeIndexXp: parsed.knowledgeIndexXp ?? 0,
+      lessonAwards: parsed.lessonAwards ?? {},
+    };
   } catch {
     // Corrupt or unreadable storage must not brick the app; start clean.
     return emptyProgress(subjectId);
