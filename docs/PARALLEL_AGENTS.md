@@ -70,6 +70,17 @@ as part of lane work.
 - If the two children touch the same file by design, they are not parallel
   work. Run them one after the other.
 
+## Secrets and data
+
+- Never put secrets in an agent prompt or context: no .env contents, API keys,
+  tokens, DATABASE_URL, Railway variables or the /ops password. Lanes never
+  read .env files.
+- The Gemini lanes run on Gemini CLI's free tier through Guy's Google account.
+  Google may use that usage to improve its products. The repo is public, so
+  code is fine, but private data and learner data never go into prompts.
+- If an agent needs a secret to finish a task, it stops and reports. It never
+  works around the gap.
+
 ## Release and clean up
 
 After the PR merges:
