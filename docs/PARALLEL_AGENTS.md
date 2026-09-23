@@ -6,10 +6,15 @@ lands its change through its own pull request.
 
 ## Lanes
 
-| Lane   | Worktree path (default)       | Who uses it                          |
-|--------|-------------------------------|--------------------------------------|
-| lane-a | `../Tikerino-lanes/lane-a`    | first agent (Gemini now)             |
-| lane-b | `../Tikerino-lanes/lane-b`    | second agent (Gemini now, Claude from 1 Oct) |
+| Lane   | Worktree path (default)       | Who uses it                                  |
+|--------|-------------------------------|----------------------------------------------|
+| lane-a | `../Tikerino-lanes/lane-a`    | repo worker for now                          |
+| lane-b | `../Tikerino-lanes/lane-b`    | repo worker for now; Claude from 1 Oct       |
+
+A Gemini lane is not running. Gemini CLI no longer works on a personal Google
+account without a paid API key, and Google's replacement (Antigravity CLI) is
+being checked against Guy's plan. Any paid route needs Guy's explicit yes and
+a cap.
 
 Set `LANES_DIR` to put the worktrees somewhere else.
 
@@ -75,9 +80,9 @@ as part of lane work.
 - Never put secrets in an agent prompt or context: no .env contents, API keys,
   tokens, DATABASE_URL, Railway variables or the /ops password. Lanes never
   read .env files.
-- The Gemini lanes run on Gemini CLI's free tier through Guy's Google account.
-  Google may use that usage to improve its products. The repo is public, so
-  code is fine, but private data and learner data never go into prompts.
+- Assume a model provider may use prompts to improve its products. The repo
+  is public, so code is fine, but private data and learner data never go into
+  prompts.
 - If an agent needs a secret to finish a task, it stops and reports. It never
   works around the gap.
 
