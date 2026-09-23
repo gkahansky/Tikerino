@@ -31,14 +31,11 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
         <section className="journey-intro" aria-labelledby="journey-title">
           <p className="journey-kicker">Your learning market</p>
           <h1 id="journey-title">The Living Chart</h1>
-          <p>Complete the live candle to raise your Knowledge Index. Progress never falls.</p>
+          <p>Complete the live candle to raise your Knowledge Index.</p>
         </section>
 
         <div className="journey-plot" aria-label="Lesson candles">
           <div className="journey-grid" aria-hidden="true" />
-          <div className="journey-floor" aria-label="Safe Floor, value not yet defined">
-            <span>Safe Floor</span><small>Locked baseline · formula pending</small>
-          </div>
           <ol className="candle-path">
             {lessons.map((lesson, index) => {
               const state = progress.lessons[lesson.lessonId];

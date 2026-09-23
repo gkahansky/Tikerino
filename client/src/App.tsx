@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import { lessonXpCreditedByAnswer } from '@tikerino/state';
+
 import type { AnswerResponse, WindowResponse } from './api';
 import { useAppState } from './app-state';
 import { exercisesForLesson, getLesson } from './content';
@@ -107,6 +109,7 @@ export function App(): JSX.Element {
           result={route.result}
           window_={route.window}
           isLast={isLast}
+          creditedXp={lessonXpCreditedByAnswer(progress, route.lessonId, exercises[route.index]!.exerciseId)}
           onContinue={() =>
             setRoute(
               isLast

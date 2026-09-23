@@ -6,6 +6,7 @@ import {
   emptyProgress,
   isLessonUnlocked,
   LESSON_COMPLETION_XP,
+  lessonXpCreditedByAnswer,
   loadProgress,
   setLessonMode,
   queuePendingAnswer,
@@ -258,5 +259,105 @@ describe('lesson mode preference', () => {
   it('is a no-op when the mode is unchanged', () => {
     const state = emptyProgress('s1');
     expect(setLessonMode(state, 'narrated')).toBe(state);
+  });
+});
+
+
+describe('Knowledge Index persistence (prog-rules-v1.0)', () => {
+  const KEY = 'tikerino.progress.v1';
+
+  function completeLesson(state = emptyProgress('s1')) {
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-001', correct: true, xp: 10, hintUsed: false });
+    return recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 10, hintUsed: false });
+  }
+
+  function legacyState(completedLessons: string[]) {
+    const legacy: Record<string, unknown> = { ...emptyProgress('s1') };
+    delete legacy.progressionRuleset;
+    delete legacy.knowledgeIndexXp;
+    delete legacy.lessonAwards;
+    legacy.lessons = Object.fromEntries(
+      completedLessons.map((id) => [id, { completedExerciseIds: ['ex-001', 'ex-002'], completed: true, crownLevel: 1, xpEarned: 20 }]),
+    );
+    return legacy;
+  }
+
+  it('backfills 25 per completed lesson for state saved before lesson awards', () => {
+    const storage = memoryStorage();
+    storage.setItem(KEY, JSON.stringify(legacyState(['lesson-0', 'lesson-1'])));
+    const loaded = loadProgress(storage, 's1');
+    expect(loaded.knowledgeIndexXp).toBe(50);
+    expect(loaded.lessonAwards['lesson-0']).toEqual({ xp: 25, awardedAt: 'migrated' });
+    expect(loaded.lessonAwards['lesson-1']).toEqual({ xp: 25, awardedAt: 'migrated' });
+  });
+
+  it('does not add more when a migrated lesson is replayed', () => {
+    const storage = memoryStorage();
+    storage.setItem(KEY, JSON.stringify(legacyState(['lesson-0'])));
+    let state = loadProgress(storage, 's1');
+    state = completeLesson(state);
+    expect(state.knowledgeIndexXp).toBe(25);
+    saveProgress(storage, state);
+    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+  });
+
+  it('round-trips awards and the index through save and load', () => {
+    const storage = memoryStorage();
+    const state = completeLesson();
+    saveProgress(storage, state);
+    const loaded = loadProgress(storage, 's1');
+    expect(loaded.knowledgeIndexXp).toBe(25);
+    expect(loaded.lessonAwards).toEqual(state.lessonAwards);
+    expect(loaded.progressionRuleset).toBe('prog-rules-v1.0');
+  });
+
+  it('keeps a stored progressionRuleset instead of overwriting it', () => {
+    const storage = memoryStorage();
+    storage.setItem(KEY, JSON.stringify({ ...completeLesson(), progressionRuleset: 'prog-rules-v0.9' }));
+    expect(loadProgress(storage, 's1').progressionRuleset).toBe('prog-rules-v0.9');
+  });
+
+  it('derives the index from awards when storage holds "25" or NaN', () => {
+    const storage = memoryStorage();
+    const state = completeLesson();
+    storage.setItem(KEY, JSON.stringify({ ...state, knowledgeIndexXp: '25' }));
+    const fromString = loadProgress(storage, 's1');
+    expect(fromString.knowledgeIndexXp).toBe(25);
+    expect(Number.isFinite(fromString.knowledgeIndexXp)).toBe(true);
+    // JSON turns NaN into null; a raw NaN-bearing object is also covered by derivation.
+    storage.setItem(KEY, JSON.stringify({ ...state, knowledgeIndexXp: Number.NaN }));
+    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+    storage.setItem(KEY, JSON.stringify({ ...state, lessonAwards: { 'lesson-0': { xp: 'x', awardedAt: 'a' } } }));
+    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+  });
+
+  it('keeps the index at 25 when a lesson re-completes after an exercise is added', () => {
+    let state = completeLesson();
+    const grown = { ...lesson, lessonExerciseIds: ['ex-001', 'ex-002', 'ex-003'] };
+    state = recordAnswer(state, { ...grown, exerciseId: 'ex-001', correct: true, xp: 10, hintUsed: false });
+    expect(state.lessons['lesson-0']!.completed).toBe(false);
+    state = recordAnswer(state, { ...grown, exerciseId: 'ex-003', correct: true, xp: 10, hintUsed: false, at: new Date(Date.now() + 60_000) });
+    expect(state.lessons['lesson-0']!.completed).toBe(true);
+    expect(state.knowledgeIndexXp).toBe(25);
+    expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-003')).toBe(0);
+  });
+
+  it('does not award the lesson when the final answer is wrong', () => {
+    let state = emptyProgress('s1');
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-001', correct: true, xp: 10, hintUsed: false });
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: false, xp: 0, hintUsed: false });
+    expect(state.knowledgeIndexXp).toBe(0);
+    expect(state.lessonAwards).toEqual({});
+    expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-002')).toBe(0);
+  });
+
+  it('reports the XP an answer actually credited', () => {
+    let state = emptyProgress('s1');
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-001', correct: true, xp: 10, hintUsed: false, at: new Date('2026-09-23T06:00:00Z') });
+    expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-001')).toBe(0);
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 10, hintUsed: false, at: new Date('2026-09-23T06:01:00Z') });
+    expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-002')).toBe(25);
+    state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 10, hintUsed: false, at: new Date('2026-09-23T06:02:00Z') });
+    expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-002')).toBe(0);
   });
 });

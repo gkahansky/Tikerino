@@ -144,6 +144,8 @@ try {
     'later lessons start locked',
     (await page.getByRole('button', { name: /Finish the previous lesson to unlock/ }).count()) > 0,
   );
+  check("path home shows no Safe Floor (formula not approved)", (await page.getByText('Safe Floor').count()) === 0);
+  check('path home makes no "Progress never falls" claim', (await page.getByText('Progress never falls').count()) === 0);
   await page.screenshot({ path: `${shots}/2-path-home.png`, fullPage: true });
   await axeScan(page, 'path home');
 
@@ -282,6 +284,8 @@ try {
   check('reveal carries no legal text (Terms/Privacy are the only home for it)', !revealText.includes('Nothing here is investment advice.') && !revealText.includes('generated practice data'));
   check('reveal shows an XP breakdown', revealText.includes('Base') && revealText.includes('Total'));
   check('reveal shows what happened next', revealText.includes('What happened next'));
+  const firstCredit = await page.locator('header .pill').innerText();
+  check('reveal credits +0 XP before the lesson completes', firstCredit === '+0 XP', firstCredit);
 
   const revealedCandles = await page.evaluate(
     () => document.querySelectorAll('.reveal-candle').length,
@@ -304,6 +308,8 @@ try {
     await page.getByRole('button', { name: /The most recent price paid/ }).click();
     await page.getByRole('button', { name: 'Check' }).click();
     await page.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+    const finalCredit = await page.locator('header .pill').innerText();
+    check('reveal credits the +25 the lesson completion actually awarded', finalCredit === '+25 XP', finalCredit);
     await page.getByRole('button', { name: /Back to the path|Next question/ }).click();
   }
 
@@ -313,6 +319,38 @@ try {
   check('lesson completion awards canonical +25 once', endingXp === '25 XP', `${startingXp} -> ${endingXp}`);
   notes.push(`     progress pill: ${startingXp.replace(/\n/g, ' ')} -> ${endingXp.replace(/\n/g, ' ')}`);
   await page.screenshot({ path: `${shots}/8-path-after.png`, fullPage: true });
+
+  /* ---------------------------------------------------------------- 8b. replay + reload keep 25 */
+  await page.getByRole('button', { name: /^Meet the chart\./ }).click();
+  await page.getByRole('heading', { name: 'A chart is a story of trades' }).waitFor();
+  await page.getByRole('button', { name: 'Show me' }).click();
+  for (let guard = 0; guard < 6; guard++) {
+    const practise = page.getByRole('button', { name: 'Practise this' });
+    if (await practise.isVisible()) {
+      await practise.click();
+      break;
+    }
+    await page.getByRole('button', { name: 'Next' }).click();
+  }
+  await page.getByText(/Question 1 of/).waitFor();
+  await page.getByRole('button', { name: /Time, from oldest on the left/ }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+  await page.getByRole('button', { name: /Next question/ }).click();
+  await page.getByText(/Question 2 of/).waitFor();
+  await page.getByRole('button', { name: /The most recent price paid/ }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+  const replayCredit = await page.locator('header .pill').innerText();
+  check('replaying a completed lesson credits +0 XP', replayCredit === '+0 XP', replayCredit);
+  await page.getByRole('button', { name: /Back to the path/ }).click();
+  await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  const replayXp = await page.locator('.journey-index').innerText();
+  check('replaying lesson 0 keeps the Knowledge Index at 25', replayXp === '25 XP', replayXp);
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  const reloadXp = await page.locator('.journey-index').innerText();
+  check('reload after replay keeps the Knowledge Index at 25', reloadXp === '25 XP', reloadXp);
 
   /* ---------------------------------------------------------------- 9. profile */
   await page.getByLabel(/Your progress/).click();
@@ -439,6 +477,42 @@ try {
   );
   await page.screenshot({ path: `${shots}/11-pick-reveal.png`, fullPage: true });
   await axeScan(page, 'pick the candle reveal');
+
+  /* ---------------------------------------------------------------- 12. seeded pre-change localStorage */
+  // State saved before lesson awards existed: lesson 0 complete, no
+  // lessonAwards, no knowledgeIndexXp, no progressionRuleset.
+  const legacyContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  await legacyContext.addInitScript(() => {
+    if (sessionStorage.getItem('seeded')) return;
+    sessionStorage.setItem('seeded', '1');
+    localStorage.setItem('tikerino.subjectId.v1', 'legacy-e2e-subject');
+    localStorage.setItem('tikerino.progress.v1', JSON.stringify({
+      version: 1,
+      subjectId: 'legacy-e2e-subject',
+      onboardingComplete: true,
+      lessonMode: 'text',
+      totalXp: 20,
+      streak: { current: 1, longest: 1, lastActiveDay: null },
+      lessons: { 'lesson-0-meet-the-chart': { completedExerciseIds: ['ex-001', 'ex-002'], completed: true, crownLevel: 1, xpEarned: 20 } },
+      answers: {},
+      pending: [],
+    }));
+  });
+  const legacyPage = await legacyContext.newPage();
+  legacyPage.on('pageerror', (error) => failures.push(`FAIL legacy page error: ${error.message}`));
+  await legacyPage.goto(BASE, { waitUntil: 'networkidle' });
+  await legacyPage.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  const legacyXp = await legacyPage.locator('.journey-index').innerText();
+  check('seeded legacy state is credited 25 for its completed lesson', legacyXp === '25 XP', legacyXp);
+  check('seeded legacy state opens lesson 1', (await legacyPage.getByRole('button', { name: /^Price moves and percent change\./ }).isEnabled()));
+  check('seeded legacy path shows no Safe Floor', (await legacyPage.getByText('Safe Floor').count()) === 0);
+  await legacyPage.reload({ waitUntil: 'networkidle' });
+  await legacyPage.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  const legacyReloadXp = await legacyPage.locator('.journey-index').innerText();
+  check('seeded legacy credit survives reload without growing', legacyReloadXp === '25 XP', legacyReloadXp);
+  await legacyPage.screenshot({ path: `${shots}/12-legacy-path.png`, fullPage: true });
+  await axeScan(legacyPage, 'seeded legacy path');
+  await legacyContext.close();
 } catch (error) {
   failures.push(`FAIL threw: ${error.message}`);
   await page.screenshot({ path: `${shots}/error.png`, fullPage: true }).catch(() => {});
