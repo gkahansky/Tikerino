@@ -124,7 +124,7 @@ export function ExerciseScreen({
   if (phase === 'loading') {
     return (
       <Screen>
-        <TopBar onBack={onBack} backLabel="Lesson" xp={progress.totalXp} streak={displayStreak} />
+        <TopBar onBack={onBack} backLabel="Lesson" xp={progress.knowledgeIndexXp} streak={displayStreak} />
         <p role="status" className="mt-8">
           Loading the chart…
         </p>
@@ -135,7 +135,7 @@ export function ExerciseScreen({
   if (phase === 'error') {
     return (
       <Screen footer={<SecondaryButton onClick={onBack}>Back to the lesson</SecondaryButton>}>
-        <TopBar onBack={onBack} backLabel="Lesson" xp={progress.totalXp} streak={displayStreak} />
+        <TopBar onBack={onBack} backLabel="Lesson" xp={progress.knowledgeIndexXp} streak={displayStreak} />
         <h1 className="text-xl mt-4 mb-2">Not right now</h1>
         <p className="text-ink-2">{errorMessage}</p>
       </Screen>
@@ -145,7 +145,7 @@ export function ExerciseScreen({
   if (phase === 'offline-locked') {
     return (
       <Screen footer={<PrimaryButton onClick={onBack}>Back to the lesson</PrimaryButton>}>
-        <TopBar onBack={onBack} backLabel="Lesson" xp={progress.totalXp} streak={displayStreak} />
+        <TopBar onBack={onBack} backLabel="Lesson" xp={progress.knowledgeIndexXp} streak={displayStreak} />
         <h1 className="text-xl mt-4 mb-2">Answer locked</h1>
         <p className="text-ink-2">
           You are offline, so your answer is saved exactly as you gave it. Grading and the reveal
@@ -170,7 +170,7 @@ export function ExerciseScreen({
       <TopBar
         onBack={onBack}
         backLabel="Lesson"
-        xp={progress.totalXp}
+        xp={progress.knowledgeIndexXp}
         streak={displayStreak}
         onProfile={onOpenProfile}
       />

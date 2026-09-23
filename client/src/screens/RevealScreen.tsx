@@ -20,11 +20,14 @@ export function RevealScreen({
   result,
   window_,
   isLast,
+  creditedXp,
   onContinue,
 }: {
   result: AnswerResponse;
   window_: WindowResponse;
   isLast: boolean;
+  /** Knowledge Index XP this answer actually credited. */
+  creditedXp: number;
   onContinue: () => void;
 }): JSX.Element {
   const { progress, displayStreak } = useAppState();
@@ -67,7 +70,7 @@ export function RevealScreen({
           {result.correct ? 'Correct' : 'Not this time'}
         </h1>
         <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">
-          +{xp.total} XP
+          +{creditedXp} XP
         </span>
       </header>
 
@@ -125,7 +128,7 @@ export function RevealScreen({
       </section>
 
       <p className="mt-3 text-sm text-ink-2 tabular">
-        {progress.totalXp} XP · {displayStreak} day streak · {meta.productName} practice data
+        Knowledge Index {progress.knowledgeIndexXp} XP · Exercise score +{xp.total} · {displayStreak} day persistence
       </p>
     </Screen>
   );

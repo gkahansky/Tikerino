@@ -73,10 +73,10 @@ try {
     const next = page.getByRole('button', { name: /Next|Start learning/ });
     if (await next.isVisible()) await next.click();
   }
-  await page.getByRole('heading', { name: 'Your path' }).waitFor();
+  await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
 
   for (const lesson of lessons) {
-    await page.getByRole('button', { name: new RegExp(lesson.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }).click();
+    await page.getByRole('button', { name: new RegExp(`^${lesson.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.`) }).click();
     await page.getByRole('heading', { name: lesson.principleCard.title }).waitFor();
 
     await page.getByRole('button', { name: 'Show me' }).click();
@@ -150,7 +150,7 @@ try {
       await page.getByRole('button', { name: /Next question|Back to the path/ }).click();
     }
 
-    await page.getByRole('heading', { name: 'Your path' }).waitFor();
+    await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   }
 
   const progress = await page.getByLabel(/Your progress/).innerText();
@@ -165,8 +165,8 @@ try {
   );
   check(
     'every lesson is marked done',
-    (await page.getByText(/Done ·/).count()) === lessons.length,
-    `${await page.getByText(/Done ·/).count()} of ${lessons.length}`,
+    (await page.getByRole('button', { name: /Complete\. Open lesson/ }).count()) === lessons.length,
+    `${await page.getByRole('button', { name: /Complete\. Open lesson/ }).count()} of ${lessons.length}`,
   );
 
   await page.screenshot({ path: resolve(here, '../../screenshots/viewport/path-complete.png') });

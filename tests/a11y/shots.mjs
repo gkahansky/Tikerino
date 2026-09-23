@@ -34,14 +34,20 @@ for (let i = 0; i < 3; i++) {
   const next = page.getByRole('button', { name: /Next|Start learning/ });
   if (await next.isVisible()) await next.click();
 }
-await page.getByRole('heading', { name: 'Your path' }).waitFor();
+await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
 await page.screenshot({ path: `${shots}/path.png` });
 
-await page.getByRole('button', { name: /Meet the chart/ }).click();
+await page.getByRole('button', { name: /^Meet the chart\./ }).click();
 await page.getByRole('heading', { name: 'A chart is a story of trades' }).waitFor();
 await page.screenshot({ path: `${shots}/lesson-card.png` });
 
 await page.getByRole('button', { name: 'Show me' }).click();
+const textOnly = page.getByRole('button', { name: 'Switch to text only' });
+await textOnly.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
+if (await textOnly.isVisible()) {
+  await textOnly.click();
+  await page.getByRole('button', { name: 'Show me' }).click();
+}
 await page.getByText(/Walkthrough/).waitFor();
 await page.screenshot({ path: `${shots}/guided.png` });
 

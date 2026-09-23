@@ -55,8 +55,16 @@ export interface StreakState {
 /** How lessons play: silent text step-through, or narrated with animation. */
 export type LessonMode = 'text' | 'narrated';
 
+export const PROGRESSION_RULESET_VERSION = 'prog-rules-v1.0' as const;
+export const LESSON_COMPLETION_XP = 25;
+
 export interface ProgressState {
   version: 1;
+  /** Ruleset the stored awards were made under. Kept as stored on load. */
+  progressionRuleset: string;
+  /** Canonical semantic-event awards only. Legacy answer XP stays separate. */
+  knowledgeIndexXp: number;
+  lessonAwards: Record<string, { xp: number; awardedAt: string }>;
   subjectId: string;
   onboardingComplete: boolean;
   lessonMode: LessonMode;
@@ -72,6 +80,9 @@ const STORAGE_KEY = 'tikerino.progress.v1';
 export function emptyProgress(subjectId: string): ProgressState {
   return {
     version: 1,
+    progressionRuleset: PROGRESSION_RULESET_VERSION,
+    knowledgeIndexXp: 0,
+    lessonAwards: {},
     subjectId,
     onboardingComplete: false,
     // Narrated is the default (Guy, 12 Sep 22:16 IDT): users who have never
@@ -170,10 +181,17 @@ export function recordAnswer(state: ProgressState, input: RecordAnswerInput): Pr
       : lesson.crownLevel;
 
   const awardedXp = alreadyScored ? 0 : input.xp;
+  const lessonAlreadyAwarded = state.lessonAwards[input.lessonId] !== undefined;
+  const awardLesson = !wasCompleted && nowCompleted && !lessonAlreadyAwarded;
 
   return {
     ...state,
+    // Existing per-answer scoring remains available for audit/backward compatibility.
     totalXp: state.totalXp + awardedXp,
+    knowledgeIndexXp: state.knowledgeIndexXp + (awardLesson ? LESSON_COMPLETION_XP : 0),
+    lessonAwards: awardLesson
+      ? { ...state.lessonAwards, [input.lessonId]: { xp: LESSON_COMPLETION_XP, awardedAt: at.toISOString() } }
+      : state.lessonAwards,
     streak: advanceStreak(state.streak, dayKey(at)),
     lessons: {
       ...state.lessons,
@@ -236,6 +254,50 @@ export function isLessonUnlocked(
 /* Persistence                                                                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Lesson awards as stored, or backfilled for state saved before awards existed:
+ * each lesson already completed is credited once, marked 'migrated', so a
+ * returning learner keeps credit and a replay cannot earn it again.
+ */
+function normaliseLessonAwards(
+  stored: unknown,
+  lessons: Record<string, LessonProgress> | undefined,
+): ProgressState['lessonAwards'] {
+  if (stored === undefined || stored === null || typeof stored !== 'object') {
+    const backfilled: ProgressState['lessonAwards'] = {};
+    for (const [lessonId, lesson] of Object.entries(lessons ?? {})) {
+      if (lesson?.completed === true) {
+        backfilled[lessonId] = { xp: LESSON_COMPLETION_XP, awardedAt: 'migrated' };
+      }
+    }
+    return backfilled;
+  }
+  const awards: ProgressState['lessonAwards'] = {};
+  for (const [lessonId, award] of Object.entries(stored as Record<string, unknown>)) {
+    if (!award || typeof award !== 'object') continue;
+    const { xp, awardedAt } = award as { xp?: unknown; awardedAt?: unknown };
+    awards[lessonId] = {
+      xp: typeof xp === 'number' && Number.isFinite(xp) ? xp : LESSON_COMPLETION_XP,
+      awardedAt: typeof awardedAt === 'string' ? awardedAt : 'migrated',
+    };
+  }
+  return awards;
+}
+
+function sumLessonAwards(awards: ProgressState['lessonAwards']): number {
+  return Object.values(awards).reduce((total, award) => total + award.xp, 0);
+}
+
+/**
+ * Knowledge Index XP this answer actually credited: the lesson award when this
+ * answer is the one that completed the lesson, otherwise 0.
+ */
+export function lessonXpCreditedByAnswer(state: ProgressState, lessonId: string, exerciseId: string): number {
+  const award = state.lessonAwards[lessonId];
+  const answer = state.answers[exerciseId];
+  return award && answer && award.awardedAt === answer.answeredAt ? award.xp : 0;
+}
+
 export function loadProgress(storage: StorageAdapter, subjectId: string): ProgressState {
   try {
     const raw = storage.getItem(STORAGE_KEY);
@@ -244,7 +306,16 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
     if (parsed.version !== 1 || typeof parsed.subjectId !== 'string') {
       return emptyProgress(subjectId);
     }
-    return { ...emptyProgress(parsed.subjectId), ...parsed };
+    const lessonAwards = normaliseLessonAwards(parsed.lessonAwards, parsed.lessons);
+    return {
+      ...emptyProgress(parsed.subjectId),
+      ...parsed,
+      progressionRuleset:
+        typeof parsed.progressionRuleset === 'string' ? parsed.progressionRuleset : PROGRESSION_RULESET_VERSION,
+      lessonAwards,
+      // Derived, never trusted from storage: a stored "25" or NaN cannot leak into the index.
+      knowledgeIndexXp: sumLessonAwards(lessonAwards),
+    };
   } catch {
     // Corrupt or unreadable storage must not brick the app; start clean.
     return emptyProgress(subjectId);
