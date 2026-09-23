@@ -35,6 +35,12 @@ npm run shots          # phone-sized screenshots of each screen
 
 `npm run test:browser` and `npm run test:play-all` need `npm run dev` running.
 
+### Working in parallel
+
+Two agents can work at once, each in its own git worktree and branch. The
+rules, the merge order and `scripts/worktrees.sh` are in
+[docs/PARALLEL_AGENTS.md](docs/PARALLEL_AGENTS.md).
+
 ### Deploying it
 
 ```sh
