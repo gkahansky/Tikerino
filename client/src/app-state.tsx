@@ -6,9 +6,10 @@ import {
   emptyProgress,
   ensureSubjectId,
   loadProgress,
+  mergeProgress,
+  persistProgress,
   queuePendingAnswer,
   recordAnswer,
-  saveProgress,
   setLessonMode as setLessonModeState,
   type LessonMode,
   streakForDisplay,
@@ -46,6 +47,8 @@ interface AppStateValue {
   setLessonMode: (mode: LessonMode) => void;
   displayStreak: number;
   pendingCount: number;
+  /** The last save to this device failed; progress since then is not durable. */
+  saveFailed: boolean;
   completeOnboarding: () => void;
   applyGradedAnswer: (input: GradedAnswerInput) => void;
   queueOffline: (pending: PendingAnswer) => void;
@@ -61,9 +64,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
     loadProgress(browserStorage, subjectId),
   );
 
+  const [saveFailed, setSaveFailed] = useState(false);
+
+  // Merge-before-save: another tab may have saved since this one loaded. Adopt
+  // the merged result so both tabs converge instead of overwriting each other.
   useEffect(() => {
-    saveProgress(browserStorage, progress);
+    const result = persistProgress(browserStorage, progress);
+    setSaveFailed(!result.saved);
+    if (JSON.stringify(result.state) !== JSON.stringify(progress)) setProgress(result.state);
   }, [progress]);
+
+  // Pick up what another tab saved without waiting for this tab's next save.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent): void => {
+      if (event.key !== 'tikerino.progress.v1' || !event.newValue) return;
+      setProgress((current) => {
+        const merged = mergeProgress(current, loadProgress(browserStorage, current.subjectId));
+        return JSON.stringify(merged) === JSON.stringify(current) ? current : merged;
+      });
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const setLessonMode = useCallback((mode: LessonMode) => {
     setProgress((current) => setLessonModeState(current, mode));
@@ -144,13 +166,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
       setLessonMode,
       displayStreak: streakForDisplay(progress.streak),
       pendingCount: progress.pending.length,
+      saveFailed,
       completeOnboarding,
       applyGradedAnswer,
       queueOffline,
       flushPending,
       reset,
     }),
-    [subjectId, progress, setLessonMode, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
+    [subjectId, progress, saveFailed, setLessonMode, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

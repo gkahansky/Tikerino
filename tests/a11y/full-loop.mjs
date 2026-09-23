@@ -513,6 +513,103 @@ try {
   await legacyPage.screenshot({ path: `${shots}/12-legacy-path.png`, fullPage: true });
   await axeScan(legacyPage, 'seeded legacy path');
   await legacyContext.close();
+
+  /* ---------------------------------------------------------------- 13. two tabs + failed save */
+  // Two tabs of the same learner, both loaded before either finishes a lesson.
+  const tabsContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  await tabsContext.addInitScript(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function guardedSetItem(key, value) {
+      if (window.__failProgressSaves && key === 'tikerino.progress.v1') {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      }
+      return original.call(this, key, value);
+    };
+    if (!localStorage.getItem('tikerino.progress.v1')) {
+      localStorage.setItem('tikerino.subjectId.v1', 'two-tab-subject');
+      localStorage.setItem('tikerino.progress.v1', JSON.stringify({
+        version: 1, subjectId: 'two-tab-subject', onboardingComplete: true, lessonMode: 'text',
+        totalXp: 0, streak: { current: 0, longest: 0, lastActiveDay: null }, lessons: {}, answers: {}, pending: [],
+        lessonAwards: {}, progressionRuleset: 'prog-rules-v1.0',
+      }));
+    }
+  });
+  const tabOne = await tabsContext.newPage();
+  const tabTwo = await tabsContext.newPage();
+  await tabOne.goto(BASE, { waitUntil: 'networkidle' });
+  await tabTwo.goto(BASE, { waitUntil: 'networkidle' });
+  // Tab two injects a stale competing award straight into its own copy is not
+  // possible from outside, so tab two plays lesson 0 while tab one stays open
+  // with its pre-lesson state; tab one then saves (mode switch) afterwards.
+  async function playLessonZero(p) {
+    await p.getByRole('button', { name: /^Meet the chart\./ }).click();
+    await p.getByRole('heading', { name: 'A chart is a story of trades' }).waitFor();
+    await p.getByRole('button', { name: 'Show me' }).click();
+    for (let guard = 0; guard < 6; guard++) {
+      const practise = p.getByRole('button', { name: 'Practise this' });
+      if (await practise.isVisible()) { await practise.click(); break; }
+      await p.getByRole('button', { name: 'Next' }).click();
+    }
+    await p.getByText(/Question 1 of/).waitFor();
+    await p.getByRole('button', { name: /Time, from oldest on the left/ }).click();
+    await p.getByRole('button', { name: 'Check' }).click();
+    await p.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+    await p.getByRole('button', { name: /Next question/ }).click();
+    await p.getByText(/Question 2 of/).waitFor();
+    await p.getByRole('button', { name: /The most recent price paid/ }).click();
+    await p.getByRole('button', { name: 'Check' }).click();
+    await p.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+  }
+  await playLessonZero(tabTwo);
+  await tabTwo.getByRole('button', { name: /Back to the path/ }).click();
+  await tabTwo.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  // Tab one never reloaded. Make it save its stale state.
+  await tabOne.bringToFront();
+  await tabOne.getByLabel(/Your progress/).click();
+  await tabOne.getByRole('heading', { name: 'Your progress' }).waitFor();
+  await tabOne.getByRole('button', { name: /Back|Path/ }).first().click();
+  await tabOne.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  await tabOne.evaluate(() => {
+    // Force a save from tab one's own state even if no storage event arrived.
+    window.dispatchEvent(new Event('focus'));
+  });
+  const stored = await tabOne.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
+  check('a second open tab does not wipe the award the first tab earned', stored.lessonAwards?.['lesson-0-meet-the-chart']?.xp === 25, JSON.stringify(stored.lessonAwards));
+  await tabOne.reload({ waitUntil: 'networkidle' });
+  await tabOne.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  check('after two tabs, reload shows the 25 XP award', (await tabOne.locator('.journey-index').innerText()) === '25 XP');
+
+  // Failed save: finish lesson 1 while every progress write throws.
+  await tabOne.evaluate(() => { window.__failProgressSaves = true; });
+  await tabOne.getByRole('button', { name: /^Price moves and percent change\./ }).click();
+  await tabOne.getByRole('button', { name: 'Show me' }).click();
+  for (let guard = 0; guard < 6; guard++) {
+    const practise = tabOne.getByRole('button', { name: 'Practise this' });
+    if (await practise.isVisible()) { await practise.click(); break; }
+    await tabOne.getByRole('button', { name: 'Next' }).click();
+  }
+  for (let q = 0; q < 4; q++) {
+    await tabOne.getByText(/Question \d+ of/).waitFor();
+    const option = tabOne.locator('button[aria-pressed]').first();
+    if (await tabOne.getByRole('button', { name: /^Select candle/ }).count()) {
+      await tabOne.getByRole('button', { name: /^Select candle/ }).first().click();
+    } else {
+      await option.click();
+    }
+    await tabOne.getByRole('button', { name: 'Check' }).click();
+    await tabOne.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+    if (await tabOne.getByRole('button', { name: /Back to the path/ }).count()) break;
+    await tabOne.getByRole('button', { name: /Next question/ }).click();
+  }
+  const failPill = await tabOne.locator('header .pill').innerText();
+  check('a failed save makes no +XP claim on the reveal', !/\+\d+ XP/.test(failPill), failPill);
+  check('a failed save is surfaced to the learner', (await tabOne.getByRole('alert').filter({ hasText: 'could not be saved' }).count()) === 1);
+  await tabOne.screenshot({ path: `${shots}/13-save-failed.png`, fullPage: true });
+  await axeScan(tabOne, 'save failed reveal');
+  await tabOne.reload({ waitUntil: 'networkidle' });
+  await tabOne.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  check('reload after a failed save shows only the durable 25 XP', (await tabOne.locator('.journey-index').innerText()) === '25 XP');
+  await tabsContext.close();
 } catch (error) {
   failures.push(`FAIL threw: ${error.message}`);
   await page.screenshot({ path: `${shots}/error.png`, fullPage: true }).catch(() => {});
