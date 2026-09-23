@@ -30,7 +30,7 @@ export function RevealScreen({
   creditedXp: number;
   onContinue: () => void;
 }): JSX.Element {
-  const { progress, displayStreak } = useAppState();
+  const { progress, displayStreak, saveFailed } = useAppState();
 
   const allCandles = useMemo(
     () => [...(window_.chart?.candles ?? []), ...result.reveal.candles],
@@ -70,9 +70,16 @@ export function RevealScreen({
           {result.correct ? 'Correct' : 'Not this time'}
         </h1>
         <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">
-          +{creditedXp} XP
+          {saveFailed ? 'Not saved' : `+${creditedXp} XP`}
         </span>
       </header>
+
+      {saveFailed && (
+        <p role="alert" className="card px-4 py-3 m-0 mb-4">
+          Your progress could not be saved on this device, so it may be lost if you close or reload
+          the app. Check that storage is allowed for this site (private browsing can block it).
+        </p>
+      )}
 
       <p aria-live="polite" className="m-0 mb-4">
         {result.correct ? result.feedback.correct : result.feedback.incorrect}
@@ -128,7 +135,7 @@ export function RevealScreen({
       </section>
 
       <p className="mt-3 text-sm text-ink-2 tabular">
-        Knowledge Index {progress.knowledgeIndexXp} XP · Exercise score +{xp.total} · {displayStreak} day persistence
+        Knowledge Index {progress.knowledgeIndexXp} XP{saveFailed ? ' (not saved)' : ''} · Exercise score +{xp.total} · {displayStreak} day persistence
       </p>
     </Screen>
   );

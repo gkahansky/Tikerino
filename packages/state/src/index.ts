@@ -322,12 +322,103 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
   }
 }
 
-export function saveProgress(storage: StorageAdapter, state: ProgressState): void {
-  try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // Private browsing or a full quota. Losing progress is bad; crashing is worse.
+/**
+ * Combine two views of the same learner's progress, e.g. this tab's state and
+ * what another tab saved since. Awards and answers are ledgers: nothing either
+ * side earned is dropped. A lesson award keeps its first award; an answer keeps
+ * the most recent attempt, so replay credit checks stay correct.
+ */
+export function mergeProgress(mine: ProgressState, theirs: ProgressState): ProgressState {
+  if (mine.subjectId !== theirs.subjectId) return mine;
+
+  const lessonAwards: ProgressState['lessonAwards'] = { ...theirs.lessonAwards };
+  for (const [lessonId, award] of Object.entries(mine.lessonAwards)) {
+    const other = lessonAwards[lessonId];
+    if (!other || award.awardedAt < other.awardedAt) lessonAwards[lessonId] = award;
   }
+
+  const answers: ProgressState['answers'] = { ...theirs.answers };
+  for (const [exerciseId, answer] of Object.entries(mine.answers)) {
+    const other = answers[exerciseId];
+    if (!other || answer.answeredAt >= other.answeredAt) answers[exerciseId] = answer;
+  }
+
+  const lessons: ProgressState['lessons'] = { ...theirs.lessons };
+  for (const [lessonId, lesson] of Object.entries(mine.lessons)) {
+    const other = lessons[lessonId];
+    lessons[lessonId] = other
+      ? {
+          completedExerciseIds: [...new Set([...other.completedExerciseIds, ...lesson.completedExerciseIds])],
+          completed: other.completed || lesson.completed,
+          crownLevel: Math.max(other.crownLevel, lesson.crownLevel),
+          xpEarned: Math.max(other.xpEarned, lesson.xpEarned),
+        }
+      : lesson;
+  }
+  const lessonXp = Object.values(lessons).reduce((total, lesson) => total + lesson.xpEarned, 0);
+
+  const streak =
+    (mine.streak.lastActiveDay ?? '') > (theirs.streak.lastActiveDay ?? '')
+      ? mine.streak
+      : (theirs.streak.lastActiveDay ?? '') > (mine.streak.lastActiveDay ?? '')
+        ? theirs.streak
+        : {
+            current: Math.max(mine.streak.current, theirs.streak.current),
+            longest: Math.max(mine.streak.longest, theirs.streak.longest),
+            lastActiveDay: mine.streak.lastActiveDay,
+          };
+
+  const pending = [...mine.pending];
+  for (const item of theirs.pending) {
+    if (!pending.some((p) => p.exerciseId === item.exerciseId && p.assignmentSnapshotAt === item.assignmentSnapshotAt)) {
+      pending.push(item);
+    }
+  }
+
+  return {
+    ...mine,
+    onboardingComplete: mine.onboardingComplete || theirs.onboardingComplete,
+    totalXp: Math.max(mine.totalXp, theirs.totalXp, lessonXp),
+    lessonAwards,
+    knowledgeIndexXp: sumLessonAwards(lessonAwards),
+    answers,
+    lessons,
+    streak,
+    pending,
+  };
+}
+
+export interface PersistResult {
+  /** True only when the merged state was written to storage. */
+  saved: boolean;
+  /** This state merged with whatever another tab saved. Use it as the new state. */
+  state: ProgressState;
+}
+
+/**
+ * Merge-before-save: read what is stored (another tab may have saved since this
+ * one loaded), merge it in, then write. Never throws; reports failure instead.
+ */
+export function persistProgress(storage: StorageAdapter, state: ProgressState): PersistResult {
+  let merged = state;
+  try {
+    const raw = storage.getItem(STORAGE_KEY);
+    if (raw) merged = mergeProgress(state, loadProgress(storage, state.subjectId));
+  } catch {
+    // Unreadable storage: fall through and try to write this tab's state.
+  }
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    return { saved: true, state: merged };
+  } catch {
+    // Private browsing or a full quota. The caller must tell the learner.
+    return { saved: false, state: merged };
+  }
+}
+
+/** Save with merge-before-save. Returns false when the write failed. */
+export function saveProgress(storage: StorageAdapter, state: ProgressState): boolean {
+  return persistProgress(storage, state).saved;
 }
 
 export function clearProgress(storage: StorageAdapter): void {

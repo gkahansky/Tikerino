@@ -8,6 +8,8 @@ import {
   LESSON_COMPLETION_XP,
   lessonXpCreditedByAnswer,
   loadProgress,
+  mergeProgress,
+  persistProgress,
   setLessonMode,
   queuePendingAnswer,
   recordAnswer,
@@ -359,5 +361,75 @@ describe('Knowledge Index persistence (prog-rules-v1.0)', () => {
     expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-002')).toBe(25);
     state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 10, hintUsed: false, at: new Date('2026-09-23T06:02:00Z') });
     expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-002')).toBe(0);
+  });
+});
+
+
+describe('merge-before-save across tabs', () => {
+  const KEY = 'tikerino.progress.v1';
+  const lessonA = { lessonId: 'lesson-0', lessonExerciseIds: ['ex-001', 'ex-002'], crownLevelCap: 5 };
+  const lessonB = { lessonId: 'lesson-1', lessonExerciseIds: ['ex-003', 'ex-004'], crownLevelCap: 5 };
+
+  function finish(state: ReturnType<typeof emptyProgress>, l: typeof lessonA, ids: [string, string], at: string) {
+    state = recordAnswer(state, { ...l, exerciseId: ids[0], correct: true, xp: 10, hintUsed: false, at: new Date(at) });
+    return recordAnswer(state, { ...l, exerciseId: ids[1], correct: true, xp: 10, hintUsed: false, at: new Date(at) });
+  }
+
+  for (const order of ['A then B', 'B then A'] as const) {
+    it(`two stale tabs saving ${order} keep both awards`, () => {
+      const storage = memoryStorage();
+      saveProgress(storage, emptyProgress('s1'));
+      let tabA = loadProgress(storage, 's1');
+      let tabB = loadProgress(storage, 's1');
+      tabA = finish(tabA, lessonA, ['ex-001', 'ex-002'], '2026-09-23T10:00:00Z');
+      tabB = finish(tabB, lessonB, ['ex-003', 'ex-004'], '2026-09-23T10:05:00Z');
+      const [first, second] = order === 'A then B' ? [tabA, tabB] : [tabB, tabA];
+      expect(saveProgress(storage, first)).toBe(true);
+      expect(saveProgress(storage, second)).toBe(true);
+      const loaded = loadProgress(storage, 's1');
+      expect(Object.keys(loaded.lessonAwards).sort()).toEqual(['lesson-0', 'lesson-1']);
+      expect(loaded.knowledgeIndexXp).toBe(50);
+      expect(loaded.lessons['lesson-0']!.completed).toBe(true);
+      expect(loaded.lessons['lesson-1']!.completed).toBe(true);
+      expect(Object.keys(loaded.answers).sort()).toEqual(['ex-001', 'ex-002', 'ex-003', 'ex-004']);
+      expect(loaded.totalXp).toBe(40);
+    });
+  }
+
+  it('the same lesson finished in both tabs is awarded once, at its first award', () => {
+    const storage = memoryStorage();
+    saveProgress(storage, emptyProgress('s1'));
+    const tabA = finish(loadProgress(storage, 's1'), lessonA, ['ex-001', 'ex-002'], '2026-09-23T10:00:00Z');
+    const tabB = finish(loadProgress(storage, 's1'), lessonA, ['ex-001', 'ex-002'], '2026-09-23T10:05:00Z');
+    saveProgress(storage, tabB);
+    const result = persistProgress(storage, tabA);
+    expect(result.state.knowledgeIndexXp).toBe(25);
+    expect(result.state.lessonAwards['lesson-0']!.awardedAt).toBe('2026-09-23T10:00:00.000Z');
+    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+  });
+
+  it('never merges a different learner in', () => {
+    const mine = finish(emptyProgress('s1'), lessonA, ['ex-001', 'ex-002'], '2026-09-23T10:00:00Z');
+    const theirs = finish(emptyProgress('s2'), lessonB, ['ex-003', 'ex-004'], '2026-09-23T10:00:00Z');
+    expect(mergeProgress(mine, theirs)).toBe(mine);
+  });
+
+  it('a throwing setItem reports failure and reload shows no +25', () => {
+    const backing = memoryStorage();
+    saveProgress(backing, emptyProgress('s1'));
+    const failing: StorageAdapter = {
+      getItem: backing.getItem,
+      setItem: () => {
+        throw new Error('QuotaExceededError');
+      },
+      removeItem: backing.removeItem,
+    };
+    const state = finish(loadProgress(failing, 's1'), lessonA, ['ex-001', 'ex-002'], '2026-09-23T10:00:00Z');
+    expect(state.knowledgeIndexXp).toBe(25);
+    const result = persistProgress(failing, state);
+    expect(result.saved).toBe(false);
+    expect(saveProgress(failing, state)).toBe(false);
+    expect(loadProgress(backing, 's1').knowledgeIndexXp).toBe(0);
+    expect(backing.getItem(KEY)).not.toContain('lesson-0');
   });
 });
