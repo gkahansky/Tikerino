@@ -77,6 +77,7 @@ async function keyboardCheck(page) {
     const sel = 'a[href],button,input,select,textarea,summary,[tabindex]:not([tabindex="-1"])';
     const els = [...document.querySelectorAll(sel)].filter((el) => {
       if (el.disabled || el.closest('[inert],[aria-hidden="true"]')) return false;
+      if (el.tabIndex < 0) return false; // roving tabindex: reached with arrow keys (full-loop proves arrows + Enter)
       const closed = el.closest('details:not([open])');
       if (closed && !el.closest('summary')) return false;
       const r = el.getBoundingClientRect();
@@ -364,18 +365,21 @@ try {
   await toPractise(legacy.p);
   for (let q = 1; q <= 4; q++) {
     await legacy.p.getByText(/Question \d+ of/).waitFor();
-    const pick = legacy.p.getByRole('button', { name: /^Select candle/ });
-    if (await pick.count()) {
+    const pickGroup = legacy.p.getByRole('group', { name: 'Pick a candle' });
+    if (await pickGroup.count()) {
       await audit(legacy.p, '14-exercise-pick-candle', 'Exercise, pick the candle');
-      await pick.first().click();
+      await legacy.p.locator('details > summary').first().click();
+      await audit(legacy.p, '14c-exercise-pick-candle-text', 'Exercise, pick the candle, text list open', { stayed: true });
+      await legacy.p.getByRole('button', { name: /^Select candle/ }).first().click();
     } else {
       if (q === 1) await audit(legacy.p, '14b-exercise-percent', 'Exercise, percent change');
       await legacy.p.locator('button[aria-pressed]').first().click();
     }
     await legacy.p.getByRole('button', { name: 'Check' }).click();
     await legacy.p.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
-    if (await legacy.p.getByRole('button', { name: /Back to the path/ }).count()) break;
-    await legacy.p.getByRole('button', { name: /Next question/ }).click();
+    const nextQ = legacy.p.getByRole('button', { name: /Next question/ });
+    if (!(await nextQ.count())) break;
+    await nextQ.click();
   }
   await legacy.c.close();
 
@@ -389,12 +393,10 @@ try {
   await off.p.getByRole('button', { name: 'Check' }).click();
   await off.p.getByRole('heading', { name: 'Answer queued' }).waitFor();
   await audit(off.p, '15-offline-queued', 'Answer queued offline', { stayed: true });
-  const back = off.p.getByRole('button', { name: /Back to the path|path/i }).first();
-  if (await back.count()) {
-    await back.click();
-    await off.p.getByRole('heading', { name: 'The Living Chart' }).waitFor();
-    await audit(off.p, '15b-path-queued', 'Path home with a queued answer', { stayed: true });
-  }
+  await off.p.getByRole('button', { name: /Back to the lesson/ }).click();
+  await off.p.getByRole('button', { name: /Back|Path/ }).first().click().catch(() => {});
+  await off.p.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  await audit(off.p, '15b-path-queued', 'Path home with a queued answer');
   await off.c.close();
 
   const fail = await seeded({ ...seedBase, totalXp: 0, subjectId: 'audit-fail', streak: { current: 0, longest: 0, lastActiveDay: null }, lessons: {}, lessonAwards: {} });
