@@ -24,8 +24,8 @@ Severity: **P0** = a WCAG 2.2 A/AA failure in the core loop (onboarding -> path 
 
 ## Israel (LEGAL-IL) - leads, not conclusions
 
-- LEAD: Israel's Equal Rights of Persons with Disabilities Law (1998) and the 2013 service-accessibility regulations require online services to meet Israeli Standard **IS 5568**, which adopts WCAG 2.0 AA with local changes. Sources: https://www.w3.org/WAI/policies/israel/ and the Commission's IS 5568 page https://www.gov.il/he/pages/israeli_standard_5598.
-- LEAD: IS 5568 Part 1 has a May 2021 edition (copy seen at https://www.brn.co.il/wp-content/uploads/2024/12/f126aede-511e-41e4-8ad0-b278f33e6c43.pdf). Which edition the regulations currently point to: **UNKNOWN**.
+- LEAD: Israel's Equal Rights of Persons with Disabilities Law (1998) and the 2013 service-accessibility regulations require online services to meet Israeli Standard **IS 5568**, which adopts WCAG 2.0 AA with local changes. Sources: https://www.w3.org/WAI/policies/israel/ and the Commission's IS 5568 page https://www.gov.il/he/pages/israeli_standard_5598 (the page is titled "תקן ישראלי 5568"; the 5598 in the address is gov.il's own slug, checked 24 Sep 2026).
+- LEAD: gov.il publishes a September 2023 edition of IS 5568 Part 1: https://www.gov.il/BlobFolder/legalinfo/israeli_accessibility_standards_pdf/he/sitedocs_si-5568-1-september-2023.pdf. Earlier editions exist (2013, May 2021). Which edition the regulations currently point to, and whether it is still WCAG 2.0-based: **UNKNOWN**.
 - UNKNOWN: whether the regulations cover a PWA/mobile learning app run by a small Israeli company, and whether any size or revenue exemption applies.
 - UNKNOWN: whether an accessibility statement (הצהרת נגישות) and a named accessibility contact are required for Tikerino, and in what form.
 - UNKNOWN: whether Hebrew/RTL content will be in scope at launch. If yes, RTL reading order joins this bar.
