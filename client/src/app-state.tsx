@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  applyConfirmedAnswer,
   clearProgress,
   dropPendingAnswer,
   emptyProgress,
@@ -18,7 +19,7 @@ import {
   type StorageAdapter,
 } from '@tikerino/state';
 
-import { submitAnswer, OfflineError } from './api';
+import { ApiError, submitAnswer, OfflineError } from './api';
 import { getLesson, orderedLessonIds } from './content';
 
 const browserStorage: StorageAdapter = {
@@ -47,6 +48,8 @@ interface AppStateValue {
   setLessonMode: (mode: LessonMode) => void;
   displayStreak: number;
   pendingCount: number;
+  /** queued: offline answers wait for the server; confirming: a flush is in flight. */
+  syncState: 'idle' | 'queued' | 'confirming';
   /** The last save to this device failed; progress since then is not durable. */
   saveFailed: boolean;
   completeOnboarding: () => void;
@@ -118,39 +121,65 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
    * Send answers captured offline. The reveal for those stays deferred until the
    * server acknowledges them, so this is what unlocks it.
    */
+  const [confirming, setConfirming] = useState(false);
+  const flushing = useRef(false);
+  const pendingRef = useRef(progress.pending);
+  pendingRef.current = progress.pending;
+
   const flushPending = useCallback(async () => {
-    const queue = [...progress.pending];
-    for (const pending of queue) {
-      try {
-        const response = await submitAnswer(pending);
-        const exerciseLesson = orderedLessonIds.find((lessonId) =>
-          getLesson(lessonId).exerciseIds.includes(pending.exerciseId),
-        );
-        if (exerciseLesson) {
-          applyGradedAnswer({
-            exerciseId: pending.exerciseId,
-            lessonId: exerciseLesson,
-            correct: response.correct,
-            xp: response.xp.total,
-            hintUsed: pending.hintUsed,
-          });
+    // Single flight: the online event and the effect must not run two flushes.
+    if (flushing.current || pendingRef.current.length === 0) return;
+    flushing.current = true;
+    setConfirming(true);
+    try {
+      for (const pending of [...pendingRef.current]) {
+        try {
+          const response = await submitAnswer(pending);
+          const exerciseLesson = orderedLessonIds.find((lessonId) =>
+            getLesson(lessonId).exerciseIds.includes(pending.exerciseId),
+          );
+          if (!exerciseLesson) {
+            setProgress((current) => dropPendingAnswer(current, pending));
+            continue;
+          }
+          const lesson = getLesson(exerciseLesson);
+          // Progress moves only here, from the server's confirmed grade, once per key.
+          setProgress((current) =>
+            applyConfirmedAnswer(current, pending, {
+              lessonId: exerciseLesson,
+              lessonExerciseIds: lesson.exerciseIds,
+              crownLevelCap: lesson.crownLevelCap,
+              correct: response.correct,
+              xp: response.xp.total,
+            }),
+          );
+        } catch (error) {
+          // A 4xx will never be accepted; keeping it would jam the queue forever.
+          if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+            setProgress((current) => dropPendingAnswer(current, pending));
+            continue;
+          }
+          // Offline, a 5xx or a timeout: keep this and the rest queued and retry later.
+          return;
         }
-        setProgress((current) => dropPendingAnswer(current, pending.exerciseId));
-      } catch (error) {
-        // Still offline: leave the rest queued and try again later.
-        if (error instanceof OfflineError) return;
-        // A rejection the server will never accept would jam the queue forever.
-        setProgress((current) => dropPendingAnswer(current, pending.exerciseId));
       }
+    } finally {
+      flushing.current = false;
+      setConfirming(false);
     }
-  }, [progress.pending, applyGradedAnswer]);
+  }, []);
 
   useEffect(() => {
     if (progress.pending.length === 0) return;
     void flushPending();
     const onOnline = (): void => void flushPending();
     window.addEventListener('online', onOnline);
-    return () => window.removeEventListener('online', onOnline);
+    // Retry after a server error even when no online event arrives.
+    const retry = window.setInterval(() => void flushPending(), 30_000);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.clearInterval(retry);
+    };
   }, [progress.pending.length, flushPending]);
 
   const reset = useCallback(() => {
@@ -166,6 +195,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
       setLessonMode,
       displayStreak: streakForDisplay(progress.streak),
       pendingCount: progress.pending.length,
+      syncState: progress.pending.length === 0 ? 'idle' : confirming ? 'confirming' : 'queued',
       saveFailed,
       completeOnboarding,
       applyGradedAnswer,
@@ -173,7 +203,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
       flushPending,
       reset,
     }),
-    [subjectId, progress, saveFailed, setLessonMode, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
+    [subjectId, progress, saveFailed, confirming, setLessonMode, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   advanceStreak,
+  applyConfirmedAnswer,
   dropPendingAnswer,
   emptyProgress,
   isLessonUnlocked,
@@ -197,7 +198,7 @@ describe('the offline queue', () => {
 
   it('drops an answer once the server has it', () => {
     let state = queuePendingAnswer(emptyProgress('s1'), pending);
-    state = dropPendingAnswer(state, 'ex-004');
+    state = dropPendingAnswer(state, pending);
     expect(state.pending).toEqual([]);
   });
 });
@@ -431,5 +432,92 @@ describe('merge-before-save across tabs', () => {
     expect(saveProgress(failing, state)).toBe(false);
     expect(loadProgress(backing, 's1').knowledgeIndexXp).toBe(0);
     expect(backing.getItem(KEY)).not.toContain('lesson-0');
+  });
+});
+
+describe('offline answers are credited once, only after server confirmation', () => {
+  const lessonIds = ['ex-a', 'ex-b'];
+  const graded = (correct = true) => ({ lessonId: 'lesson-x', lessonExerciseIds: lessonIds, crownLevelCap: 3, correct, xp: 12 });
+  const queued = (exerciseId: string, at = '2026-09-24T02:00:00.000Z') => ({
+    subjectId: 's1', exerciseId, answer: { selectedOptionId: 'a' }, hintUsed: false, timeToAnswerMs: 3_000,
+    capturedOffline: true as const, assignmentSnapshotAt: at,
+  });
+  const halfDone = () => recordAnswer(emptyProgress('s1'), { ...graded(), exerciseId: 'ex-a', hintUsed: false });
+
+  it('shows zero new XP while the answer is only queued', () => {
+    const state = queuePendingAnswer(halfDone(), queued('ex-b'));
+    expect(state.knowledgeIndexXp).toBe(0);
+    expect(state.lessons['lesson-x']?.completed).toBe(false);
+  });
+
+  it('adds +25 and completes the lesson exactly once when the server confirms', () => {
+    const q = queued('ex-b');
+    const confirmed = applyConfirmedAnswer(queuePendingAnswer(halfDone(), q), q, graded());
+    expect(confirmed.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(confirmed.lessons['lesson-x']?.completed).toBe(true);
+    expect(confirmed.pending).toEqual([]);
+  });
+
+  it('a duplicate flush of the same confirmed answer awards nothing extra', () => {
+    const q = queued('ex-b');
+    const once = applyConfirmedAnswer(queuePendingAnswer(halfDone(), q), q, graded());
+    const twice = applyConfirmedAnswer(queuePendingAnswer(once, q), q, graded());
+    expect(twice.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(twice.totalXp).toBe(once.totalXp);
+    expect(twice.answers).toEqual(once.answers);
+    expect(twice.pending).toEqual([]);
+  });
+
+  it('a stale tab still holding the queued answer cannot re-queue it after confirmation', () => {
+    const q = queued('ex-b');
+    const stale = queuePendingAnswer(halfDone(), q);
+    const confirmed = applyConfirmedAnswer(stale, q, graded());
+    const merged = mergeProgress(stale, confirmed);
+    expect(merged.pending).toEqual([]);
+    expect(merged.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(mergeProgress(confirmed, stale).pending).toEqual([]);
+  });
+
+  it('survives merge-before-save: a confirmed answer is not resurrected from storage', () => {
+    const storage = memoryStorage();
+    const q = queued('ex-b');
+    const queuedState = queuePendingAnswer(halfDone(), q);
+    persistProgress(storage, queuedState);
+    const result = persistProgress(storage, applyConfirmedAnswer(queuedState, q, graded()));
+    expect(result.state.pending).toEqual([]);
+    expect(loadProgress(storage, 's1').pending).toEqual([]);
+    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+  });
+
+  it('two devices holding the same confirmed answers each derive +25 exactly once', () => {
+    const q = queued('ex-b');
+    for (const device of [halfDone(), halfDone()]) {
+      let state = applyConfirmedAnswer(queuePendingAnswer(device, q), q, graded());
+      state = applyConfirmedAnswer(state, q, graded()); // replayed flush on the same device
+      expect(state.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+      expect(Object.keys(state.lessonAwards)).toEqual(['lesson-x']);
+    }
+  });
+
+  it('a wrong confirmed answer completes nothing and awards nothing', () => {
+    const q = queued('ex-b');
+    const state = applyConfirmedAnswer(queuePendingAnswer(halfDone(), q), q, graded(false));
+    expect(state.knowledgeIndexXp).toBe(0);
+    expect(state.pending).toEqual([]);
+  });
+
+  it('confirming one attempt leaves a different queued attempt at the same exercise', () => {
+    const first = queued('ex-b', '2026-09-24T02:00:00.000Z');
+    const second = queued('ex-b', '2026-09-24T02:05:00.000Z');
+    const state = queuePendingAnswer(queuePendingAnswer(halfDone(), first), second);
+    expect(dropPendingAnswer(state, first).pending).toEqual([second]);
+  });
+
+  it('loads older saved state that has no confirmed ledger', () => {
+    const storage = memoryStorage();
+    const legacy = { ...halfDone() } as Partial<ReturnType<typeof halfDone>>;
+    delete legacy.confirmed;
+    storage.setItem('tikerino.progress.v1', JSON.stringify(legacy));
+    expect(loadProgress(storage, 's1').confirmed).toEqual([]);
   });
 });

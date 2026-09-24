@@ -146,10 +146,10 @@ export function ExerciseScreen({
     return (
       <Screen footer={<PrimaryButton onClick={onBack}>Back to the lesson</PrimaryButton>}>
         <TopBar onBack={onBack} backLabel="Lesson" xp={progress.knowledgeIndexXp} streak={displayStreak} />
-        <h1 className="text-xl mt-4 mb-2">Answer locked</h1>
-        <p className="text-ink-2">
-          You are offline, so your answer is saved exactly as you gave it. Grading and the reveal
-          happen when you reconnect - the result cannot change in the meantime.
+        <h1 className="text-xl mt-4 mb-2">Answer queued</h1>
+        <p role="status" className="text-ink-2">
+          You are offline, so your answer is queued exactly as you gave it. It is checked when you
+          reconnect, and any progress it earns is added then - not before.
         </p>
       </Screen>
     );
