@@ -73,6 +73,12 @@ export interface ProgressState {
   lessons: Record<string, LessonProgress>;
   answers: Record<string, AnswerRecord>;
   pending: PendingAnswer[];
+  /**
+   * Idempotency keys of queued answers the server has confirmed. A ledger:
+   * merged as a union, so a confirmed answer can never be re-queued or re-applied
+   * by another tab's stale copy.
+   */
+  confirmed: string[];
 }
 
 const STORAGE_KEY = 'tikerino.progress.v1';
@@ -93,6 +99,7 @@ export function emptyProgress(subjectId: string): ProgressState {
     lessons: {},
     answers: {},
     pending: [],
+    confirmed: [],
   };
 }
 
@@ -234,8 +241,33 @@ export function queuePendingAnswer(state: ProgressState, pending: PendingAnswer)
   return { ...state, pending: [...state.pending, pending] };
 }
 
-export function dropPendingAnswer(state: ProgressState, exerciseId: string): ProgressState {
-  return { ...state, pending: state.pending.filter((p) => p.exerciseId !== exerciseId) };
+/** The server's idempotency key for one assigned attempt. */
+export function pendingKey(item: { exerciseId: string; assignmentSnapshotAt: string }): string {
+  return `${item.exerciseId}@${item.assignmentSnapshotAt}`;
+}
+
+/** Remove exactly this queued attempt (never a different attempt at the same exercise). */
+export function dropPendingAnswer(state: ProgressState, item: { exerciseId: string; assignmentSnapshotAt: string }): ProgressState {
+  const key = pendingKey(item);
+  return { ...state, pending: state.pending.filter((p) => pendingKey(p) !== key) };
+}
+
+/**
+ * Apply a queued answer once the server has confirmed its grade. Idempotent on
+ * the server's key: a duplicate flush, a second tab, or a replay of the same
+ * confirmed answer changes nothing. Progress (+25, the candle) comes only from
+ * here, never from the queued answer itself.
+ */
+export function applyConfirmedAnswer(
+  state: ProgressState,
+  pending: PendingAnswer,
+  graded: Omit<RecordAnswerInput, 'exerciseId' | 'hintUsed'>,
+): ProgressState {
+  const key = pendingKey(pending);
+  const withoutPending = dropPendingAnswer(state, pending);
+  if (state.confirmed.includes(key)) return withoutPending;
+  const recorded = recordAnswer(withoutPending, { ...graded, exerciseId: pending.exerciseId, hintUsed: pending.hintUsed });
+  return { ...recorded, confirmed: [...recorded.confirmed, key] };
 }
 
 /** Lesson n is open when lesson n-1 is complete. Lesson 0 is always open. */
@@ -307,12 +339,16 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
       return emptyProgress(subjectId);
     }
     const lessonAwards = normaliseLessonAwards(parsed.lessonAwards, parsed.lessons);
+    const confirmed = Array.isArray(parsed.confirmed) ? parsed.confirmed.filter((k) => typeof k === 'string') : [];
+    const pending = Array.isArray(parsed.pending) ? parsed.pending.filter((p) => !confirmed.includes(pendingKey(p))) : [];
     return {
       ...emptyProgress(parsed.subjectId),
       ...parsed,
       progressionRuleset:
         typeof parsed.progressionRuleset === 'string' ? parsed.progressionRuleset : PROGRESSION_RULESET_VERSION,
       lessonAwards,
+      confirmed,
+      pending,
       // Derived, never trusted from storage: a stored "25" or NaN cannot leak into the index.
       knowledgeIndexXp: sumLessonAwards(lessonAwards),
     };
@@ -368,11 +404,11 @@ export function mergeProgress(mine: ProgressState, theirs: ProgressState): Progr
             lastActiveDay: mine.streak.lastActiveDay,
           };
 
-  const pending = [...mine.pending];
-  for (const item of theirs.pending) {
-    if (!pending.some((p) => p.exerciseId === item.exerciseId && p.assignmentSnapshotAt === item.assignmentSnapshotAt)) {
-      pending.push(item);
-    }
+  const confirmed = [...new Set([...theirs.confirmed, ...mine.confirmed])];
+  const pending: PendingAnswer[] = [];
+  for (const item of [...mine.pending, ...theirs.pending]) {
+    const key = pendingKey(item);
+    if (!confirmed.includes(key) && !pending.some((p) => pendingKey(p) === key)) pending.push(item);
   }
 
   return {
@@ -385,6 +421,7 @@ export function mergeProgress(mine: ProgressState, theirs: ProgressState): Progr
     lessons,
     streak,
     pending,
+    confirmed,
   };
 }
 

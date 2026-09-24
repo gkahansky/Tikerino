@@ -625,6 +625,98 @@ try {
   await tabOne.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   check('reload after a failed save shows only the durable 25 XP', (await tabOne.locator('.journey-index').innerText()) === '25 XP');
   await tabsContext.close();
+
+  /* ---------------------------------------------------------------- 14. offline queue, reconnect, duplicate flush */
+  // Reduced motion on, so the queued/confirming states are proven without animation.
+  const offlineSeed = {
+    version: 1, subjectId: 'offline-subject', onboardingComplete: true, lessonMode: 'text',
+    totalXp: 0, streak: { current: 0, longest: 0, lastActiveDay: null }, lessons: {}, answers: {}, pending: [], confirmed: [],
+    lessonAwards: {}, progressionRuleset: 'prog-rules-v1.0',
+  };
+  async function offlineDevice(seed) {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, reducedMotion: 'reduce' });
+    await context.addInitScript((state) => {
+      if (!localStorage.getItem('tikerino.progress.v1')) {
+        localStorage.setItem('tikerino.subjectId.v1', state.subjectId);
+        localStorage.setItem('tikerino.progress.v1', JSON.stringify(state));
+      }
+    }, seed);
+    const p = await context.newPage();
+    await p.goto(BASE, { waitUntil: 'networkidle' });
+    await p.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+    return { context, p };
+  }
+  const deviceA = await offlineDevice(offlineSeed);
+  const a = deviceA.p;
+  await a.getByRole('button', { name: /^Meet the chart\./ }).click();
+  await a.getByRole('heading', { name: 'A chart is a story of trades' }).waitFor();
+  await a.getByRole('button', { name: 'Show me' }).click();
+  for (let guard = 0; guard < 6; guard++) {
+    const practise = a.getByRole('button', { name: 'Practise this' });
+    if (await practise.isVisible()) { await practise.click(); break; }
+    await a.getByRole('button', { name: 'Next' }).click();
+  }
+  await a.getByText(/Question 1 of/).waitFor();
+  await a.getByRole('button', { name: /Time, from oldest on the left/ }).click();
+  await a.getByRole('button', { name: 'Check' }).click();
+  await a.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+  await a.getByRole('button', { name: /Next question/ }).click();
+  await a.getByText(/Question 2 of/).waitFor();
+  await a.getByRole('button', { name: /The most recent price paid/ }).click();
+  await deviceA.context.setOffline(true);
+  await a.getByRole('button', { name: 'Check' }).click();
+  await a.getByRole('heading', { name: 'Answer queued' }).waitFor();
+  const queuedText = await a.locator('body').innerText();
+  check('offline answer shows a neutral queued state', queuedText.includes('queued') && !/locked/i.test(queuedText));
+  check('queued answer claims no XP', !/\+\d+ XP/.test(queuedText) && (await a.locator('header .pill').filter({ hasText: /^\+/ }).count()) === 0);
+  await a.screenshot({ path: `${shots}/14-offline-queued.png`, fullPage: true });
+  await axeScan(a, 'offline queued');
+  const queuedState = await a.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
+  check('the queued answer is stored for later', queuedState.pending.length === 1, JSON.stringify(queuedState.pending));
+  await a.getByRole('button', { name: /Back to the lesson/ }).click();
+  await a.getByRole('button', { name: /Back|Path/ }).first().click().catch(() => {});
+  await a.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  check('path shows zero XP before server confirmation', (await a.locator('.journey-index').innerText()) === '0 XP');
+  check('path says the answer is queued', (await a.getByRole('status').filter({ hasText: 'queued' }).count()) === 1);
+  check('lesson 0 candle is not complete before confirmation', !/Meet the chart\. Complete/.test((await a.getByRole('button', { name: /^Meet the chart\./ }).getAttribute('aria-label')) ?? ''));
+  await a.screenshot({ path: `${shots}/14b-path-queued.png`, fullPage: true });
+  await axeScan(a, 'path with queued answer');
+  // Reconnect into a server error first: a 503 must keep the queued answer, not drop it.
+  await deviceA.context.route('**/api/answers', (route) => route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"unavailable"}' }));
+  await deviceA.context.setOffline(false);
+  await a.evaluate(() => window.dispatchEvent(new Event('online')));
+  await a.waitForTimeout(1500);
+  const after503 = await a.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
+  check('a server error on reconnect keeps the queued answer', after503.pending.length === 1 && (await a.locator('.journey-index').innerText()) === '0 XP');
+  await deviceA.context.unroute('**/api/answers');
+  // Reconnect: the server confirms and progression moves exactly once.
+  await a.evaluate(() => window.dispatchEvent(new Event('online')));
+  await a.locator('.journey-index', { hasText: '25 XP' }).waitFor({ timeout: 15000 });
+  check('reconnect confirms the answer and adds +25 once', (await a.locator('.journey-index').innerText()) === '25 XP');
+  check('reconnect completes the lesson 0 candle', /Complete/.test((await a.getByRole('button', { name: /^Meet the chart\./ }).getAttribute('aria-label')) ?? ''));
+  check('queued status clears after confirmation', (await a.getByRole('status').filter({ hasText: /queued/ }).count()) === 0);
+  await a.screenshot({ path: `${shots}/14c-path-confirmed.png`, fullPage: true });
+  // Duplicate flush: put the same queued answer back and reload. Nothing more is added.
+  await a.evaluate((pending) => {
+    const s = JSON.parse(localStorage.getItem('tikerino.progress.v1'));
+    s.pending = pending;
+    localStorage.setItem('tikerino.progress.v1', JSON.stringify(s));
+  }, queuedState.pending);
+  await a.reload({ waitUntil: 'networkidle' });
+  await a.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  await a.waitForTimeout(1500);
+  const afterDup = await a.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
+  check('a duplicate flush adds nothing (still 25 XP)', (await a.locator('.journey-index').innerText()) === '25 XP' && afterDup.pending.length === 0, JSON.stringify({ pending: afterDup.pending.length, awards: afterDup.lessonAwards }));
+  // A second device holding the same queued answer: server replays the grade, +25 once there too.
+  const deviceB = await offlineDevice(queuedState);
+  await deviceB.p.locator('.journey-index', { hasText: '25 XP' }).waitFor({ timeout: 15000 });
+  await deviceB.p.waitForTimeout(1500);
+  await deviceB.p.reload({ waitUntil: 'networkidle' });
+  await deviceB.p.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  const bState = await deviceB.p.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
+  check('a second device replaying the same confirmed answer derives +25 exactly once', (await deviceB.p.locator('.journey-index').innerText()) === '25 XP' && Object.keys(bState.lessonAwards).length === 1 && bState.pending.length === 0, JSON.stringify(bState.lessonAwards));
+  await deviceB.context.close();
+  await deviceA.context.close();
 } catch (error) {
   failures.push(`FAIL threw: ${error.message}`);
   await page.screenshot({ path: `${shots}/error.png`, fullPage: true }).catch(() => {});

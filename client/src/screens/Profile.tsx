@@ -10,7 +10,7 @@ export function Profile({
   onBack: () => void;
   onOpenLegal: (doc: LegalDoc) => void;
 }): JSX.Element {
-  const { progress, displayStreak, pendingCount, reset, lessonMode, setLessonMode } = useAppState();
+  const { progress, displayStreak, pendingCount, syncState, reset, lessonMode, setLessonMode } = useAppState();
 
   const completed = lessons.filter((l) => progress.lessons[l.lessonId]?.completed).length;
   const crowns = lessons.reduce(
@@ -57,9 +57,10 @@ export function Profile({
       )}
 
       {pendingCount > 0 && (
-        <p className="card bg-sun-soft border-sun px-4 py-3 mt-4 text-sm">
-          {pendingCount} answer{pendingCount === 1 ? '' : 's'} locked offline. They are graded, and
-          revealed, as soon as you reconnect.
+        <p role="status" className="card px-4 py-3 mt-4 text-sm">
+          {syncState === 'confirming'
+            ? `Confirming ${pendingCount} queued answer${pendingCount === 1 ? '' : 's'}…`
+            : `${pendingCount} answer${pendingCount === 1 ? '' : 's'} queued. Checked when you reconnect; progress is added then.`}
         </p>
       )}
 

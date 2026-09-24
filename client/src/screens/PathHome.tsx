@@ -8,7 +8,7 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
   onOpenLesson: (lessonId: string) => void;
   onOpenProfile: () => void;
 }): JSX.Element {
-  const { progress, displayStreak } = useAppState();
+  const { progress, displayStreak, pendingCount, syncState } = useAppState();
   const firstIncomplete = lessons.findIndex((lesson) => !progress.lessons[lesson.lessonId]?.completed);
   const allDone = firstIncomplete === -1;
   const currentLesson = allDone ? lessons[lessons.length - 1]! : lessons[firstIncomplete]!;
@@ -27,6 +27,14 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
             <span aria-hidden="true">▥</span><span>{displayStreak} day{displayStreak === 1 ? '' : 's'}</span>
           </button>
         </header>
+
+        {pendingCount > 0 && (
+          <p role="status" className="journey-sync">
+            {syncState === 'confirming'
+              ? `Confirming ${pendingCount} queued answer${pendingCount === 1 ? '' : 's'}…`
+              : `${pendingCount} answer${pendingCount === 1 ? '' : 's'} queued · checked when you reconnect`}
+          </p>
+        )}
 
         <section className="journey-intro" aria-labelledby="journey-title">
           <p className="journey-kicker">Your learning market</p>
