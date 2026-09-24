@@ -273,6 +273,10 @@ export function CandleChart(props: CandleChartProps): JSX.Element {
                       width={Math.min(columnWidth * 0.4, 18)}
                       height={volumeTop + VOLUME_HEIGHT - volumeY(candle.v)}
                       fill="var(--data-volume)"
+                      // WCAG 1.4.11: --data-volume on the white card is 1.9:1.
+                      // The frozen token stays; an --ink-2 outline (5.1:1) draws the bar's edge.
+                      stroke="var(--ink-2)"
+                      strokeWidth={1}
                       rx={2}
                     />
                   )}

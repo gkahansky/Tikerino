@@ -1,0 +1,274 @@
+{
+  "generatedAt": "2026-09-24T05:41:00.509Z",
+  "base": "http://127.0.0.1:5173",
+  "threshold": 3,
+  "rows": [
+    {
+      "state": "Living Chart path (dark)",
+      "mark": "path: open lesson candle outline (#7bcab2)",
+      "required": false,
+      "colour": "#7bcab2",
+      "against": "#083a39",
+      "ratio": 6.53,
+      "note": "Decorative (aria-hidden); state is in visible text (LIVE · forming). (sampled pixels)"
+    },
+    {
+      "state": "Living Chart path (dark)",
+      "mark": "path: completed candle body (#4ba98c)",
+      "required": false,
+      "colour": "#4ba98c",
+      "against": "#0b2833",
+      "ratio": 5.38,
+      "note": "Decorative; \"Complete\" is visible text. (sampled pixels)"
+    },
+    {
+      "state": "Living Chart path (dark)",
+      "mark": "path: locked candle mark (#75908b)",
+      "required": false,
+      "colour": "#556e6d",
+      "against": "#09222e",
+      "ratio": 3,
+      "note": "Decorative; \"locked\" is visible text. (sampled pixels)"
+    },
+    {
+      "state": "Living Chart path (dark)",
+      "mark": "path: forming lesson border (#5ce1b5)",
+      "required": true,
+      "colour": "#5ce1b5",
+      "against": "#061725",
+      "ratio": 11.14,
+      "note": "Marks the one lesson to continue. (sampled pixels)"
+    },
+    {
+      "state": "Living Chart path (dark)",
+      "mark": "path: persistence bar, active day (#4ba98c)",
+      "required": false,
+      "colour": "#4aa88b",
+      "against": "#061a28",
+      "ratio": 6.12,
+      "note": "aria-hidden; \"Day N\" is visible text. (sampled pixels)"
+    },
+    {
+      "state": "Living Chart path (dark)",
+      "mark": "path: persistence bar, inactive day",
+      "required": false,
+      "colour": "#14393e",
+      "against": "#061a28",
+      "ratio": 1.42,
+      "note": "aria-hidden; the day count is visible text. (sampled pixels)"
+    },
+    {
+      "state": "Exercise chart, before reveal",
+      "mark": "exercise: bullish body border + wick (--data-up)",
+      "required": true,
+      "colour": "#0e9f6e",
+      "against": "#ffffff",
+      "ratio": 3.39,
+      "note": ""
+    },
+    {
+      "state": "Exercise chart, before reveal",
+      "mark": "exercise: bearish body + wick (--data-down)",
+      "required": true,
+      "colour": "#dc2626",
+      "against": "#ffffff",
+      "ratio": 4.83,
+      "note": ""
+    },
+    {
+      "state": "Exercise chart, before reveal",
+      "mark": "exercise: unchanged (doji) body (--ink-2)",
+      "missing": true
+    },
+    {
+      "state": "Exercise chart, before reveal",
+      "mark": "exercise: volume bar (--data-volume)",
+      "required": false,
+      "colour": "#b3bcc4",
+      "against": "#ffffff",
+      "ratio": 1.93,
+      "note": "Fill only; the bar's boundary is the 5.06:1 outline."
+    },
+    {
+      "state": "Exercise chart, before reveal",
+      "mark": "exercise: volume bar outline",
+      "required": true,
+      "colour": "#5b7186",
+      "against": "#ffffff",
+      "ratio": 5.06,
+      "note": ""
+    },
+    {
+      "state": "Exercise chart, before reveal",
+      "mark": "exercise: gridline (--data-grid)",
+      "required": false,
+      "colour": "#edeae3",
+      "against": "#ffffff",
+      "ratio": 1.2,
+      "note": "Decorative: prices are read from candle positions and the text list; no gridline value is needed to answer."
+    },
+    {
+      "state": "Exercise, keyboard focus",
+      "mark": "focus ring on an answer (--focus-ring, 3px) vs paper",
+      "required": true,
+      "colour": "#2c5677",
+      "against": "#fafaf7",
+      "ratio": 7.43,
+      "note": ""
+    },
+    {
+      "state": "Exercise, keyboard focus",
+      "mark": "focus ring vs white card",
+      "required": true,
+      "colour": "#2c5677",
+      "against": "#ffffff",
+      "ratio": 7.76,
+      "note": ""
+    },
+    {
+      "state": "Reveal chart",
+      "mark": "reveal: bullish body border + wick (--data-up)",
+      "required": true,
+      "colour": "#0e9f6e",
+      "against": "#ffffff",
+      "ratio": 3.39,
+      "note": ""
+    },
+    {
+      "state": "Reveal chart",
+      "mark": "reveal: bearish body + wick (--data-down)",
+      "required": true,
+      "colour": "#dc2626",
+      "against": "#ffffff",
+      "ratio": 4.83,
+      "note": ""
+    },
+    {
+      "state": "Reveal chart",
+      "mark": "reveal: unchanged (doji) body (--ink-2)",
+      "missing": true
+    },
+    {
+      "state": "Reveal chart",
+      "mark": "reveal: volume bar (--data-volume)",
+      "required": false,
+      "colour": "#b3bcc4",
+      "against": "#ffffff",
+      "ratio": 1.93,
+      "note": "Fill only; the bar's boundary is the 5.06:1 outline."
+    },
+    {
+      "state": "Reveal chart",
+      "mark": "reveal: volume bar outline",
+      "required": true,
+      "colour": "#5b7186",
+      "against": "#ffffff",
+      "ratio": 5.06,
+      "note": ""
+    },
+    {
+      "state": "Reveal chart",
+      "mark": "reveal: gridline (--data-grid)",
+      "required": false,
+      "colour": "#edeae3",
+      "against": "#ffffff",
+      "ratio": 1.2,
+      "note": "Decorative: prices are read from candle positions and the text list; no gridline value is needed to answer."
+    },
+    {
+      "state": "Reveal chart",
+      "mark": "reveal: cut-point line (--ink-2, dashed)",
+      "required": true,
+      "colour": "#5b7186",
+      "against": "#ffffff",
+      "ratio": 5.06,
+      "note": ""
+    },
+    {
+      "state": "Pick the candle, keyboard focus",
+      "mark": "pick: focused candle target outline (--focus-ring, 3px)",
+      "required": true,
+      "colour": "#2c5677",
+      "against": "#ffffff",
+      "ratio": 7.76,
+      "note": ""
+    },
+    {
+      "state": "Pick the candle, selected",
+      "mark": "pick: selected candle ring (--focus-ring, 3px)",
+      "required": true,
+      "colour": "#2c5677",
+      "against": "#ffffff",
+      "ratio": 7.76,
+      "note": ""
+    },
+    {
+      "state": "Pick the candle, selected",
+      "mark": "pick: bullish body border + wick (--data-up)",
+      "required": true,
+      "colour": "#0e9f6e",
+      "against": "#ffffff",
+      "ratio": 3.39,
+      "note": ""
+    },
+    {
+      "state": "Pick the candle, selected",
+      "mark": "pick: bearish body + wick (--data-down)",
+      "required": true,
+      "colour": "#dc2626",
+      "against": "#ffffff",
+      "ratio": 4.83,
+      "note": ""
+    },
+    {
+      "state": "Pick the candle, selected",
+      "mark": "pick: unchanged (doji) body (--ink-2)",
+      "missing": true
+    },
+    {
+      "state": "Pick the candle, selected",
+      "mark": "pick: volume bar (--data-volume)",
+      "required": false,
+      "colour": "#b3bcc4",
+      "against": "#ffffff",
+      "ratio": 1.93,
+      "note": "Fill only; the bar's boundary is the 5.06:1 outline."
+    },
+    {
+      "state": "Pick the candle, selected",
+      "mark": "pick: volume bar outline",
+      "required": true,
+      "colour": "#5b7186",
+      "against": "#ffffff",
+      "ratio": 5.06,
+      "note": ""
+    },
+    {
+      "state": "Pick the candle, selected",
+      "mark": "pick: gridline (--data-grid)",
+      "required": false,
+      "colour": "#edeae3",
+      "against": "#ffffff",
+      "ratio": 1.2,
+      "note": "Decorative: prices are read from candle positions and the text list; no gridline value is needed to answer."
+    },
+    {
+      "state": "Pick the candle, reveal",
+      "mark": "pick reveal: correct-candle ring (--brand-strong on --brand-soft)",
+      "required": true,
+      "colour": "#0b7b5c",
+      "against": "#e7f8f1",
+      "ratio": 4.77,
+      "note": ""
+    },
+    {
+      "state": "Pick the candle, reveal",
+      "mark": "pick reveal: correct-candle surface vs card (--brand-soft)",
+      "required": false,
+      "colour": "#e7f8f1",
+      "against": "#ffffff",
+      "ratio": 1.1,
+      "note": "The 3px --brand-strong ring is the boundary that carries the meaning; the mint fill is decoration."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Accessibility matrix
 
-Generated 2026-09-24T05:32:31.738Z by `tests/a11y/audit.mjs` against http://127.0.0.1:5173 at 390x844. Bar: [RELEASE_BAR.md](RELEASE_BAR.md).
+Generated 2026-09-24T05:42:01.996Z by `tests/a11y/audit.mjs` against http://127.0.0.1:5173 at 390x844. Bar: [RELEASE_BAR.md](RELEASE_BAR.md).
 
 Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been run on hardware. "SR labels" is checked from the Chrome accessibility tree, which is what both screen readers are given; see `transcripts/`. Device status: UNVERIFIED.
 
@@ -368,4 +368,42 @@ Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been 
 - Chart text alt: PASS - 1/1 charts named; text route present
 - axe 2.2 AA: PASS - clean
 - Transcript: [transcripts/16-save-failed.txt](transcripts/16-save-failed.txt)
+
+## Non-text contrast (WCAG 1.4.11, 3:1)
+
+Measured 2026-09-24T05:41:00.509Z by `tests/a11y/contrast.mjs` against http://127.0.0.1:5173. "Required" marks carry meaning a sighted learner needs; the rest are decorative or repeat visible text (reason in the note).
+
+| State | Mark | Colour | Against | Ratio | Required | Result | Note |
+|---|---|---|---|---|---|---|---|
+| Living Chart path (dark) | path: open lesson candle outline (#7bcab2) | #7bcab2 | #083a39 | 6.53:1 | no | PASS | Decorative (aria-hidden); state is in visible text (LIVE · forming). (sampled pixels) |
+| Living Chart path (dark) | path: completed candle body (#4ba98c) | #4ba98c | #0b2833 | 5.38:1 | no | PASS | Decorative; "Complete" is visible text. (sampled pixels) |
+| Living Chart path (dark) | path: locked candle mark (#75908b) | #556e6d | #09222e | 3.00:1 | no | PASS | Decorative; "locked" is visible text. (sampled pixels) |
+| Living Chart path (dark) | path: forming lesson border (#5ce1b5) | #5ce1b5 | #061725 | 11.14:1 | yes | PASS | Marks the one lesson to continue. (sampled pixels) |
+| Living Chart path (dark) | path: persistence bar, active day (#4ba98c) | #4aa88b | #061a28 | 6.12:1 | no | PASS | aria-hidden; "Day N" is visible text. (sampled pixels) |
+| Living Chart path (dark) | path: persistence bar, inactive day | #14393e | #061a28 | 1.42:1 | no | n/a (not required) | aria-hidden; the day count is visible text. (sampled pixels) |
+| Exercise chart, before reveal | exercise: bullish body border + wick (--data-up) | #0e9f6e | #ffffff | 3.39:1 | yes | PASS |  |
+| Exercise chart, before reveal | exercise: bearish body + wick (--data-down) | #dc2626 | #ffffff | 4.83:1 | yes | PASS |  |
+| Exercise chart, before reveal | exercise: unchanged (doji) body (--ink-2) | - | - | - | - | not present in this state | |
+| Exercise chart, before reveal | exercise: volume bar (--data-volume) | #b3bcc4 | #ffffff | 1.93:1 | no | n/a (not required) | Fill only; the bar's boundary is the 5.06:1 outline. |
+| Exercise chart, before reveal | exercise: volume bar outline | #5b7186 | #ffffff | 5.06:1 | yes | PASS |  |
+| Exercise chart, before reveal | exercise: gridline (--data-grid) | #edeae3 | #ffffff | 1.20:1 | no | n/a (not required) | Decorative: prices are read from candle positions and the text list; no gridline value is needed to answer. |
+| Exercise, keyboard focus | focus ring on an answer (--focus-ring, 3px) vs paper | #2c5677 | #fafaf7 | 7.43:1 | yes | PASS |  |
+| Exercise, keyboard focus | focus ring vs white card | #2c5677 | #ffffff | 7.76:1 | yes | PASS |  |
+| Reveal chart | reveal: bullish body border + wick (--data-up) | #0e9f6e | #ffffff | 3.39:1 | yes | PASS |  |
+| Reveal chart | reveal: bearish body + wick (--data-down) | #dc2626 | #ffffff | 4.83:1 | yes | PASS |  |
+| Reveal chart | reveal: unchanged (doji) body (--ink-2) | - | - | - | - | not present in this state | |
+| Reveal chart | reveal: volume bar (--data-volume) | #b3bcc4 | #ffffff | 1.93:1 | no | n/a (not required) | Fill only; the bar's boundary is the 5.06:1 outline. |
+| Reveal chart | reveal: volume bar outline | #5b7186 | #ffffff | 5.06:1 | yes | PASS |  |
+| Reveal chart | reveal: gridline (--data-grid) | #edeae3 | #ffffff | 1.20:1 | no | n/a (not required) | Decorative: prices are read from candle positions and the text list; no gridline value is needed to answer. |
+| Reveal chart | reveal: cut-point line (--ink-2, dashed) | #5b7186 | #ffffff | 5.06:1 | yes | PASS |  |
+| Pick the candle, keyboard focus | pick: focused candle target outline (--focus-ring, 3px) | #2c5677 | #ffffff | 7.76:1 | yes | PASS |  |
+| Pick the candle, selected | pick: selected candle ring (--focus-ring, 3px) | #2c5677 | #ffffff | 7.76:1 | yes | PASS |  |
+| Pick the candle, selected | pick: bullish body border + wick (--data-up) | #0e9f6e | #ffffff | 3.39:1 | yes | PASS |  |
+| Pick the candle, selected | pick: bearish body + wick (--data-down) | #dc2626 | #ffffff | 4.83:1 | yes | PASS |  |
+| Pick the candle, selected | pick: unchanged (doji) body (--ink-2) | - | - | - | - | not present in this state | |
+| Pick the candle, selected | pick: volume bar (--data-volume) | #b3bcc4 | #ffffff | 1.93:1 | no | n/a (not required) | Fill only; the bar's boundary is the 5.06:1 outline. |
+| Pick the candle, selected | pick: volume bar outline | #5b7186 | #ffffff | 5.06:1 | yes | PASS |  |
+| Pick the candle, selected | pick: gridline (--data-grid) | #edeae3 | #ffffff | 1.20:1 | no | n/a (not required) | Decorative: prices are read from candle positions and the text list; no gridline value is needed to answer. |
+| Pick the candle, reveal | pick reveal: correct-candle ring (--brand-strong on --brand-soft) | #0b7b5c | #e7f8f1 | 4.77:1 | yes | PASS |  |
+| Pick the candle, reveal | pick reveal: correct-candle surface vs card (--brand-soft) | #e7f8f1 | #ffffff | 1.10:1 | no | n/a (not required) | The 3px --brand-strong ring is the boundary that carries the meaning; the mint fill is decoration. |
 
