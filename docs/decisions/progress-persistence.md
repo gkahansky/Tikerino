@@ -21,8 +21,10 @@ What it is: a "Save my progress" button produces a code (or file / QR) that enco
 - Minors / guardian path: nothing to collect, so no age gate. A parent can keep the code for the child.
 - LEGAL-IL leads: lowest exposure. No identifiable data beyond a random id. Amendment 13 purpose-binding and security duties still apply to the audit record [1][2]. Database registration now mostly applies to data brokers and public bodies [3] - lead only.
 - Migration: none needed; today's progress is the starting point. Restoring the same `subjectId` keeps audit continuity. The 18 legacy rows are untouched.
+- Restore on a device that already has its own id: the restored `subjectId` becomes primary, and the device's own id stays as a linked secondary, so its audit rows remain reachable. Nothing in `audit_answers` is rewritten.
 - Effort: about 1-2 days (encode/decode, UI, tests, copy). Estimate, not measured.
 - Running cost: $0 new. No new service.
+- Privacy page: still needs one copy line saying the code is the learner's own secret, that anyone holding it can use their progress, and that we cannot recover a lost code.
 - Security: the code is a bearer secret. Anyone holding it can load that progress and submit answers under that `subjectId`. Keep it out of URLs and logs. Losing the code still loses progress. Does not unlock admin, notifications or Google auth - it only fixes the "lost my phone" case.
 
 ## Option (b): sign-in (passwordless email or Google) with server-synced progress
