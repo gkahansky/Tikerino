@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   advanceStreak,
+  daysBetween,
+  dayKey,
+  returnStateFor,
   applyConfirmedAnswer,
   dropPendingAnswer,
   emptyProgress,
@@ -519,5 +522,100 @@ describe('offline answers are credited once, only after server confirmation', ()
     delete legacy.confirmed;
     storage.setItem('tikerino.progress.v1', JSON.stringify(legacy));
     expect(loadProgress(storage, 's1').confirmed).toEqual([]);
+  });
+});
+
+describe('missed days are recovery, never loss (prog-rules-v1.0, no ladder constants)', () => {
+  const lessonIds = ['ex-a', 'ex-b'];
+  const answer = (state: ReturnType<typeof emptyProgress>, exerciseId: string, at: string, correct = true, timeZone = 'Asia/Jerusalem') =>
+    recordAnswer(state, { exerciseId, lessonId: 'lesson-x', lessonExerciseIds: lessonIds, crownLevelCap: 3, correct, xp: 12, hintUsed: false, at: new Date(at), timeZone });
+
+  it('the run rule: same day holds, next day +1, a gap restarts at 1, longest is kept', () => {
+    const s0 = { current: 0, longest: 0, lastActiveDay: null };
+    const d1 = advanceStreak(s0, '2026-09-20');
+    expect(d1).toEqual({ current: 1, longest: 1, lastActiveDay: '2026-09-20' });
+    expect(advanceStreak(d1, '2026-09-20')).toBe(d1);
+    const d2 = advanceStreak(d1, '2026-09-21');
+    expect(d2.current).toBe(2);
+    const back = advanceStreak(d2, '2026-09-24');
+    expect(back).toEqual({ current: 1, longest: 2, lastActiveDay: '2026-09-24' });
+  });
+
+  it('uses the learner local day, not UTC: 23:30 and 00:30 Israel time are two days', () => {
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T20:30:00Z'); // 23:30 IDT
+    s = answer(s, 'ex-b', '2026-09-20T21:30:00Z'); // 00:30 IDT next day, still 20 Sep in UTC
+    expect(s.practiceDays).toEqual(['2026-09-20', '2026-09-21']);
+    expect(s.streak.current).toBe(2);
+  });
+
+  it('DST end in Israel (25 Oct 2026, a 25-hour day) is still exactly one day', () => {
+    expect(dayKey(new Date('2026-10-24T20:59:00Z'), 'Asia/Jerusalem')).toBe('2026-10-24'); // 23:59 IDT
+    expect(dayKey(new Date('2026-10-24T21:01:00Z'), 'Asia/Jerusalem')).toBe('2026-10-25'); // 00:01 IDT
+    expect(dayKey(new Date('2026-10-25T21:59:00Z'), 'Asia/Jerusalem')).toBe('2026-10-25'); // 23:59 IST
+    expect(daysBetween('2026-10-24', '2026-10-25')).toBe(1);
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-10-24T20:00:00Z');
+    s = answer(s, 'ex-b', '2026-10-25T21:30:00Z');
+    expect(s.streak.current).toBe(2);
+  });
+
+  it('DST start (US, 8 Mar 2026, a 23-hour day) is still exactly one day', () => {
+    expect(dayKey(new Date('2026-03-08T04:59:00Z'), 'America/New_York')).toBe('2026-03-07'); // 23:59 EST
+    expect(dayKey(new Date('2026-03-09T03:59:00Z'), 'America/New_York')).toBe('2026-03-08'); // 23:59 EDT
+    expect(daysBetween('2026-03-07', '2026-03-08')).toBe(1);
+    expect(daysBetween('2026-03-08', '2026-03-09')).toBe(1);
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-03-08T04:30:00Z', true, 'America/New_York');
+    s = answer(s, 'ex-b', '2026-03-09T03:30:00Z', true, 'America/New_York');
+    expect(s.streak.current).toBe(2);
+  });
+
+  it('a returning learner keeps XP, lessons and lifetime days; only the run restarts', () => {
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T08:00:00Z');
+    s = answer(s, 'ex-b', '2026-09-21T08:00:00Z');
+    expect(s.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    const before = JSON.stringify(s);
+    const ret = returnStateFor(s, '2026-09-25');
+    expect(ret).toEqual({ kind: 'returning', lifetimeDays: 2, missedDays: 3, lastRun: 2 });
+    expect(JSON.stringify(s)).toBe(before); // reading the return state changes nothing
+    expect(streakForDisplay(s.streak, '2026-09-25')).toBe(0);
+    const again = answer(s, 'ex-a', '2026-09-25T08:00:00Z');
+    expect(again.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(again.lessons['lesson-x']?.completed).toBe(true);
+    expect(again.streak.current).toBe(1);
+    expect(again.practiceDays).toHaveLength(3);
+    expect(returnStateFor(again, '2026-09-25')).toEqual({ kind: 'active', lifetimeDays: 3, run: 1 });
+  });
+
+  it('property: XP, awards and lifetime days never decrease across random answers, gaps and replays', () => {
+    let seed = 20260924;
+    const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+    for (let run = 0; run < 200; run++) {
+      let s = emptyProgress('s1');
+      let t = Date.UTC(2026, 8, 1, 8);
+      for (let step = 0; step < 40; step++) {
+        t += Math.floor(rand() * 4) * 86_400_000 + Math.floor(rand() * 20) * 3_600_000; // gaps of 0-3 days
+        const prev = s;
+        s = answer(s, rand() < 0.5 ? 'ex-a' : 'ex-b', new Date(t).toISOString(), rand() < 0.7);
+        if (rand() < 0.2) s = mergeProgress(s, prev); // a stale tab merging in
+        expect(s.knowledgeIndexXp).toBeGreaterThanOrEqual(prev.knowledgeIndexXp);
+        expect(s.totalXp).toBeGreaterThanOrEqual(prev.totalXp);
+        expect(Object.keys(s.lessonAwards).length).toBeGreaterThanOrEqual(Object.keys(prev.lessonAwards).length);
+        expect(s.practiceDays.length).toBeGreaterThanOrEqual(prev.practiceDays.length);
+        expect(s.streak.longest).toBeGreaterThanOrEqual(prev.streak.longest);
+      }
+    }
+  });
+
+  it('merges lifetime practice days from two tabs as a union', () => {
+    const a = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T08:00:00Z');
+    const b = answer(emptyProgress('s1'), 'ex-b', '2026-09-22T08:00:00Z');
+    expect(mergeProgress(a, b).practiceDays).toEqual(['2026-09-20', '2026-09-22']);
+  });
+
+  it('rebuilds lifetime days for older saves from answers and the last active day', () => {
+    const storage = memoryStorage();
+    const old = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T08:00:00Z', true, undefined as unknown as string) as Partial<ReturnType<typeof emptyProgress>>;
+    delete old.practiceDays;
+    storage.setItem('tikerino.progress.v1', JSON.stringify(old));
+    expect(loadProgress(storage, 's1').practiceDays.length).toBe(1);
   });
 });

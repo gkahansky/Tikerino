@@ -42,7 +42,8 @@ export function Profile({
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Knowledge Index" value={`${progress.knowledgeIndexXp} XP`} />
         <Stat label="Exercise XP (legacy)" value={progress.totalXp} />
-        <Stat label="Day streak" value={displayStreak} />
+        <Stat label="Current run" value={`${displayStreak} day${displayStreak === 1 ? '' : 's'}`} />
+        <Stat label="Practice days" value={progress.practiceDays.length} />
         <Stat label="Lessons done" value={`${completed}/${lessons.length}`} />
         <Stat label="Crowns" value={crowns} />
         <Stat label="Questions answered" value={answered} />
