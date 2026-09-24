@@ -77,7 +77,7 @@ Open decisions for Guy / controller:
 ## Sources
 
 [1] https://iapp.org/news/a/israel-marks-a-new-era-in-privacy-law-amendment-13-ushers-in-sweeping-reform
-[2] https://dpoisrael.com/en/amendment-13/
+[2] https://dpoisrael.com/en/amendment-13/ (commercial compliance vendor. Its intro reads as if every organization must appoint a DPO, but its own list names five categories (section 17B1). Treat it as a lead and confirm DPO scope against the law text or PPA guidance.)
 [3] https://presencis.com/regulations/il-ppl/article-database-registration/
 [4] https://support.google.com/accounts/answer/1350409?hl=en
 [5] https://support.google.com/accounts/answer/7103338?hl=en
