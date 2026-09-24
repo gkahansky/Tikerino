@@ -8,6 +8,7 @@ main
     "Read markets, one small idea at a time"
   paragraph
     "Short lessons. One principle each. Then you practise it on a chart and find out straight away how you did."
+  status
   list "Step 1 of 3"
     listitem [level=1]
     listitem [level=1]

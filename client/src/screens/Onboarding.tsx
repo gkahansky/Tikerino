@@ -56,6 +56,14 @@ export function Onboarding({ onDone }: { onDone: () => void }): JSX.Element {
         <p className="text-ink-2 m-0">{card.body}</p>
       </div>
 
+      {/*
+        Focus stays on Next so keyboard users can keep going, so the new step is
+        announced here instead. Empty on the first step: the page itself is read then.
+      */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {step > 0 ? `Step ${step + 1} of ${CARDS.length}. ${card.title}. ${card.body}` : ''}
+      </p>
+
       <ol className="flex gap-2 list-none p-0 mt-8" aria-label={`Step ${step + 1} of ${CARDS.length}`}>
         {CARDS.map((entry, index) => (
           <li

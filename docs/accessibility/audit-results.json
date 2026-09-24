@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T05:42:01.996Z",
+  "generatedAt": "2026-09-24T05:48:57.654Z",
   "base": "http://127.0.0.1:5173",
   "viewport": "390x844",
   "rows": [
@@ -45,6 +45,10 @@
       "chart": {
         "pass": null,
         "detail": "no chart"
+      },
+      "announce": {
+        "pass": null,
+        "detail": "first step: read as the page"
       }
     },
     {
@@ -89,6 +93,10 @@
       "chart": {
         "pass": null,
         "detail": "no chart"
+      },
+      "announce": {
+        "pass": true,
+        "detail": "live region: \"Step 2 of 3. Make the call, see the grade. Every exercise cuts a pract\"; focus kept on Next"
       }
     },
     {
@@ -133,6 +141,10 @@
       "chart": {
         "pass": null,
         "detail": "no chart"
+      },
+      "announce": {
+        "pass": true,
+        "detail": "live region: \"Step 3 of 3. Build your streak, climb the path. One graded answer a da\"; focus kept on Next"
       }
     },
     {
