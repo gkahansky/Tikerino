@@ -96,7 +96,7 @@ export function TopBar({
         type="button"
         onClick={onProfile}
         className="target flex items-center gap-3 px-2"
-        aria-label={`Your progress: Knowledge Index ${xp} XP, ${streak} day persistence`}
+        aria-label={`Knowledge ${xp} XP, ${streak} day persistence. Your progress`}
       >
         <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">
           Knowledge {xp} XP

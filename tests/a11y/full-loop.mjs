@@ -139,7 +139,7 @@ try {
 
   /* ---------------------------------------------------------------- 2. path home */
   await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
-  check('path home lists both topics', (await page.getByRole('button', { name: /Open lesson|unlock/ }).count()) === 9);
+  check('path home lists all 9 lesson candles', (await page.getByRole('button', { name: /Open lesson|unlock/ }).count()) === 9);
   check(
     'later lessons start locked',
     (await page.getByRole('button', { name: /Finish the previous lesson to unlock/ }).count()) > 0,
@@ -282,10 +282,10 @@ try {
 
   const revealText = await page.locator('body').innerText();
   check('reveal carries no legal text (Terms/Privacy are the only home for it)', !revealText.includes('Nothing here is investment advice.') && !revealText.includes('generated practice data'));
-  check('reveal shows an XP breakdown', revealText.includes('Base') && revealText.includes('Total'));
+  check('reveal shows the exercise score breakdown', revealText.includes('Exercise score') && revealText.includes('Base') && revealText.includes('Score'));
   check('reveal shows what happened next', revealText.includes('What happened next'));
-  const firstCredit = await page.locator('header .pill').innerText();
-  check('reveal credits +0 XP before the lesson completes', firstCredit === '+0 XP', firstCredit);
+  check('reveal makes no XP claim before the lesson completes', (await page.locator('header .pill').count()) === 0);
+  check('reveal never shows a +0 XP pill', !/\+0 XP/.test(revealText));
 
   const revealedCandles = await page.evaluate(
     () => document.querySelectorAll('.reveal-candle').length,
@@ -319,6 +319,22 @@ try {
   check('lesson completion awards canonical +25 once', endingXp === '25 XP', `${startingXp} -> ${endingXp}`);
   notes.push(`     progress pill: ${startingXp.replace(/\n/g, ' ')} -> ${endingXp.replace(/\n/g, ' ')}`);
   await page.screenshot({ path: `${shots}/8-path-after.png`, fullPage: true });
+  // Reading order: the lesson candles' DOM (focus) order runs top to bottom on screen.
+  const candleTops = await page.locator('.candle-path .lesson-candle').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
+  check('path focus order matches reading order (top to bottom)', candleTops.length > 1 && candleTops.every((top, i) => i === 0 || top > candleTops[i - 1]), candleTops.join(','));
+  // WCAG 2.5.3: each labelled control's accessible name contains its visible text.
+  const labelMismatches = await page.locator('button[aria-label]').evaluateAll((els) => els
+    .filter((el) => el.offsetParent !== null)
+    .map((el) => ({ name: el.getAttribute('aria-label').toLowerCase(), visible: el.innerText.replace(/[▥◆◇✓↑▶]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase() }))
+    .filter(({ name, visible }) => visible && !visible.split(/(?<=\S) (?=\S)/).join(' ').split(' ').every((word) => name.includes(word)))
+    .map(({ name, visible }) => `${visible} | ${name}`));
+  check('path controls have accessible names that contain their visible text', labelMismatches.length === 0, labelMismatches.join(' ; '));
+  check('path has no aria-label on role-less divs', (await page.locator('div[aria-label]:not([role])').count()) === 0);
+  // 320px: the path must not scroll sideways on the narrowest supported phones.
+  await page.setViewportSize({ width: 320, height: 700 });
+  check('path fits 320px with no horizontal scroll', await page.evaluate(() => document.documentElement.scrollWidth <= 320));
+  await page.screenshot({ path: `${shots}/8b-path-320.png`, fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
 
   /* ---------------------------------------------------------------- 8b. replay + reload keep 25 */
   await page.getByRole('button', { name: /^Meet the chart\./ }).click();
@@ -341,8 +357,7 @@ try {
   await page.getByRole('button', { name: /The most recent price paid/ }).click();
   await page.getByRole('button', { name: 'Check' }).click();
   await page.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
-  const replayCredit = await page.locator('header .pill').innerText();
-  check('replaying a completed lesson credits +0 XP', replayCredit === '+0 XP', replayCredit);
+  check('replaying a completed lesson makes no XP claim', (await page.locator('header .pill').count()) === 0);
   await page.getByRole('button', { name: /Back to the path/ }).click();
   await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   const replayXp = await page.locator('.journey-index').innerText();
