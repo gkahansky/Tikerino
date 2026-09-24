@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T05:19:03.552Z",
+  "generatedAt": "2026-09-24T05:32:31.738Z",
   "base": "http://127.0.0.1:5173",
   "viewport": "390x844",
   "rows": [
@@ -840,6 +840,94 @@
       }
     },
     {
+      "id": "14-exercise-pick-candle",
+      "name": "Exercise, pick the candle",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"Tap the candle with the highest closing \""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "6 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "14c-exercise-pick-candle-text",
+      "name": "Exercise, pick the candle, text list open",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "18 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
       "id": "15-offline-queued",
       "name": "Answer queued offline",
       "axe": {
@@ -849,6 +937,50 @@
       "focusOnArrival": {
         "pass": null,
         "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "3 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "15b-path-queued",
+      "name": "Path home with a queued answer",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"The Living Chart\""
       },
       "keyboard": {
         "pass": true,

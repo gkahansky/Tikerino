@@ -1,6 +1,6 @@
 # Accessibility matrix
 
-Generated 2026-09-24T05:19:03.552Z by `tests/a11y/audit.mjs` against http://127.0.0.1:5173 at 390x844. Bar: [RELEASE_BAR.md](RELEASE_BAR.md).
+Generated 2026-09-24T05:32:31.738Z by `tests/a11y/audit.mjs` against http://127.0.0.1:5173 at 390x844. Bar: [RELEASE_BAR.md](RELEASE_BAR.md).
 
 Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been run on hardware. "SR labels" is checked from the Chrome accessibility tree, which is what both screen readers are given; see `transcripts/`. Device status: UNVERIFIED.
 
@@ -25,7 +25,10 @@ Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been 
 | Path home, returning after missed days (`12-return-after-gap`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
 | Path home, legacy save (`13-legacy-path`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
 | Exercise, percent change (`14b-exercise-percent`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Exercise, pick the candle (`14-exercise-pick-candle`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Exercise, pick the candle, text list open (`14c-exercise-pick-candle-text`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
 | Answer queued offline (`15-offline-queued`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Path home with a queued answer (`15b-path-queued`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
 | Reveal when the save fails (`16-save-failed`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
 
 ## Details
@@ -296,6 +299,34 @@ Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been 
 - axe 2.2 AA: PASS - clean
 - Transcript: [transcripts/14b-exercise-percent.txt](transcripts/14b-exercise-percent.txt)
 
+### Exercise, pick the candle (`14-exercise-pick-candle`)
+
+- Focus on arrival: PASS - focus on h1 "Tap the candle with the highest closing "
+- Keyboard: PASS - 6 controls reached
+- SR labels (AX tree): PASS - all named
+- Reading order: PASS - DOM order = visual order
+- Contrast: PASS - axe color-contrast clean
+- Reduced motion: PASS - no running animation
+- 200% text: PASS - all text scales, no loss
+- Reflow 320px: PASS - reflows at 320px
+- Chart text alt: PASS - 1/1 charts named; text route present
+- axe 2.2 AA: PASS - clean
+- Transcript: [transcripts/14-exercise-pick-candle.txt](transcripts/14-exercise-pick-candle.txt)
+
+### Exercise, pick the candle, text list open (`14c-exercise-pick-candle-text`)
+
+- Focus on arrival: n/a - same screen
+- Keyboard: PASS - 18 controls reached
+- SR labels (AX tree): PASS - all named
+- Reading order: PASS - DOM order = visual order
+- Contrast: PASS - axe color-contrast clean
+- Reduced motion: PASS - no running animation
+- 200% text: PASS - all text scales, no loss
+- Reflow 320px: PASS - reflows at 320px
+- Chart text alt: PASS - 1/1 charts named; text route present
+- axe 2.2 AA: PASS - clean
+- Transcript: [transcripts/14c-exercise-pick-candle-text.txt](transcripts/14c-exercise-pick-candle-text.txt)
+
 ### Answer queued offline (`15-offline-queued`)
 
 - Focus on arrival: n/a - same screen
@@ -309,6 +340,20 @@ Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been 
 - Chart text alt: n/a - no chart
 - axe 2.2 AA: PASS - clean
 - Transcript: [transcripts/15-offline-queued.txt](transcripts/15-offline-queued.txt)
+
+### Path home with a queued answer (`15b-path-queued`)
+
+- Focus on arrival: PASS - focus on h1 "The Living Chart"
+- Keyboard: PASS - 3 controls reached
+- SR labels (AX tree): PASS - all named
+- Reading order: PASS - DOM order = visual order
+- Contrast: PASS - axe color-contrast clean
+- Reduced motion: PASS - no running animation
+- 200% text: PASS - all text scales, no loss
+- Reflow 320px: PASS - reflows at 320px
+- Chart text alt: n/a - no chart
+- axe 2.2 AA: PASS - clean
+- Transcript: [transcripts/15b-path-queued.txt](transcripts/15b-path-queued.txt)
 
 ### Reveal when the save fails (`16-save-failed`)
 

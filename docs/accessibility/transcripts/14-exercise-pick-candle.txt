@@ -1,0 +1,45 @@
+# Exercise, pick the candle
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Lesson"
+      ""
+      "Lesson"
+    button "Knowledge 35 XP, 1 day persistence. Your progress"
+      "Knowledge"
+      "35"
+      "XP"
+      ""
+      "1"
+      "day"
+  paragraph
+    "Question"
+    "2"
+    "of"
+    "2"
+  heading "Tap the candle with the highest closing price." [level=1]
+    "Tap the candle with the highest closing price."
+  figure
+    group "Practice chart for question 2, scrollable chart"
+      image "Practice chart for question 2. Practice chart - generated data, not a real stock. 1 day per candle."
+      group "Pick a candle"
+        button "Candle 1 of 12, 1 day. Bearish: closed lower than it opened. Open 55.75, close 54.60, high 55.88, low 54.47. The body is 82% of the range. Volume 3,869, above the typical volume."
+        button "Candle 2 of 12, 1 day. Bullish: closed higher than it opened. Open 54.70, close 54.85, high 55.15, low 54.30. The body is 18% of the range. Volume 2,163, about the typical volume."
+        button "Candle 3 of 12, 1 day. Bearish: closed lower than it opened. Open 54.77, close 53.58, high 55.27, low 53.27. The body is 60% of the range. Volume 7,407, far above the typical volume."
+        button "Candle 4 of 12, 1 day. Bullish: closed higher than it opened. Open 53.61, close 54.10, high 54.76, low 53.04. The body is 28% of the range. Volume 1,366, below the typical volume."
+        button "Candle 5 of 12, 1 day. Bullish: closed higher than it opened. Open 54.23, close 54.86, high 55.05, low 53.48. The body is 40% of the range. Volume 1,077, far below the typical volume."
+        button "Candle 6 of 12, 1 day. Bullish: closed higher than it opened. Open 54.66, close 56.52, high 56.92, low 54.32. The body is 72% of the range. Volume 5,875, far above the typical volume."
+        button "Candle 7 of 12, 1 day. Bullish: closed higher than it opened. Open 56.48, close 57.80, high 58.11, low 55.69. The body is 55% of the range. Volume 4,669, above the typical volume."
+        button "Candle 8 of 12, 1 day. Bearish: closed lower than it opened. Open 57.65, close 56.66, high 57.92, low 56.08. The body is 54% of the range. Volume 2,732, about the typical volume."
+        button "Candle 9 of 12, 1 day. Bearish: closed lower than it opened. Open 56.65, close 56.41, high 56.88, low 56.09. The body is 30% of the range. Volume 3,312, about the typical volume."
+        button "Candle 10 of 12, 1 day. Bullish: closed higher than it opened. Open 56.21, close 57.70, high 57.74, low 55.98. The body is 85% of the range. Volume 2,240, about the typical volume."
+        button "Candle 11 of 12, 1 day. Bearish: closed lower than it opened. Open 57.89, close 57.10, high 58.09, low 57.01. The body is 73% of the range. Volume 1,366, below the typical volume."
+        button "Candle 12 of 12, 1 day. Bearish: closed lower than it opened. Open 57.06, close 56.36, high 57.22, low 56.08. The body is 61% of the range. Volume 2,010, about the typical volume."
+    Figcaption
+      "1 day per candle"
+    group
+      DisclosureTriangle "Read the candles as text"
+  button "Show a hint (costs half the XP)"
+button "Check" [disabled=true]
+  "Check"
