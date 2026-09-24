@@ -23,7 +23,7 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
             <strong className="journey-index tabular">{progress.knowledgeIndexXp} XP</strong>
           </div>
           <button type="button" onClick={onOpenProfile} className="journey-profile target"
-            aria-label={`Your progress: Knowledge Index ${progress.knowledgeIndexXp} XP, ${displayStreak} day persistence`}>
+            aria-label={`${displayStreak} day${displayStreak === 1 ? '' : 's'} persistence. Your progress: Knowledge Index ${progress.knowledgeIndexXp} XP`}>
             <span aria-hidden="true">▥</span><span>{displayStreak} day{displayStreak === 1 ? '' : 's'}</span>
           </button>
         </header>
@@ -34,10 +34,12 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
           <p>Complete the live candle to raise your Knowledge Index.</p>
         </section>
 
-        <div className="journey-plot" aria-label="Lesson candles">
+        <section className="journey-plot" aria-label="Lesson candles">
           <div className="journey-grid" aria-hidden="true" />
-          <ol className="candle-path">
-            {lessons.map((lesson, index) => {
+          {/* Newest candle on top: the DOM runs top to bottom so focus order matches
+              reading order (no column-reverse). */}
+          <ol className="candle-path" reversed>
+            {lessons.map((lesson, index) => ({ lesson, index })).reverse().map(({ lesson, index }) => {
               const state = progress.lessons[lesson.lessonId];
               const unlocked = isLessonUnlocked(progress, orderedLessonIds, lesson.lessonId);
               const done = state?.completed === true;
@@ -58,13 +60,15 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
             })}
           </ol>
           {nextGate && <div className="resistance-gate" role="note">
-            <span>Resistance</span><strong>{nextGate.title}</strong><small>Locked · complete the candle below</small>
+            <span>Resistance</span><strong>{nextGate.title}</strong><small>Locked · complete the live candle first</small>
           </div>}
-        </div>
+        </section>
 
         <section className="persistence-panel" aria-label="Persistence">
           <div><span className="journey-kicker">Persistence</span><strong>{displayStreak === 0 ? 'Start today' : `Day ${displayStreak}`}</strong></div>
-          <div className="volume-bars" aria-hidden="true">{[2,4,3,6,5,8,7].map((height,index) => <i key={index} style={{height:`${height * 4}px`}} />)}</div>
+          {/* One slot per day of the current week of persistence; filled slots are real
+              active days, not a decorative pattern. */}
+          <div className="volume-bars" aria-hidden="true">{Array.from({ length: 7 }, (_, index) => <i key={index} className={index < Math.min(displayStreak, 7) ? 'is-active' : ''} />)}</div>
           <p>Practice builds volume. Missing a day never removes earned progress.</p>
         </section>
 

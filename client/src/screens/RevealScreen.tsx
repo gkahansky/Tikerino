@@ -69,9 +69,14 @@ export function RevealScreen({
         >
           {result.correct ? 'Correct' : 'Not this time'}
         </h1>
-        <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">
-          {saveFailed ? 'Not saved' : `+${creditedXp} XP`}
-        </span>
+        {/* Only lesson completion moves the Knowledge Index, so the pill appears only
+            when XP was actually credited (or a save failed). Exercise points below are
+            a separate score, never shown as XP. */}
+        {(saveFailed || creditedXp > 0) && (
+          <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">
+            {saveFailed ? 'Not saved' : `+${creditedXp} XP`}
+          </span>
+        )}
       </header>
 
       {saveFailed && (
@@ -115,7 +120,8 @@ export function RevealScreen({
         </>
       )}
 
-      <section aria-label="XP breakdown" className="card mt-5 px-4 py-3">
+      <section aria-labelledby="exercise-score-title" className="card mt-5 px-4 py-3">
+        <h2 id="exercise-score-title" className="text-sm font-bold m-0 mb-2">Exercise score</h2>
         <dl className="grid grid-cols-2 gap-y-1 m-0 text-sm tabular">
           <dt className="text-ink-2">Base</dt>
           <dd className="m-0 text-right">{xp.base}</dd>
@@ -129,7 +135,7 @@ export function RevealScreen({
               <dd className="m-0 text-right">half</dd>
             </>
           )}
-          <dt className="font-bold border-t border-line pt-1">Total</dt>
+          <dt className="font-bold border-t border-line pt-1">Score</dt>
           <dd className="m-0 text-right font-bold border-t border-line pt-1">{xp.total}</dd>
         </dl>
       </section>
