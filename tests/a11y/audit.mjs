@@ -5,6 +5,7 @@
  * Walks every live learner screen and state at 390px and, per screen, checks:
  *   axe      axe-core with WCAG 2.0/2.1/2.2 A+AA tags, zero critical/serious
  *   focus    after a screen change, focus lands on the new screen (not <body>)
+ *   announce onboarding step changes reach a live region while focus stays on Next
  *   keyboard every visible control is reachable with Tab, focus is visible and
  *            not hidden under sticky/fixed UI
  *   labels   every control and image has an accessible name (Chrome AX tree)
@@ -277,11 +278,24 @@ try {
   const ctx = await browser.newContext(ctxOpts);
   const page = await ctx.newPage();
   await page.goto(BASE, { waitUntil: 'networkidle' });
+  // Keyboard walkthrough: Tab to Next and press Enter, no pointer.
   for (let step = 1; step <= 3; step++) {
-    await audit(page, `01-onboarding-${step}`, `Onboarding, step ${step}`, { stayed: true });
-    const next = page.getByRole('button', { name: /Next|Start learning/ });
-    if (await next.isVisible()) await next.click();
+    const row = await audit(page, `01-onboarding-${step}`, `Onboarding, step ${step}`, { stayed: true });
+    const heading = (await page.getByRole('heading', { level: 1 }).innerText()).trim();
+    const live = await page.evaluate(() => [...document.querySelectorAll('[role="status"],[aria-live]')].map((n) => n.textContent ?? '').join(' '));
+    const focusedNext = await page.evaluate(() => /Next|Start learning/.test(document.activeElement?.textContent ?? ''));
+    row.announce = step === 1
+      ? { pass: null, detail: 'first step: read as the page' }
+      : { pass: live.includes(heading) && focusedNext, detail: `live region: "${live.trim().slice(0, 70)}"; focus ${focusedNext ? 'kept on Next' : 'lost'}` };
+    if (row.announce.pass === false) console.log(`FAIL ${row.id} announce`);
+    await page.evaluate(() => document.activeElement?.blur());
+    for (let i = 0; i < 6; i++) {
+      await page.keyboard.press('Tab');
+      if (await page.evaluate(() => /^(Next|Start learning)$/.test((document.activeElement?.textContent ?? '').trim()))) break;
+    }
+    if (step < 3) await page.keyboard.press('Enter');
   }
+  await page.getByRole('button', { name: 'Start learning' }).click();
   await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   await audit(page, '02-path-new', 'Path home, new learner (locked lessons)');
   await page.getByRole('button', { name: /^Meet the chart\./ }).click();

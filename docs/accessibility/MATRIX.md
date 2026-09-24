@@ -1,41 +1,42 @@
 # Accessibility matrix
 
-Generated 2026-09-24T05:42:01.996Z by `tests/a11y/audit.mjs` against http://127.0.0.1:5173 at 390x844. Bar: [RELEASE_BAR.md](RELEASE_BAR.md).
+Generated 2026-09-24T05:48:57.654Z by `tests/a11y/audit.mjs` against http://127.0.0.1:5173 at 390x844. Bar: [RELEASE_BAR.md](RELEASE_BAR.md).
 
 Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been run on hardware. "SR labels" is checked from the Chrome accessibility tree, which is what both screen readers are given; see `transcripts/`. Device status: UNVERIFIED.
 
-| Screen / state | Focus on arrival | Keyboard | SR labels (AX tree) | Reading order | Contrast | Reduced motion | 200% text | Reflow 320px | Chart text alt | axe 2.2 AA | VoiceOver / TalkBack device |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Onboarding, step 1 (`01-onboarding-1`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Onboarding, step 2 (`01-onboarding-2`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Onboarding, step 3 (`01-onboarding-3`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Path home, new learner (locked lessons) (`02-path-new`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Lesson card (`03-lesson-card`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Guided example, narrated (default) (`04-guided-narrated`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Guided example, text only (`04b-guided-text`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Exercise, multiple choice (`05-exercise-choice`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Exercise with hint open (`05b-exercise-hint`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Exercise, answer selected (`05c-exercise-selected`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Reveal, correct (+10 daily) (`06-reveal-correct`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Reveal, not this time (`07-reveal-wrong`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Path home after practice (`08-path-progress`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Profile (`09-profile`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Terms of use (`10-terms`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Privacy (`11-privacy`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Path home, returning after missed days (`12-return-after-gap`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Path home, legacy save (`13-legacy-path`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Exercise, percent change (`14b-exercise-percent`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Exercise, pick the candle (`14-exercise-pick-candle`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Exercise, pick the candle, text list open (`14c-exercise-pick-candle-text`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
-| Answer queued offline (`15-offline-queued`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Path home with a queued answer (`15b-path-queued`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
-| Reveal when the save fails (`16-save-failed`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Screen / state | Focus on arrival | Step announced | Keyboard | SR labels (AX tree) | Reading order | Contrast | Reduced motion | 200% text | Reflow 320px | Chart text alt | axe 2.2 AA | VoiceOver / TalkBack device |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Onboarding, step 1 (`01-onboarding-1`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Onboarding, step 2 (`01-onboarding-2`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Onboarding, step 3 (`01-onboarding-3`) | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Path home, new learner (locked lessons) (`02-path-new`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Lesson card (`03-lesson-card`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Guided example, narrated (default) (`04-guided-narrated`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Guided example, text only (`04b-guided-text`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Exercise, multiple choice (`05-exercise-choice`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Exercise with hint open (`05b-exercise-hint`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Exercise, answer selected (`05c-exercise-selected`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Reveal, correct (+10 daily) (`06-reveal-correct`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Reveal, not this time (`07-reveal-wrong`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Path home after practice (`08-path-progress`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Profile (`09-profile`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Terms of use (`10-terms`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Privacy (`11-privacy`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Path home, returning after missed days (`12-return-after-gap`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Path home, legacy save (`13-legacy-path`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Exercise, percent change (`14b-exercise-percent`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Exercise, pick the candle (`14-exercise-pick-candle`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Exercise, pick the candle, text list open (`14c-exercise-pick-candle-text`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
+| Answer queued offline (`15-offline-queued`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Path home with a queued answer (`15b-path-queued`) | PASS | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | n/a | PASS | UNVERIFIED |
+| Reveal when the save fails (`16-save-failed`) | n/a | n/a | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | UNVERIFIED |
 
 ## Details
 
 ### Onboarding, step 1 (`01-onboarding-1`)
 
 - Focus on arrival: n/a - same screen
+- Step announced: n/a - first step: read as the page
 - Keyboard: PASS - 2 controls reached
 - SR labels (AX tree): PASS - all named
 - Reading order: PASS - DOM order = visual order
@@ -50,6 +51,7 @@ Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been 
 ### Onboarding, step 2 (`01-onboarding-2`)
 
 - Focus on arrival: n/a - same screen
+- Step announced: PASS - live region: "Step 2 of 3. Make the call, see the grade. Every exercise cuts a pract"; focus kept on Next
 - Keyboard: PASS - 2 controls reached
 - SR labels (AX tree): PASS - all named
 - Reading order: PASS - DOM order = visual order
@@ -64,6 +66,7 @@ Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been 
 ### Onboarding, step 3 (`01-onboarding-3`)
 
 - Focus on arrival: n/a - same screen
+- Step announced: PASS - live region: "Step 3 of 3. Build your streak, climb the path. One graded answer a da"; focus kept on Next
 - Keyboard: PASS - 1 controls reached
 - SR labels (AX tree): PASS - all named
 - Reading order: PASS - DOM order = visual order
@@ -371,7 +374,7 @@ Device screen readers (VoiceOver on iOS, TalkBack on Android) have **not** been 
 
 ## Non-text contrast (WCAG 1.4.11, 3:1)
 
-Measured 2026-09-24T05:41:00.509Z by `tests/a11y/contrast.mjs` against http://127.0.0.1:5173. "Required" marks carry meaning a sighted learner needs; the rest are decorative or repeat visible text (reason in the note).
+Measured 2026-09-24T05:49:15.522Z by `tests/a11y/contrast.mjs` against http://127.0.0.1:5173. "Required" marks carry meaning a sighted learner needs; the rest are decorative or repeat visible text (reason in the note).
 
 | State | Mark | Colour | Against | Ratio | Required | Result | Note |
 |---|---|---|---|---|---|---|---|
@@ -406,4 +409,6 @@ Measured 2026-09-24T05:41:00.509Z by `tests/a11y/contrast.mjs` against http://12
 | Pick the candle, selected | pick: gridline (--data-grid) | #edeae3 | #ffffff | 1.20:1 | no | n/a (not required) | Decorative: prices are read from candle positions and the text list; no gridline value is needed to answer. |
 | Pick the candle, reveal | pick reveal: correct-candle ring (--brand-strong on --brand-soft) | #0b7b5c | #e7f8f1 | 4.77:1 | yes | PASS |  |
 | Pick the candle, reveal | pick reveal: correct-candle surface vs card (--brand-soft) | #e7f8f1 | #ffffff | 1.10:1 | no | n/a (not required) | The 3px --brand-strong ring is the boundary that carries the meaning; the mint fill is decoration. |
+
+**Conditional pass, keep the text:** the inactive persistence bars on the path (1.42:1) pass only because "Day N" and "N practice days" are shown as visible text. If that text is removed, the bars carry the meaning alone and fail 1.4.11.
 

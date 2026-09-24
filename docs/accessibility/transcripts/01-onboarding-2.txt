@@ -8,6 +8,8 @@ main
     "Make the call, see the grade"
   paragraph
     "Every exercise cuts a practice chart at one moment. You call what the chart is telling you, and the grade lands straight away - XP broken down by base, difficulty and speed."
+  status
+    "Step 2 of 3. Make the call, see the grade. Every exercise cuts a practice chart at one moment. You call what the chart is telling you, and the grade lands straight away - XP broken down by base, difficulty and speed."
   list "Step 2 of 3"
     listitem [level=1]
     listitem [level=1]

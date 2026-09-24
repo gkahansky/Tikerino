@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), '../../docs/accessibility');
 const { generatedAt, base, viewport, rows } = JSON.parse(readFileSync(resolve(dir, 'audit-results.json'), 'utf8'));
 const cols = [
-  ['focusOnArrival', 'Focus on arrival'], ['keyboard', 'Keyboard'], ['labels', 'SR labels (AX tree)'], ['order', 'Reading order'], ['contrast', 'Contrast'],
+  ['focusOnArrival', 'Focus on arrival'], ['announce', 'Step announced'], ['keyboard', 'Keyboard'], ['labels', 'SR labels (AX tree)'], ['order', 'Reading order'], ['contrast', 'Contrast'],
   ['motion', 'Reduced motion'], ['text200', '200% text'], ['reflow320', 'Reflow 320px'], ['chart', 'Chart text alt'], ['axe', 'axe 2.2 AA'],
 ];
 const mark = (c) => (c == null || c.pass == null ? 'n/a' : c.pass ? 'PASS' : 'FAIL');
@@ -29,7 +29,7 @@ try {
     if (r.missing) { md += `| ${esc(r.state)} | ${esc(r.mark)} | - | - | - | - | not present in this state | |\n`; continue; }
     md += `| ${esc(r.state)} | ${esc(r.mark)} | ${r.colour} | ${r.against} | ${r.ratio.toFixed(2)}:1 | ${r.required ? 'yes' : 'no'} | ${r.ratio >= 3 ? 'PASS' : r.required ? 'FAIL' : 'n/a (not required)'} | ${esc(r.note ?? '')} |\n`;
   }
-  md += '\n';
+  md += '\n**Conditional pass, keep the text:** the inactive persistence bars on the path (1.42:1) pass only because "Day N" and "N practice days" are shown as visible text. If that text is removed, the bars carry the meaning alone and fail 1.4.11.\n\n';
 } catch { /* contrast not measured yet */ }
 writeFileSync(resolve(dir, 'MATRIX.md'), md);
 console.log(`MATRIX.md: ${rows.length} screens`);
