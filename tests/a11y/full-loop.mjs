@@ -284,7 +284,9 @@ try {
   check('reveal carries no legal text (Terms/Privacy are the only home for it)', !revealText.includes('Nothing here is investment advice.') && !revealText.includes('generated practice data'));
   check('reveal shows the exercise score breakdown', revealText.includes('Exercise score') && revealText.includes('Base') && revealText.includes('Score'));
   check('reveal shows what happened next', revealText.includes('What happened next'));
-  check('reveal makes no XP claim before the lesson completes', (await page.locator('header .pill').count()) === 0);
+  const firstPill = await page.locator('header .pill').innerText();
+  check("the day's first confirmed answer shows the daily +10 XP", firstPill === '+10 XP', firstPill);
+  await page.screenshot({ path: `${shots}/6b-daily-plus-10.png`, fullPage: true });
   check('reveal never shows a +0 XP pill', !/\+0 XP/.test(revealText));
 
   const revealedCandles = await page.evaluate(
@@ -316,7 +318,8 @@ try {
   /* ---------------------------------------------------------------- 8. back to the path */
   await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   const endingXp = await page.locator('.journey-index').innerText();
-  check('lesson completion awards canonical +25 once', endingXp === '25 XP', `${startingXp} -> ${endingXp}`);
+  check('lesson completion +25 plus the daily +10, each once', endingXp === '35 XP', `${startingXp} -> ${endingXp}`);
+  check("the chart's Persistence panel shows today's +10", (await page.getByRole('region', { name: 'Persistence' }).innerText()).includes("Today's practice: +10 XP earned"));
   notes.push(`     progress pill: ${startingXp.replace(/\n/g, ' ')} -> ${endingXp.replace(/\n/g, ' ')}`);
   await page.screenshot({ path: `${shots}/8-path-after.png`, fullPage: true });
   // Reading order: the lesson candles' DOM (focus) order runs top to bottom on screen.
@@ -361,11 +364,11 @@ try {
   await page.getByRole('button', { name: /Back to the path/ }).click();
   await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   const replayXp = await page.locator('.journey-index').innerText();
-  check('replaying lesson 0 keeps the Knowledge Index at 25', replayXp === '25 XP', replayXp);
+  check('replaying lesson 0 the same day keeps the Knowledge Index at 35', replayXp === '35 XP', replayXp);
   await page.reload({ waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   const reloadXp = await page.locator('.journey-index').innerText();
-  check('reload after replay keeps the Knowledge Index at 25', reloadXp === '25 XP', reloadXp);
+  check('reload after replay keeps the Knowledge Index at 35', reloadXp === '35 XP', reloadXp);
 
   /* ---------------------------------------------------------------- 9. profile */
   await page.getByLabel(/Your progress/).click();
@@ -592,7 +595,7 @@ try {
   check('a second open tab does not wipe the award the first tab earned', stored.lessonAwards?.['lesson-0-meet-the-chart']?.xp === 25, JSON.stringify(stored.lessonAwards));
   await tabOne.reload({ waitUntil: 'networkidle' });
   await tabOne.getByRole('heading', { name: 'The Living Chart' }).waitFor();
-  check('after two tabs, reload shows the 25 XP award', (await tabOne.locator('.journey-index').innerText()) === '25 XP');
+  check('after two tabs, reload shows the 35 XP (lesson +25, daily +10)', (await tabOne.locator('.journey-index').innerText()) === '35 XP');
 
   // Failed save: finish lesson 1 while every progress write throws.
   await tabOne.evaluate(() => { window.__failProgressSaves = true; });
@@ -623,7 +626,7 @@ try {
   await axeScan(tabOne, 'save failed reveal');
   await tabOne.reload({ waitUntil: 'networkidle' });
   await tabOne.getByRole('heading', { name: 'The Living Chart' }).waitFor();
-  check('reload after a failed save shows only the durable 25 XP', (await tabOne.locator('.journey-index').innerText()) === '25 XP');
+  check('reload after a failed save shows only the durable 35 XP', (await tabOne.locator('.journey-index').innerText()) === '35 XP');
   await tabsContext.close();
 
   /* ---------------------------------------------------------------- 14. offline queue, reconnect, duplicate flush */
@@ -660,6 +663,7 @@ try {
   await a.getByRole('button', { name: /Time, from oldest on the left/ }).click();
   await a.getByRole('button', { name: 'Check' }).click();
   await a.getByRole('heading', { name: /Correct|Not this time/ }).waitFor();
+  check('reduced motion: the daily +10 is shown as text on the reveal', (await a.locator('header .pill').innerText()) === '+10 XP');
   await a.getByRole('button', { name: /Next question/ }).click();
   await a.getByText(/Question 2 of/).waitFor();
   await a.getByRole('button', { name: /The most recent price paid/ }).click();
@@ -676,7 +680,7 @@ try {
   await a.getByRole('button', { name: /Back to the lesson/ }).click();
   await a.getByRole('button', { name: /Back|Path/ }).first().click().catch(() => {});
   await a.getByRole('heading', { name: 'The Living Chart' }).waitFor();
-  check('path shows zero XP before server confirmation', (await a.locator('.journey-index').innerText()) === '0 XP');
+  check('path shows no lesson XP before server confirmation (only the confirmed daily 10)', (await a.locator('.journey-index').innerText()) === '10 XP');
   check('path says the answer is queued', (await a.getByRole('status').filter({ hasText: 'queued' }).count()) === 1);
   check('lesson 0 candle is not complete before confirmation', !/Meet the chart\. Complete/.test((await a.getByRole('button', { name: /^Meet the chart\./ }).getAttribute('aria-label')) ?? ''));
   await a.screenshot({ path: `${shots}/14b-path-queued.png`, fullPage: true });
@@ -687,12 +691,12 @@ try {
   await a.evaluate(() => window.dispatchEvent(new Event('online')));
   await a.waitForTimeout(1500);
   const after503 = await a.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
-  check('a server error on reconnect keeps the queued answer', after503.pending.length === 1 && (await a.locator('.journey-index').innerText()) === '0 XP');
+  check('a server error on reconnect keeps the queued answer', after503.pending.length === 1 && (await a.locator('.journey-index').innerText()) === '10 XP');
   await deviceA.context.unroute('**/api/answers');
   // Reconnect: the server confirms and progression moves exactly once.
   await a.evaluate(() => window.dispatchEvent(new Event('online')));
-  await a.locator('.journey-index', { hasText: '25 XP' }).waitFor({ timeout: 15000 });
-  check('reconnect confirms the answer and adds +25 once', (await a.locator('.journey-index').innerText()) === '25 XP');
+  await a.locator('.journey-index', { hasText: '35 XP' }).waitFor({ timeout: 15000 });
+  check('reconnect confirms the answer and adds +25 once', (await a.locator('.journey-index').innerText()) === '35 XP');
   check('reconnect completes the lesson 0 candle', /Complete/.test((await a.getByRole('button', { name: /^Meet the chart\./ }).getAttribute('aria-label')) ?? ''));
   check('queued status clears after confirmation', (await a.getByRole('status').filter({ hasText: /queued/ }).count()) === 0);
   await a.screenshot({ path: `${shots}/14c-path-confirmed.png`, fullPage: true });
@@ -706,15 +710,15 @@ try {
   await a.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   await a.waitForTimeout(1500);
   const afterDup = await a.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
-  check('a duplicate flush adds nothing (still 25 XP)', (await a.locator('.journey-index').innerText()) === '25 XP' && afterDup.pending.length === 0, JSON.stringify({ pending: afterDup.pending.length, awards: afterDup.lessonAwards }));
+  check('a duplicate flush adds nothing (still 35 XP)', (await a.locator('.journey-index').innerText()) === '35 XP' && afterDup.pending.length === 0, JSON.stringify({ pending: afterDup.pending.length, awards: afterDup.lessonAwards }));
   // A second device holding the same queued answer: server replays the grade, +25 once there too.
   const deviceB = await offlineDevice(queuedState);
-  await deviceB.p.locator('.journey-index', { hasText: '25 XP' }).waitFor({ timeout: 15000 });
+  await deviceB.p.locator('.journey-index', { hasText: '35 XP' }).waitFor({ timeout: 15000 });
   await deviceB.p.waitForTimeout(1500);
   await deviceB.p.reload({ waitUntil: 'networkidle' });
   await deviceB.p.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   const bState = await deviceB.p.evaluate(() => JSON.parse(localStorage.getItem('tikerino.progress.v1')));
-  check('a second device replaying the same confirmed answer derives +25 exactly once', (await deviceB.p.locator('.journey-index').innerText()) === '25 XP' && Object.keys(bState.lessonAwards).length === 1 && bState.pending.length === 0, JSON.stringify(bState.lessonAwards));
+  check('a second device replaying the same confirmed answer derives +25 exactly once', (await deviceB.p.locator('.journey-index').innerText()) === '35 XP' && Object.keys(bState.lessonAwards).length === 1 && Object.keys(bState.dailyAwards).length === 1 && bState.pending.length === 0, JSON.stringify(bState.lessonAwards));
   await deviceB.context.close();
   await deviceA.context.close();
 
@@ -739,6 +743,7 @@ try {
   await back.getByRole('heading', { name: 'The Living Chart' }).waitFor();
   const panel = await back.getByRole('region', { name: 'Persistence' }).innerText();
   check('returning learner keeps their 25 XP after missed days', (await back.locator('.journey-index').innerText()) === '25 XP');
+  check('returning learner is offered today\'s +10 before practising', (await back.getByRole('region', { name: 'Persistence' }).innerText()).includes('Practise today: +10 XP'));
   check('returning learner sees recovery copy', panel.includes('Welcome back') && panel.includes('Everything you earned is still here: 25 XP and 1 completed candle'), panel);
   check('lifetime practice days stay visible after a gap', panel.includes('2 practice days in total'), panel);
   check('return copy carries no loss language', !/\b(lost|lose|broke|broken|reset|gone)\b/i.test(await back.locator('body').innerText()));

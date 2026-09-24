@@ -1,4 +1,4 @@
-import { isLessonUnlocked, returnStateFor } from '@tikerino/state';
+import { DAILY_PRACTICE_XP, dayKey, isLessonUnlocked, returnStateFor } from '@tikerino/state';
 
 import { useAppState } from '../app-state';
 import { lessons, orderedLessonIds } from '../content';
@@ -86,6 +86,9 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
           ) : (
             <p>Practice builds volume. Missing a day never removes earned progress.</p>
           )}
+          <p className="persistence-daily tabular">
+            {progress.dailyAwards[dayKey()] ? `Today's practice: +${DAILY_PRACTICE_XP} XP earned` : `Practise today: +${DAILY_PRACTICE_XP} XP`}
+          </p>
           {back.lifetimeDays > 0 && (
             <p className="persistence-lifetime tabular">{back.lifetimeDays} practice day{back.lifetimeDays === 1 ? '' : 's'} in total</p>
           )}

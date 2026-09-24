@@ -57,6 +57,8 @@ export type LessonMode = 'text' | 'narrated';
 
 export const PROGRESSION_RULESET_VERSION = 'prog-rules-v1.0' as const;
 export const LESSON_COMPLETION_XP = 25;
+/** Daily practice: the first server-confirmed answer of each local day (Guy, 19/9 14:38). */
+export const DAILY_PRACTICE_XP = 10 as const;
 
 export interface ProgressState {
   version: 1;
@@ -81,6 +83,8 @@ export interface ProgressState {
   confirmed: string[];
   /** Every local day with graded practice. A ledger: only ever grows. */
   practiceDays: string[];
+  /** One +10 per local day, keyed by day. A ledger: the first award for a day wins. */
+  dailyAwards: Record<string, { xp: number; awardedAt: string }>;
 }
 
 const STORAGE_KEY = 'tikerino.progress.v1';
@@ -103,6 +107,7 @@ export function emptyProgress(subjectId: string): ProgressState {
     pending: [],
     confirmed: [],
     practiceDays: [],
+    dailyAwards: {},
   };
 }
 
@@ -229,17 +234,24 @@ export function recordAnswer(state: ProgressState, input: RecordAnswerInput): Pr
   const awardedXp = alreadyScored ? 0 : input.xp;
   const lessonAlreadyAwarded = state.lessonAwards[input.lessonId] !== undefined;
   const awardLesson = !wasCompleted && nowCompleted && !lessonAlreadyAwarded;
+  // recordAnswer only ever runs on a server-confirmed grade (online reply or a
+  // confirmed offline flush), so the first one of the local day qualifies.
+  const today = dayKey(at, input.timeZone);
+  const awardDaily = state.dailyAwards[today] === undefined;
 
   return {
     ...state,
     // Existing per-answer scoring remains available for audit/backward compatibility.
     totalXp: state.totalXp + awardedXp,
-    knowledgeIndexXp: state.knowledgeIndexXp + (awardLesson ? LESSON_COMPLETION_XP : 0),
+    knowledgeIndexXp: state.knowledgeIndexXp + (awardLesson ? LESSON_COMPLETION_XP : 0) + (awardDaily ? DAILY_PRACTICE_XP : 0),
     lessonAwards: awardLesson
       ? { ...state.lessonAwards, [input.lessonId]: { xp: LESSON_COMPLETION_XP, awardedAt: at.toISOString() } }
       : state.lessonAwards,
-    streak: advanceStreak(state.streak, dayKey(at, input.timeZone)),
-    practiceDays: addPracticeDay(state.practiceDays, dayKey(at, input.timeZone)),
+    streak: advanceStreak(state.streak, today),
+    practiceDays: addPracticeDay(state.practiceDays, today),
+    dailyAwards: awardDaily
+      ? { ...state.dailyAwards, [today]: { xp: DAILY_PRACTICE_XP, awardedAt: at.toISOString() } }
+      : state.dailyAwards,
     lessons: {
       ...state.lessons,
       [input.lessonId]: {
@@ -356,8 +368,20 @@ function normaliseLessonAwards(
   return awards;
 }
 
-function sumLessonAwards(awards: ProgressState['lessonAwards']): number {
-  return Object.values(awards).reduce((total, award) => total + award.xp, 0);
+function sumLessonAwards(awards: ProgressState['lessonAwards'], daily: ProgressState['dailyAwards'] = {}): number {
+  return [...Object.values(awards), ...Object.values(daily)].reduce((total, award) => total + award.xp, 0);
+}
+
+/** Stored daily awards only; never backfilled from past practice days. */
+function normaliseDailyAwards(stored: unknown): ProgressState['dailyAwards'] {
+  const awards: ProgressState['dailyAwards'] = {};
+  if (!stored || typeof stored !== 'object') return awards;
+  for (const [day, award] of Object.entries(stored as Record<string, unknown>)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !award || typeof award !== 'object') continue;
+    const { awardedAt } = award as { awardedAt?: unknown };
+    awards[day] = { xp: DAILY_PRACTICE_XP, awardedAt: typeof awardedAt === 'string' ? awardedAt : 'migrated' };
+  }
+  return awards;
 }
 
 /**
@@ -370,6 +394,13 @@ export function lessonXpCreditedByAnswer(state: ProgressState, lessonId: string,
   return award && answer && award.awardedAt === answer.answeredAt ? award.xp : 0;
 }
 
+/** All Knowledge Index XP this answer credited: its lesson award plus the day's +10 if it was the day's first. */
+export function xpCreditedByAnswer(state: ProgressState, lessonId: string, exerciseId: string): number {
+  const answer = state.answers[exerciseId];
+  const daily = answer ? Object.values(state.dailyAwards).find((award) => award.awardedAt === answer.answeredAt) : undefined;
+  return lessonXpCreditedByAnswer(state, lessonId, exerciseId) + (daily ? daily.xp : 0);
+}
+
 export function loadProgress(storage: StorageAdapter, subjectId: string): ProgressState {
   try {
     const raw = storage.getItem(STORAGE_KEY);
@@ -379,6 +410,7 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
       return emptyProgress(subjectId);
     }
     const lessonAwards = normaliseLessonAwards(parsed.lessonAwards, parsed.lessons);
+    const dailyAwards = normaliseDailyAwards(parsed.dailyAwards);
     const confirmed = Array.isArray(parsed.confirmed) ? parsed.confirmed.filter((k) => typeof k === 'string') : [];
     // Older saves had no ledger: rebuild it from the days we can still see.
     const practiceDays = Array.isArray(parsed.practiceDays)
@@ -397,8 +429,9 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
       confirmed,
       pending,
       practiceDays,
+      dailyAwards,
       // Derived, never trusted from storage: a stored "25" or NaN cannot leak into the index.
-      knowledgeIndexXp: sumLessonAwards(lessonAwards),
+      knowledgeIndexXp: sumLessonAwards(lessonAwards, dailyAwards),
     };
   } catch {
     // Corrupt or unreadable storage must not brick the app; start clean.
@@ -454,6 +487,11 @@ export function mergeProgress(mine: ProgressState, theirs: ProgressState): Progr
 
   const confirmed = [...new Set([...theirs.confirmed, ...mine.confirmed])];
   const practiceDays = [...new Set([...theirs.practiceDays, ...mine.practiceDays])].sort();
+  const dailyAwards: ProgressState['dailyAwards'] = { ...theirs.dailyAwards };
+  for (const [day, award] of Object.entries(mine.dailyAwards)) {
+    const other = dailyAwards[day];
+    if (!other || award.awardedAt < other.awardedAt) dailyAwards[day] = award;
+  }
   const pending: PendingAnswer[] = [];
   for (const item of [...mine.pending, ...theirs.pending]) {
     const key = pendingKey(item);
@@ -465,7 +503,8 @@ export function mergeProgress(mine: ProgressState, theirs: ProgressState): Progr
     onboardingComplete: mine.onboardingComplete || theirs.onboardingComplete,
     totalXp: Math.max(mine.totalXp, theirs.totalXp, lessonXp),
     lessonAwards,
-    knowledgeIndexXp: sumLessonAwards(lessonAwards),
+    knowledgeIndexXp: sumLessonAwards(lessonAwards, dailyAwards),
+    dailyAwards,
     answers,
     lessons,
     streak,

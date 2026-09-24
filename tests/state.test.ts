@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   advanceStreak,
+  DAILY_PRACTICE_XP,
+  xpCreditedByAnswer,
   daysBetween,
   dayKey,
   returnStateFor,
@@ -21,6 +23,11 @@ import {
   streakForDisplay,
   type StorageAdapter,
 } from '@tikerino/state';
+
+/** Knowledge Index from lesson awards only, so lesson-award tests are independent of the daily +10. */
+function lessonIndex(state: { lessonAwards: Record<string, { xp: number }> }): number {
+  return Object.values(state.lessonAwards).reduce((total, award) => total + award.xp, 0);
+}
 
 function memoryStorage(): StorageAdapter {
   const map = new Map<string, string>();
@@ -60,19 +67,19 @@ describe('recordAnswer', () => {
     expect(state.lessons['lesson-0']!.completed).toBe(true);
     expect(state.lessons['lesson-0']!.crownLevel).toBe(1);
     expect(state.totalXp).toBe(20);
-    expect(state.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(lessonIndex(state)).toBe(LESSON_COMPLETION_XP);
     expect(state.lessonAwards['lesson-0']?.xp).toBe(25);
   });
 
   it('awards canonical +25 exactly once when a lesson completes, separate from answer XP', () => {
     let state = emptyProgress('s1');
     state = recordAnswer(state, { ...lesson, exerciseId: 'ex-001', correct: true, xp: 12, hintUsed: false });
-    expect(state.knowledgeIndexXp).toBe(0);
+    expect(lessonIndex(state)).toBe(0);
     state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 12, hintUsed: false });
-    expect(state.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(state)).toBe(25);
     expect(state.totalXp).toBe(24);
     state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: true, xp: 12, hintUsed: false });
-    expect(state.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(state)).toBe(25);
     expect(Object.keys(state.lessonAwards)).toEqual(['lesson-0']);
   });
 
@@ -302,9 +309,9 @@ describe('Knowledge Index persistence (prog-rules-v1.0)', () => {
     storage.setItem(KEY, JSON.stringify(legacyState(['lesson-0'])));
     let state = loadProgress(storage, 's1');
     state = completeLesson(state);
-    expect(state.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(state)).toBe(25);
     saveProgress(storage, state);
-    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(loadProgress(storage, 's1'))).toBe(25);
   });
 
   it('round-trips awards and the index through save and load', () => {
@@ -312,7 +319,7 @@ describe('Knowledge Index persistence (prog-rules-v1.0)', () => {
     const state = completeLesson();
     saveProgress(storage, state);
     const loaded = loadProgress(storage, 's1');
-    expect(loaded.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(loaded)).toBe(25);
     expect(loaded.lessonAwards).toEqual(state.lessonAwards);
     expect(loaded.progressionRuleset).toBe('prog-rules-v1.0');
   });
@@ -328,13 +335,13 @@ describe('Knowledge Index persistence (prog-rules-v1.0)', () => {
     const state = completeLesson();
     storage.setItem(KEY, JSON.stringify({ ...state, knowledgeIndexXp: '25' }));
     const fromString = loadProgress(storage, 's1');
-    expect(fromString.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(fromString)).toBe(25);
     expect(Number.isFinite(fromString.knowledgeIndexXp)).toBe(true);
     // JSON turns NaN into null; a raw NaN-bearing object is also covered by derivation.
     storage.setItem(KEY, JSON.stringify({ ...state, knowledgeIndexXp: Number.NaN }));
-    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(loadProgress(storage, 's1'))).toBe(25);
     storage.setItem(KEY, JSON.stringify({ ...state, lessonAwards: { 'lesson-0': { xp: 'x', awardedAt: 'a' } } }));
-    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(loadProgress(storage, 's1'))).toBe(25);
   });
 
   it('keeps the index at 25 when a lesson re-completes after an exercise is added', () => {
@@ -344,7 +351,7 @@ describe('Knowledge Index persistence (prog-rules-v1.0)', () => {
     expect(state.lessons['lesson-0']!.completed).toBe(false);
     state = recordAnswer(state, { ...grown, exerciseId: 'ex-003', correct: true, xp: 10, hintUsed: false, at: new Date(Date.now() + 60_000) });
     expect(state.lessons['lesson-0']!.completed).toBe(true);
-    expect(state.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(state)).toBe(25);
     expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-003')).toBe(0);
   });
 
@@ -352,7 +359,7 @@ describe('Knowledge Index persistence (prog-rules-v1.0)', () => {
     let state = emptyProgress('s1');
     state = recordAnswer(state, { ...lesson, exerciseId: 'ex-001', correct: true, xp: 10, hintUsed: false });
     state = recordAnswer(state, { ...lesson, exerciseId: 'ex-002', correct: false, xp: 0, hintUsed: false });
-    expect(state.knowledgeIndexXp).toBe(0);
+    expect(lessonIndex(state)).toBe(0);
     expect(state.lessonAwards).toEqual({});
     expect(lessonXpCreditedByAnswer(state, 'lesson-0', 'ex-002')).toBe(0);
   });
@@ -392,7 +399,7 @@ describe('merge-before-save across tabs', () => {
       expect(saveProgress(storage, second)).toBe(true);
       const loaded = loadProgress(storage, 's1');
       expect(Object.keys(loaded.lessonAwards).sort()).toEqual(['lesson-0', 'lesson-1']);
-      expect(loaded.knowledgeIndexXp).toBe(50);
+      expect(lessonIndex(loaded)).toBe(50);
       expect(loaded.lessons['lesson-0']!.completed).toBe(true);
       expect(loaded.lessons['lesson-1']!.completed).toBe(true);
       expect(Object.keys(loaded.answers).sort()).toEqual(['ex-001', 'ex-002', 'ex-003', 'ex-004']);
@@ -407,9 +414,9 @@ describe('merge-before-save across tabs', () => {
     const tabB = finish(loadProgress(storage, 's1'), lessonA, ['ex-001', 'ex-002'], '2026-09-23T10:05:00Z');
     saveProgress(storage, tabB);
     const result = persistProgress(storage, tabA);
-    expect(result.state.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(result.state)).toBe(25);
     expect(result.state.lessonAwards['lesson-0']!.awardedAt).toBe('2026-09-23T10:00:00.000Z');
-    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(loadProgress(storage, 's1'))).toBe(25);
   });
 
   it('never merges a different learner in', () => {
@@ -429,7 +436,7 @@ describe('merge-before-save across tabs', () => {
       removeItem: backing.removeItem,
     };
     const state = finish(loadProgress(failing, 's1'), lessonA, ['ex-001', 'ex-002'], '2026-09-23T10:00:00Z');
-    expect(state.knowledgeIndexXp).toBe(25);
+    expect(lessonIndex(state)).toBe(25);
     const result = persistProgress(failing, state);
     expect(result.saved).toBe(false);
     expect(saveProgress(failing, state)).toBe(false);
@@ -449,14 +456,14 @@ describe('offline answers are credited once, only after server confirmation', ()
 
   it('shows zero new XP while the answer is only queued', () => {
     const state = queuePendingAnswer(halfDone(), queued('ex-b'));
-    expect(state.knowledgeIndexXp).toBe(0);
+    expect(lessonIndex(state)).toBe(0);
     expect(state.lessons['lesson-x']?.completed).toBe(false);
   });
 
   it('adds +25 and completes the lesson exactly once when the server confirms', () => {
     const q = queued('ex-b');
     const confirmed = applyConfirmedAnswer(queuePendingAnswer(halfDone(), q), q, graded());
-    expect(confirmed.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(lessonIndex(confirmed)).toBe(LESSON_COMPLETION_XP);
     expect(confirmed.lessons['lesson-x']?.completed).toBe(true);
     expect(confirmed.pending).toEqual([]);
   });
@@ -465,7 +472,7 @@ describe('offline answers are credited once, only after server confirmation', ()
     const q = queued('ex-b');
     const once = applyConfirmedAnswer(queuePendingAnswer(halfDone(), q), q, graded());
     const twice = applyConfirmedAnswer(queuePendingAnswer(once, q), q, graded());
-    expect(twice.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(lessonIndex(twice)).toBe(LESSON_COMPLETION_XP);
     expect(twice.totalXp).toBe(once.totalXp);
     expect(twice.answers).toEqual(once.answers);
     expect(twice.pending).toEqual([]);
@@ -477,7 +484,7 @@ describe('offline answers are credited once, only after server confirmation', ()
     const confirmed = applyConfirmedAnswer(stale, q, graded());
     const merged = mergeProgress(stale, confirmed);
     expect(merged.pending).toEqual([]);
-    expect(merged.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(lessonIndex(merged)).toBe(LESSON_COMPLETION_XP);
     expect(mergeProgress(confirmed, stale).pending).toEqual([]);
   });
 
@@ -489,7 +496,7 @@ describe('offline answers are credited once, only after server confirmation', ()
     const result = persistProgress(storage, applyConfirmedAnswer(queuedState, q, graded()));
     expect(result.state.pending).toEqual([]);
     expect(loadProgress(storage, 's1').pending).toEqual([]);
-    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(lessonIndex(loadProgress(storage, 's1'))).toBe(LESSON_COMPLETION_XP);
   });
 
   it('two devices holding the same confirmed answers each derive +25 exactly once', () => {
@@ -497,7 +504,7 @@ describe('offline answers are credited once, only after server confirmation', ()
     for (const device of [halfDone(), halfDone()]) {
       let state = applyConfirmedAnswer(queuePendingAnswer(device, q), q, graded());
       state = applyConfirmedAnswer(state, q, graded()); // replayed flush on the same device
-      expect(state.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+      expect(lessonIndex(state)).toBe(LESSON_COMPLETION_XP);
       expect(Object.keys(state.lessonAwards)).toEqual(['lesson-x']);
     }
   });
@@ -505,7 +512,7 @@ describe('offline answers are credited once, only after server confirmation', ()
   it('a wrong confirmed answer completes nothing and awards nothing', () => {
     const q = queued('ex-b');
     const state = applyConfirmedAnswer(queuePendingAnswer(halfDone(), q), q, graded(false));
-    expect(state.knowledgeIndexXp).toBe(0);
+    expect(lessonIndex(state)).toBe(0);
     expect(state.pending).toEqual([]);
   });
 
@@ -571,14 +578,14 @@ describe('missed days are recovery, never loss (prog-rules-v1.0, no ladder const
   it('a returning learner keeps XP, lessons and lifetime days; only the run restarts', () => {
     let s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T08:00:00Z');
     s = answer(s, 'ex-b', '2026-09-21T08:00:00Z');
-    expect(s.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(lessonIndex(s)).toBe(LESSON_COMPLETION_XP);
     const before = JSON.stringify(s);
     const ret = returnStateFor(s, '2026-09-25');
     expect(ret).toEqual({ kind: 'returning', lifetimeDays: 2, missedDays: 3, lastRun: 2 });
     expect(JSON.stringify(s)).toBe(before); // reading the return state changes nothing
     expect(streakForDisplay(s.streak, '2026-09-25')).toBe(0);
     const again = answer(s, 'ex-a', '2026-09-25T08:00:00Z');
-    expect(again.knowledgeIndexXp).toBe(LESSON_COMPLETION_XP);
+    expect(lessonIndex(again)).toBe(LESSON_COMPLETION_XP);
     expect(again.lessons['lesson-x']?.completed).toBe(true);
     expect(again.streak.current).toBe(1);
     expect(again.practiceDays).toHaveLength(3);
@@ -617,5 +624,96 @@ describe('missed days are recovery, never loss (prog-rules-v1.0, no ladder const
     delete old.practiceDays;
     storage.setItem('tikerino.progress.v1', JSON.stringify(old));
     expect(loadProgress(storage, 's1').practiceDays.length).toBe(1);
+  });
+});
+
+describe('daily practice +10, once per local day (no ladder, no backfill)', () => {
+  const lessonIds = ['ex-a', 'ex-b', 'ex-c'];
+  const answer = (state: ReturnType<typeof emptyProgress>, exerciseId: string, at: string, correct = true, timeZone = 'Asia/Jerusalem') =>
+    recordAnswer(state, { exerciseId, lessonId: 'lesson-x', lessonExerciseIds: lessonIds, crownLevelCap: 3, correct, xp: 12, hintUsed: false, at: new Date(at), timeZone });
+  const daily = (s: ReturnType<typeof emptyProgress>) => s.knowledgeIndexXp - lessonIndex(s);
+
+  it('the first confirmed answer of the day adds +10; later answers that day add nothing', () => {
+    expect(DAILY_PRACTICE_XP).toBe(10);
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T06:00:00Z');
+    expect(s.knowledgeIndexXp).toBe(10);
+    expect(xpCreditedByAnswer(s, 'lesson-x', 'ex-a')).toBe(10);
+    s = answer(s, 'ex-b', '2026-09-20T07:00:00Z', false);
+    s = answer(s, 'ex-a', '2026-09-20T08:00:00Z');
+    expect(s.knowledgeIndexXp).toBe(10);
+    expect(xpCreditedByAnswer(s, 'lesson-x', 'ex-a')).toBe(0);
+  });
+
+  it('a wrong answer still counts as practice for the day', () => {
+    const s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T06:00:00Z', false);
+    expect(s.knowledgeIndexXp).toBe(10);
+  });
+
+  it('stacks with the lesson award on the answer that does both', () => {
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T06:00:00Z');
+    s = answer(s, 'ex-b', '2026-09-20T06:01:00Z');
+    s = answer(s, 'ex-c', '2026-09-21T06:00:00Z'); // completes the lesson on a new day
+    expect(xpCreditedByAnswer(s, 'lesson-x', 'ex-c')).toBe(25 + 10);
+    expect(s.knowledgeIndexXp).toBe(10 + 10 + 25);
+  });
+
+  it('local midnight splits days: 23:30 and 00:30 Israel time are two awards', () => {
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T20:30:00Z');
+    s = answer(s, 'ex-b', '2026-09-20T21:30:00Z');
+    expect(Object.keys(s.dailyAwards)).toEqual(['2026-09-20', '2026-09-21']);
+    expect(daily(s)).toBe(20);
+  });
+
+  it('Israel DST end (25-hour day): early and late answers on 25 Oct are one award', () => {
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-10-24T21:01:00Z'); // 00:01 IDT 25 Oct
+    s = answer(s, 'ex-b', '2026-10-25T21:59:00Z'); // 23:59 IST 25 Oct
+    expect(Object.keys(s.dailyAwards)).toEqual(['2026-10-25']);
+    expect(daily(s)).toBe(10);
+  });
+
+  it('US DST start (23-hour day): 7 and 8 Mar late evenings are two awards', () => {
+    let s = answer(emptyProgress('s1'), 'ex-a', '2026-03-08T04:59:00Z', true, 'America/New_York'); // 23:59 EST 7 Mar
+    s = answer(s, 'ex-b', '2026-03-09T03:59:00Z', true, 'America/New_York'); // 23:59 EDT 8 Mar
+    expect(Object.keys(s.dailyAwards)).toEqual(['2026-03-07', '2026-03-08']);
+    expect(daily(s)).toBe(20);
+  });
+
+  it('two devices practising the same day merge to one +10 for that day', () => {
+    const phone = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T06:00:00Z');
+    const laptop = answer(emptyProgress('s1'), 'ex-b', '2026-09-20T09:00:00Z');
+    const merged = mergeProgress(phone, laptop);
+    expect(merged.dailyAwards).toEqual({ '2026-09-20': phone.dailyAwards['2026-09-20'] });
+    expect(daily(merged)).toBe(10);
+    expect(mergeProgress(laptop, phone).dailyAwards).toEqual(merged.dailyAwards);
+    const otherDay = answer(emptyProgress('s1'), 'ex-b', '2026-09-21T09:00:00Z');
+    expect(daily(mergeProgress(phone, otherDay))).toBe(20);
+  });
+
+  it('an offline answer confirmed later earns the day it is confirmed on, once', () => {
+    const q = { subjectId: 's1', exerciseId: 'ex-a', answer: { selectedOptionId: 'a' }, hintUsed: false, timeToAnswerMs: 1, capturedOffline: true as const, assignmentSnapshotAt: '2026-09-20T06:00:00.000Z' };
+    const graded = { lessonId: 'lesson-x', lessonExerciseIds: lessonIds, crownLevelCap: 3, correct: true, xp: 12, at: new Date('2026-09-22T06:00:00Z'), timeZone: 'Asia/Jerusalem' };
+    let s = queuePendingAnswer(emptyProgress('s1'), q);
+    expect(s.knowledgeIndexXp).toBe(0);
+    s = applyConfirmedAnswer(s, q, graded);
+    s = applyConfirmedAnswer(queuePendingAnswer(s, q), q, graded);
+    expect(Object.keys(s.dailyAwards)).toEqual(['2026-09-22']);
+    expect(s.knowledgeIndexXp).toBe(10);
+  });
+
+  it('never backfills: an older save with past practice days gains no daily XP on load', () => {
+    const storage = memoryStorage();
+    const old = { ...answer(emptyProgress('s1'), 'ex-a', '2026-09-20T06:00:00Z'), practiceDays: ['2026-09-18', '2026-09-19', '2026-09-20'] } as Partial<ReturnType<typeof emptyProgress>>;
+    delete old.dailyAwards;
+    storage.setItem('tikerino.progress.v1', JSON.stringify(old));
+    const loaded = loadProgress(storage, 's1');
+    expect(loaded.dailyAwards).toEqual({});
+    expect(loaded.knowledgeIndexXp).toBe(0);
+  });
+
+  it('a tampered stored daily amount is normalised to +10', () => {
+    const storage = memoryStorage();
+    const s = answer(emptyProgress('s1'), 'ex-a', '2026-09-20T06:00:00Z');
+    storage.setItem('tikerino.progress.v1', JSON.stringify({ ...s, dailyAwards: { '2026-09-20': { xp: 9999, awardedAt: 'x' }, 'bad-key': { xp: 5 } } }));
+    expect(loadProgress(storage, 's1').knowledgeIndexXp).toBe(10);
   });
 });
