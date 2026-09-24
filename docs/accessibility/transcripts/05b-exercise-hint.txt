@@ -1,0 +1,43 @@
+# Exercise with hint open
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Lesson"
+      ""
+      "Lesson"
+    button "Knowledge 0 XP, 0 days persistence. Your progress"
+      "Knowledge"
+      "0"
+      "XP"
+      ""
+      "0"
+      "day"
+      "s"
+  paragraph
+    "Question"
+    "1"
+    "of"
+    "2"
+  heading "Look at this practice chart. What does the horizontal (bottom) axis show?" [level=1]
+    "Look at this practice chart. What does the horizontal (bottom) axis show?"
+  figure
+    group "Practice chart for question 1, scrollable chart"
+      image "Practice chart for question 1. Practice chart - generated data, not a real stock. 1 day per candle."
+    Figcaption
+      "1 day per candle"
+    group
+      DisclosureTriangle "Read the candles as text"
+  list "Answers"
+    listitem [level=1]
+      button "Time, from oldest on the left to newest on the right"
+    listitem [level=1]
+      button "Price per share"
+    listitem [level=1]
+      button "Number of shares traded"
+    listitem [level=1]
+      button "The company's name"
+  paragraph
+    "One axis is time, the other is price. The bottom one runs left to right."
+button "Check" [disabled=true]
+  "Check"

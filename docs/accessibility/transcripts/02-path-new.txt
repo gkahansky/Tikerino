@@ -1,0 +1,84 @@
+# Path home, new learner (locked lessons)
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader "Journey summary"
+    "KNOWLEDGE INDEX"
+    strong
+      "0"
+      "XP"
+    button "0 days persistence. Your progress: Knowledge Index 0 XP"
+      "0"
+      "day"
+      "s"
+  region "The Living Chart"
+    paragraph
+      "YOUR LEARNING MARKET"
+    heading "The Living Chart" [level=1]
+      "The Living Chart"
+    paragraph
+      "Complete the live candle to raise your Knowledge Index."
+  region "Lesson candles"
+    list
+      listitem [level=1]
+        button "Body size, range, and honest limits. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Body size, range, and honest limits"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Bullish and bearish candles. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Bullish and bearish candles"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Anatomy of a candle. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Anatomy of a candle"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Orders, long and short. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Orders, long and short"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Bid, ask, and spread. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Bid, ask, and spread"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Timeframes: same stock, different zoom. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Timeframes: same stock, different zoom"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Volume: how much changed hands. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Volume: how much changed hands"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Price moves and percent change. Resistance · locked. Finish the previous lesson to unlock" [disabled=true]
+          strong
+            "Price moves and percent change"
+          "Resistance · locked"
+      listitem [level=1]
+        button "Meet the chart. LIVE · forming. Open lesson"
+          strong
+            "Meet the chart"
+          "LIVE · forming"
+    note
+      "RESISTANCE"
+      strong
+        "Price moves and percent change"
+      "Locked · complete the live candle first"
+  region "Persistence"
+    "PERSISTENCE"
+    strong
+      "Start today"
+    paragraph
+      "Practice builds volume. Missing a day never removes earned progress."
+    paragraph
+      "Practise today: +10 XP"
+  button "Continue the live candle Meet the chart"
+    "Continue the live candle"
+    strong
+      "Meet the chart"

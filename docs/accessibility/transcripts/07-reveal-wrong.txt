@@ -1,0 +1,41 @@
+# Reveal, not this time
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    heading "Not this time" [level=1]
+      "Not this time"
+  paragraph
+    "Not quite - the price on a chart is per single share. Volume, profit, and company value are different numbers, shown elsewhere."
+  paragraph
+    "The answer was:"
+    strong
+      "The most recent price paid for one share"
+  region "Exercise score"
+    heading "Exercise score" [level=2]
+      "Exercise score"
+    DescriptionList
+      term "Base"
+      definition
+        "0"
+      term "Difficulty"
+      definition
+        "×"
+        "1"
+      term "Speed bonus"
+      definition
+        "+"
+        "0"
+      term "Score"
+      definition
+        "0"
+  paragraph
+    "Knowledge Index"
+    "10"
+    "XP"
+    "· Exercise score +"
+    "0"
+    "·"
+    "1"
+    "day persistence"
+button "Back to the path"
