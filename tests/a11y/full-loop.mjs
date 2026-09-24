@@ -717,6 +717,41 @@ try {
   check('a second device replaying the same confirmed answer derives +25 exactly once', (await deviceB.p.locator('.journey-index').innerText()) === '25 XP' && Object.keys(bState.lessonAwards).length === 1 && bState.pending.length === 0, JSON.stringify(bState.lessonAwards));
   await deviceB.context.close();
   await deviceA.context.close();
+
+  /* ---------------------------------------------------------------- 15. return after missed days */
+  // Fixed clock and the learner's zone, so the day boundary is deterministic.
+  const returnContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, timezoneId: 'Asia/Jerusalem', reducedMotion: 'reduce' });
+  await returnContext.addInitScript(() => {
+    if (!localStorage.getItem('tikerino.progress.v1')) {
+      localStorage.setItem('tikerino.subjectId.v1', 'return-subject');
+      localStorage.setItem('tikerino.progress.v1', JSON.stringify({
+        version: 1, subjectId: 'return-subject', onboardingComplete: true, lessonMode: 'text', totalXp: 24,
+        streak: { current: 2, longest: 2, lastActiveDay: '2026-10-21' },
+        lessons: { 'lesson-0-meet-the-chart': { completedExerciseIds: ['ex-001', 'ex-002'], completed: true, crownLevel: 1, xpEarned: 24 } },
+        answers: {}, pending: [], confirmed: [], practiceDays: ['2026-10-20', '2026-10-21'],
+        lessonAwards: { 'lesson-0-meet-the-chart': { xp: 25, awardedAt: '2026-10-21T09:00:00.000Z' } }, progressionRuleset: 'prog-rules-v1.0',
+      }));
+    }
+  });
+  const back = await returnContext.newPage();
+  await back.clock.setFixedTime(new Date('2026-10-25T10:00:00+02:00')); // Sunday after DST ended, 3 days missed
+  await back.goto(BASE, { waitUntil: 'networkidle' });
+  await back.getByRole('heading', { name: 'The Living Chart' }).waitFor();
+  const panel = await back.getByRole('region', { name: 'Persistence' }).innerText();
+  check('returning learner keeps their 25 XP after missed days', (await back.locator('.journey-index').innerText()) === '25 XP');
+  check('returning learner sees recovery copy', panel.includes('Welcome back') && panel.includes('Everything you earned is still here: 25 XP and 1 completed candle'), panel);
+  check('lifetime practice days stay visible after a gap', panel.includes('2 practice days in total'), panel);
+  check('return copy carries no loss language', !/\b(lost|lose|broke|broken|reset|gone)\b/i.test(await back.locator('body').innerText()));
+  check('completed candle stays complete after the gap', /Complete/.test((await back.getByRole('button', { name: /^Meet the chart\./ }).getAttribute('aria-label')) ?? ''));
+  await back.screenshot({ path: `${shots}/15-return-after-gap.png`, fullPage: true });
+  await axeScan(back, 'return after gap');
+  await back.getByLabel(/persistence\. Your progress/).click();
+  await back.getByRole('heading', { name: 'Your progress' }).waitFor();
+  const profileText = await back.locator('body').innerText();
+  check('profile shows lifetime practice days next to the current run', /2\s*Practice days/.test(profileText) && /0 days\s*Current run/.test(profileText), profileText.slice(0, 300));
+  await back.screenshot({ path: `${shots}/15b-return-profile.png`, fullPage: true });
+  await axeScan(back, 'return profile');
+  await returnContext.close();
 } catch (error) {
   failures.push(`FAIL threw: ${error.message}`);
   await page.screenshot({ path: `${shots}/error.png`, fullPage: true }).catch(() => {});

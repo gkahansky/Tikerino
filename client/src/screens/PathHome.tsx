@@ -1,4 +1,4 @@
-import { isLessonUnlocked } from '@tikerino/state';
+import { isLessonUnlocked, returnStateFor } from '@tikerino/state';
 
 import { useAppState } from '../app-state';
 import { lessons, orderedLessonIds } from '../content';
@@ -12,6 +12,8 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
   const firstIncomplete = lessons.findIndex((lesson) => !progress.lessons[lesson.lessonId]?.completed);
   const allDone = firstIncomplete === -1;
   const currentLesson = allDone ? lessons[lessons.length - 1]! : lessons[firstIncomplete]!;
+  const back = returnStateFor(progress);
+  const completedCount = lessons.filter((lesson) => progress.lessons[lesson.lessonId]?.completed).length;
   const nextGate = lessons.find((lesson) => !isLessonUnlocked(progress, orderedLessonIds, lesson.lessonId));
 
   return (
@@ -73,11 +75,20 @@ export function PathHome({ onOpenLesson, onOpenProfile }: {
         </section>
 
         <section className="persistence-panel" aria-label="Persistence">
-          <div><span className="journey-kicker">Persistence</span><strong>{displayStreak === 0 ? 'Start today' : `Day ${displayStreak}`}</strong></div>
+          <div><span className="journey-kicker">Persistence</span><strong>{back.kind === 'returning' ? 'Welcome back' : displayStreak === 0 ? 'Start today' : `Day ${displayStreak}`}</strong></div>
           {/* One slot per day of the current week of persistence; filled slots are real
               active days, not a decorative pattern. */}
           <div className="volume-bars" aria-hidden="true">{Array.from({ length: 7 }, (_, index) => <i key={index} className={index < Math.min(displayStreak, 7) ? 'is-active' : ''} />)}</div>
-          <p>Practice builds volume. Missing a day never removes earned progress.</p>
+          {back.kind === 'returning' ? (
+            <p className="persistence-return">
+              Everything you earned is still here: {progress.knowledgeIndexXp} XP and {completedCount} completed candle{completedCount === 1 ? '' : 's'}. Practise today to start a new run.
+            </p>
+          ) : (
+            <p>Practice builds volume. Missing a day never removes earned progress.</p>
+          )}
+          {back.lifetimeDays > 0 && (
+            <p className="persistence-lifetime tabular">{back.lifetimeDays} practice day{back.lifetimeDays === 1 ? '' : 's'} in total</p>
+          )}
         </section>
 
         <button type="button" onClick={() => onOpenLesson(currentLesson.lessonId)} className="journey-cta target">

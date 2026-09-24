@@ -79,6 +79,8 @@ export interface ProgressState {
    * by another tab's stale copy.
    */
   confirmed: string[];
+  /** Every local day with graded practice. A ledger: only ever grows. */
+  practiceDays: string[];
 }
 
 const STORAGE_KEY = 'tikerino.progress.v1';
@@ -100,21 +102,56 @@ export function emptyProgress(subjectId: string): ProgressState {
     answers: {},
     pending: [],
     confirmed: [],
+    practiceDays: [],
   };
 }
 
-/** Local calendar day. Streaks are a human, local-timezone idea, not a UTC one. */
-export function dayKey(date: Date = new Date()): string {
+/**
+ * Local calendar day. Streaks are a human, local-timezone idea, not a UTC one.
+ * Pass an IANA timeZone to pin the learner's zone (tests, or a known zone);
+ * otherwise the device's own zone is used.
+ */
+export function dayKey(date: Date = new Date(), timeZone?: string): string {
+  if (timeZone) {
+    // en-CA formats as YYYY-MM-DD.
+    return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+  }
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
 
-function daysBetween(fromKey: string, toKey: string): number {
-  const from = new Date(`${fromKey}T00:00:00`);
-  const to = new Date(`${toKey}T00:00:00`);
-  return Math.round((to.getTime() - from.getTime()) / 86_400_000);
+/** Whole calendar days between two day keys. Pure date arithmetic, so DST cannot skew it. */
+export function daysBetween(fromKey: string, toKey: string): number {
+  const utc = (key: string): number => {
+    const [y, m, d] = key.split('-').map(Number);
+    return Date.UTC(y!, m! - 1, d!);
+  };
+  return Math.round((utc(toKey) - utc(fromKey)) / 86_400_000);
+}
+
+/** Add a day to the lifetime practice ledger (sorted, unique). */
+export function addPracticeDay(days: string[], day: string): string[] {
+  return days.includes(day) ? days : [...days, day].sort();
+}
+
+export type ReturnState =
+  | { kind: 'new'; lifetimeDays: number }
+  | { kind: 'active'; lifetimeDays: number; run: number }
+  | { kind: 'returning'; lifetimeDays: number; missedDays: number; lastRun: number };
+
+/**
+ * How the learner stands today. A missed day never removes anything: XP,
+ * lessons and lifetime practice days are untouched; only the run restarts.
+ */
+export function returnStateFor(state: ProgressState, today: string = dayKey()): ReturnState {
+  const lifetimeDays = state.practiceDays.length;
+  const last = state.streak.lastActiveDay;
+  if (last === null) return { kind: 'new', lifetimeDays };
+  const gap = daysBetween(last, today);
+  if (gap <= 1) return { kind: 'active', lifetimeDays, run: state.streak.current };
+  return { kind: 'returning', lifetimeDays, missedDays: gap - 1, lastRun: state.streak.current };
 }
 
 /**
@@ -152,6 +189,8 @@ export interface RecordAnswerInput {
   xp: number;
   hintUsed: boolean;
   at?: Date;
+  /** Learner's IANA zone for the day boundary; defaults to the device zone. */
+  timeZone?: string;
 }
 
 /**
@@ -199,7 +238,8 @@ export function recordAnswer(state: ProgressState, input: RecordAnswerInput): Pr
     lessonAwards: awardLesson
       ? { ...state.lessonAwards, [input.lessonId]: { xp: LESSON_COMPLETION_XP, awardedAt: at.toISOString() } }
       : state.lessonAwards,
-    streak: advanceStreak(state.streak, dayKey(at)),
+    streak: advanceStreak(state.streak, dayKey(at, input.timeZone)),
+    practiceDays: addPracticeDay(state.practiceDays, dayKey(at, input.timeZone)),
     lessons: {
       ...state.lessons,
       [input.lessonId]: {
@@ -340,6 +380,13 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
     }
     const lessonAwards = normaliseLessonAwards(parsed.lessonAwards, parsed.lessons);
     const confirmed = Array.isArray(parsed.confirmed) ? parsed.confirmed.filter((k) => typeof k === 'string') : [];
+    // Older saves had no ledger: rebuild it from the days we can still see.
+    const practiceDays = Array.isArray(parsed.practiceDays)
+      ? [...new Set(parsed.practiceDays.filter((d) => typeof d === 'string'))].sort()
+      : [...new Set([
+          ...Object.values(parsed.answers ?? {}).map((a) => (a && typeof a.answeredAt === 'string' ? dayKey(new Date(a.answeredAt)) : null)),
+          parsed.streak?.lastActiveDay ?? null,
+        ].filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort();
     const pending = Array.isArray(parsed.pending) ? parsed.pending.filter((p) => !confirmed.includes(pendingKey(p))) : [];
     return {
       ...emptyProgress(parsed.subjectId),
@@ -349,6 +396,7 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
       lessonAwards,
       confirmed,
       pending,
+      practiceDays,
       // Derived, never trusted from storage: a stored "25" or NaN cannot leak into the index.
       knowledgeIndexXp: sumLessonAwards(lessonAwards),
     };
@@ -405,6 +453,7 @@ export function mergeProgress(mine: ProgressState, theirs: ProgressState): Progr
           };
 
   const confirmed = [...new Set([...theirs.confirmed, ...mine.confirmed])];
+  const practiceDays = [...new Set([...theirs.practiceDays, ...mine.practiceDays])].sort();
   const pending: PendingAnswer[] = [];
   for (const item of [...mine.pending, ...theirs.pending]) {
     const key = pendingKey(item);
@@ -422,6 +471,7 @@ export function mergeProgress(mine: ProgressState, theirs: ProgressState): Progr
     streak,
     pending,
     confirmed,
+    practiceDays,
   };
 }
 
