@@ -27,7 +27,9 @@
     "test:browser": "node tests/a11y/full-loop.mjs",
     "test:play-all": "tsx tests/a11y/play-all.mjs",
     "shots": "node tests/a11y/shots.mjs",
-    "a11y:audit": "node tests/a11y/audit.mjs && node tests/a11y/contrast.mjs && node tests/a11y/matrix.mjs"
+    "a11y:audit": "node tests/a11y/audit.mjs && node tests/a11y/contrast.mjs && node tests/a11y/matrix.mjs",
+    "perf:budget": "node scripts/check-perf-budget.mjs",
+    "perf:vitals": "node tests/perf/vitals.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -36,6 +38,7 @@
     "playwright": "^1.63.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "web-vitals": "^4.2.4"
   }
 }

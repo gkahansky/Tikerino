@@ -1,14 +1,41 @@
 import { resolve } from 'node:path';
 
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+
+/**
+ * main.tsx loads App and app-state with import() so a broken content pack can
+ * show a fallback instead of a white screen. The side effect is a waterfall on
+ * a slow connection: the entry script must download and run before those two
+ * chunks are even requested. Preloading them from index.html fetches all three
+ * in parallel without changing what runs or when.
+ */
+function preloadStartupChunks(): Plugin {
+  return {
+    name: 'tikerino-preload-startup-chunks',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, ctx) {
+        // The entry's dynamic imports are exactly main.tsx's import() calls.
+        const entry = ctx.chunk;
+        const files = entry && entry.type === 'chunk' ? entry.dynamicImports : [];
+        return files.map((f) => ({ tag: 'link', attrs: { rel: 'modulepreload', crossorigin: '', href: `/${f}` }, injectTo: 'head' as const }));
+      },
+    },
+  };
+}
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
     react(),
+    preloadStartupChunks(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Register the service worker from a deferred script, so it never blocks
+      // the first paint on a slow connection.
+      injectRegister: 'script-defer',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
         name: 'Tikerino',

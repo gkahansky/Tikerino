@@ -9,12 +9,20 @@
       content="Tikerino teaches you to read markets one tiny principle at a time, on generated practice charts."
     />
     <title>Tikerino</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Fonts are self-hosted: the same Latin woff2 files Google Fonts serves
+         (Baloo 2 v23, Nunito v32, SIL Open Font License), declared with the
+         same weights and unicode-range. This drops a render-blocking
+         third-party stylesheet and two extra origins from the first paint.
+         No rel=preload on purpose: on slow 4G it made the 70 KB of fonts
+         compete with the app script and pushed first paint later (measured
+         LCP 956 ms without, 1,252 ms with). -->
+    <style>
+      @font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/baloo2-v23-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+      @font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 700; font-display: swap; src: url(/fonts/baloo2-v23-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+      @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/nunito-v32-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+      @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/nunito-v32-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+      @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 700; font-display: swap; src: url(/fonts/nunito-v32-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

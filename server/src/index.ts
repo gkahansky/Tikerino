@@ -6,6 +6,7 @@ import fastifyStatic from '@fastify/static';
 import { buildApp } from './app.js';
 import { createAuditStore } from './store.js';
 import { registerOps } from './ops.js';
+import { setStaticCacheHeaders } from './static-cache.js';
 
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '127.0.0.1';
@@ -19,7 +20,7 @@ const app = buildApp({ auditStore: store, logger: true });
 registerOps(app);
 const clientDist = resolve(process.env.CLIENT_DIST ?? resolve(dirname(fileURLToPath(import.meta.url)), '../../client/dist'));
 if (existsSync(resolve(clientDist, 'index.html'))) {
-  await app.register(fastifyStatic, { root: clientDist });
+  await app.register(fastifyStatic, { root: clientDist, setHeaders: setStaticCacheHeaders });
   app.setNotFoundHandler((request, reply) => {
     if (request.method === 'GET' && !request.url.startsWith('/api/')) return reply.type('text/html').sendFile('index.html');
     return reply.code(404).send({ error: 'not_found' });
