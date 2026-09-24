@@ -22,5 +22,14 @@ for (const r of rows) {
   for (const [k, h] of cols) if (r[k]) md += `- ${h}: ${mark(r[k])} - ${esc(r[k].detail)}\n`;
   md += `- Transcript: [transcripts/${r.id}.txt](transcripts/${r.id}.txt)\n\n`;
 }
+try {
+  const c = JSON.parse(readFileSync(resolve(dir, 'contrast-results.json'), 'utf8'));
+  md += `## Non-text contrast (WCAG 1.4.11, 3:1)\n\nMeasured ${c.generatedAt} by \`tests/a11y/contrast.mjs\` against ${c.base}. "Required" marks carry meaning a sighted learner needs; the rest are decorative or repeat visible text (reason in the note).\n\n| State | Mark | Colour | Against | Ratio | Required | Result | Note |\n|---|---|---|---|---|---|---|---|\n`;
+  for (const r of c.rows) {
+    if (r.missing) { md += `| ${esc(r.state)} | ${esc(r.mark)} | - | - | - | - | not present in this state | |\n`; continue; }
+    md += `| ${esc(r.state)} | ${esc(r.mark)} | ${r.colour} | ${r.against} | ${r.ratio.toFixed(2)}:1 | ${r.required ? 'yes' : 'no'} | ${r.ratio >= 3 ? 'PASS' : r.required ? 'FAIL' : 'n/a (not required)'} | ${esc(r.note ?? '')} |\n`;
+  }
+  md += '\n';
+} catch { /* contrast not measured yet */ }
 writeFileSync(resolve(dir, 'MATRIX.md'), md);
 console.log(`MATRIX.md: ${rows.length} screens`);

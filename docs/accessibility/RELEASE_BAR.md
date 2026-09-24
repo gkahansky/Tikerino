@@ -12,7 +12,7 @@ Every live learner screen and state must meet **WCAG 2.2 Level AA** (https://www
 | Focus on arrival | After a screen change, focus moves to the new screen's heading, not `<body>`. | 2.4.3, 4.1.3 | `audit.mjs` |
 | Screen-reader labels | Every control, image and chart has an accessible name, and state (pressed, disabled) is exposed. | 1.1.1, 4.1.2, 1.3.1 | Chrome AX tree (`transcripts/`); **device VoiceOver/TalkBack pass still required** |
 | Reading order | AX order matches visual order. | 1.3.2, 2.4.3 | `audit.mjs` |
-| Contrast | Text 4.5:1 (3:1 large). UI parts and chart marks 3:1. | 1.4.3, 1.4.11 | axe `color-contrast`; 1.4.11 chart marks by manual review |
+| Contrast | Text 4.5:1 (3:1 large). UI parts and chart marks 3:1. | 1.4.3, 1.4.11 | axe `color-contrast`; chart marks, focus rings and path marks measured by `contrast.mjs` (MATRIX.md, Non-text contrast) |
 | Reduced motion | With `prefers-reduced-motion: reduce`, nothing animates, and every animated cue has a text equivalent. | 2.3.3 (AAA, adopted), 2.2.2 | `audit.mjs`, plus the full-loop reduced-motion checks |
 | 200% text | With text at 200%, all text scales, nothing clips, and nothing scrolls sideways. | 1.4.4 | `audit.mjs` (root font-size 200%) |
 | Reflow | At 320 CSS px nothing scrolls sideways. | 1.4.10 | `audit.mjs` |
@@ -34,5 +34,4 @@ Severity: **P0** = a WCAG 2.2 A/AA failure in the core loop (onboarding -> path 
 ## What this bar does not prove yet
 
 - **No device screen-reader run.** VoiceOver (iOS Safari/PWA) and TalkBack (Android Chrome) have not been run on hardware. The AX-tree transcripts show what those readers are given, not how they speak it. This is the open evidence gap for the core loop.
-- Non-text contrast of chart candles (1.4.11) is reviewed by eye, not measured.
 - `/ops` is owner-only and out of the learner scope.
