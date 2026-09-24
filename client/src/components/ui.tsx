@@ -96,13 +96,14 @@ export function TopBar({
         type="button"
         onClick={onProfile}
         className="target flex items-center gap-3 px-2"
-        aria-label={`Knowledge ${xp} XP, ${streak} day persistence. Your progress`}
+        aria-label={`Knowledge ${xp} XP, ${streak} day${streak === 1 ? '' : 's'} persistence. Your progress`}
       >
         <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">
           Knowledge {xp} XP
         </span>
         <span className="pill bg-brand-soft text-brand-ink px-3 py-1 text-sm font-bold tabular">
-          <span aria-hidden="true">&#9670;</span> {streak}
+          {/* Same run-days mark as the path HUD, so it is never read as a crown count. */}
+          <span aria-hidden="true">▥</span> {streak} day{streak === 1 ? '' : 's'}
         </span>
       </button>
     </header>
