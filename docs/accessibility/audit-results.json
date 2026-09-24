@@ -1,0 +1,931 @@
+{
+  "generatedAt": "2026-09-24T05:19:03.552Z",
+  "base": "http://127.0.0.1:5173",
+  "viewport": "390x844",
+  "rows": [
+    {
+      "id": "01-onboarding-1",
+      "name": "Onboarding, step 1",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "2 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "01-onboarding-2",
+      "name": "Onboarding, step 2",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "2 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "01-onboarding-3",
+      "name": "Onboarding, step 3",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "1 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "02-path-new",
+      "name": "Path home, new learner (locked lessons)",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"The Living Chart\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "3 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "03-lesson-card",
+      "name": "Lesson card",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"A chart is a story of trades\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "5 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "04-guided-narrated",
+      "name": "Guided example, narrated (default)",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "6 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "04b-guided-text",
+      "name": "Guided example, text only",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "7 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "05-exercise-choice",
+      "name": "Exercise, multiple choice",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"Look at this practice chart. What does t\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "9 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "05b-exercise-hint",
+      "name": "Exercise with hint open",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "8 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "05c-exercise-selected",
+      "name": "Exercise, answer selected",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "9 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "06-reveal-correct",
+      "name": "Reveal, correct (+10 daily)",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"Correct\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "3 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    },
+    {
+      "id": "07-reveal-wrong",
+      "name": "Reveal, not this time",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"Not this time\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "1 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "08-path-progress",
+      "name": "Path home after practice",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"The Living Chart\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "3 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "09-profile",
+      "name": "Profile",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"Your progress\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "7 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "10-terms",
+      "name": "Terms of use",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"Terms of use\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "2 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "11-privacy",
+      "name": "Privacy",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"Privacy policy\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "2 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "12-return-after-gap",
+      "name": "Path home, returning after missed days",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "4 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "13-legacy-path",
+      "name": "Path home, legacy save",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "4 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "14b-exercise-percent",
+      "name": "Exercise, percent change",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": true,
+        "detail": "focus on h1 \"A share rises from 40 to 44. What is the\""
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "7 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "15-offline-queued",
+      "name": "Answer queued offline",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "3 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": null,
+        "detail": "no chart"
+      }
+    },
+    {
+      "id": "16-save-failed",
+      "name": "Reveal when the save fails",
+      "axe": {
+        "pass": true,
+        "detail": "clean"
+      },
+      "focusOnArrival": {
+        "pass": null,
+        "detail": "same screen"
+      },
+      "keyboard": {
+        "pass": true,
+        "detail": "3 controls reached"
+      },
+      "labels": {
+        "pass": true,
+        "detail": "all named"
+      },
+      "order": {
+        "pass": true,
+        "detail": "DOM order = visual order"
+      },
+      "contrast": {
+        "pass": true,
+        "detail": "axe color-contrast clean"
+      },
+      "motion": {
+        "pass": true,
+        "detail": "no running animation"
+      },
+      "reflow320": {
+        "pass": true,
+        "detail": "reflows at 320px"
+      },
+      "text200": {
+        "pass": true,
+        "detail": "all text scales, no loss"
+      },
+      "chart": {
+        "pass": true,
+        "detail": "1/1 charts named; text route present"
+      }
+    }
+  ]
+}

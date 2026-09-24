@@ -79,7 +79,7 @@ export function TopBar({
   onProfile?: () => void;
 }): JSX.Element {
   return (
-    <header className="flex items-center justify-between gap-2 py-2">
+    <header className="flex flex-wrap items-center justify-between gap-2 py-2">
       {onBack ? (
         <button
           type="button"
@@ -95,7 +95,7 @@ export function TopBar({
       <button
         type="button"
         onClick={onProfile}
-        className="target flex items-center gap-3 px-2"
+        className="target flex flex-wrap items-center justify-end gap-2 px-2 ml-auto"
         aria-label={`Knowledge ${xp} XP, ${streak} day${streak === 1 ? '' : 's'} persistence. Your progress`}
       >
         <span className="pill bg-sun-soft text-ink px-3 py-1 text-sm font-bold tabular">

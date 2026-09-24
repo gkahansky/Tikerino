@@ -1,0 +1,35 @@
+# Exercise, percent change
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Lesson"
+      ""
+      "Lesson"
+    button "Knowledge 25 XP, 0 days persistence. Your progress"
+      "Knowledge"
+      "25"
+      "XP"
+      ""
+      "0"
+      "day"
+      "s"
+  paragraph
+    "Question"
+    "1"
+    "of"
+    "2"
+  heading "A share rises from 40 to 44. What is the percent change?" [level=1]
+    "A share rises from 40 to 44. What is the percent change?"
+  list "Answers"
+    listitem [level=1]
+      button "+4%"
+    listitem [level=1]
+      button "+10%"
+    listitem [level=1]
+      button "+40%"
+    listitem [level=1]
+      button "+44%"
+  button "Show a hint (costs half the XP)"
+button "Check" [disabled=true]
+  "Check"

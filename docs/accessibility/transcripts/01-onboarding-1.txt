@@ -1,0 +1,16 @@
+# Onboarding, step 1
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    "Tikerino"
+  heading "Read markets, one small idea at a time" [level=1]
+    "Read markets, one small idea at a time"
+  paragraph
+    "Short lessons. One principle each. Then you practise it on a chart and find out straight away how you did."
+  list "Step 1 of 3"
+    listitem [level=1]
+    listitem [level=1]
+    listitem [level=1]
+button "Next"
+button "Skip"

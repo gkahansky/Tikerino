@@ -1,0 +1,66 @@
+# Profile
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Path"
+      ""
+      "Path"
+    button "Knowledge 10 XP, 1 day persistence. Your progress"
+      "Knowledge"
+      "10"
+      "XP"
+      ""
+      "1"
+      "day"
+  heading "Your progress" [level=1]
+    "Your progress"
+  paragraph
+    "10 XP"
+  paragraph
+    "Knowledge Index"
+  paragraph
+    "6"
+  paragraph
+    "Exercise XP (legacy)"
+  paragraph
+    "1 day"
+  paragraph
+    "Current run"
+  paragraph
+    "1"
+  paragraph
+    "Practice days"
+  paragraph
+    "0/9"
+  paragraph
+    "Lessons done"
+  paragraph
+    "0"
+  paragraph
+    "Crowns"
+  paragraph
+    "2"
+  paragraph
+    "Questions answered"
+  paragraph
+    "1"
+  paragraph
+    "Answered correctly"
+  paragraph
+    "Longest streak:"
+    "1"
+    "day"
+    "."
+  heading "Lesson style" [level=2]
+    "Lesson style"
+  paragraph
+    "Narrated plays the lesson aloud while the chart animates. Text only is the silent step-through. You can switch mid-lesson too."
+  group "Lesson style"
+    button "✓ Text only"
+    button "Narrated"
+  paragraph
+    "Progress is stored on this device only - there are no accounts."
+  button "Terms of use"
+  button "Privacy"
+button "Reset my progress"

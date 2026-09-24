@@ -1,0 +1,33 @@
+# Guided example, text only
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Path"
+      ""
+      "Path"
+    button "Knowledge 0 XP, 0 days persistence. Your progress"
+      "Knowledge"
+      "0"
+      "XP"
+      ""
+      "0"
+      "day"
+      "s"
+  region "A chart is a story of trades"
+    paragraph
+      "Walkthrough · step 1 of 3"
+    heading "A chart is a story of trades" [level=1]
+      "A chart is a story of trades"
+    figure
+      group "Guided example for Meet the chart, scrollable chart"
+        image "Guided example for Meet the chart. Practice chart - generated data, not a real stock. 1 day per candle."
+      Figcaption
+        "1 day per candle"
+      group
+        DisclosureTriangle "Read the candles as text"
+    button "Switch to narrated lesson"
+    paragraph
+      "Find the bottom axis. It runs from oldest on the left to newest on the right."
+button "Next"
+button "Back a step"

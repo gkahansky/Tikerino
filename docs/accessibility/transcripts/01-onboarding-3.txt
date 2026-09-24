@@ -1,0 +1,15 @@
+# Onboarding, step 3
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    "Tikerino"
+  heading "Build your streak, climb the path" [level=1]
+    "Build your streak, climb the path"
+  paragraph
+    "One graded answer a day grows your streak. Finish a lesson to unlock the next one, and the path fills in as you go."
+  list "Step 3 of 3"
+    listitem [level=1]
+    listitem [level=1]
+    listitem [level=1]
+button "Start learning"

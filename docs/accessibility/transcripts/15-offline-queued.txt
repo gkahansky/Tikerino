@@ -1,0 +1,21 @@
+# Answer queued offline
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Lesson"
+      ""
+      "Lesson"
+    button "Knowledge 0 XP, 0 days persistence. Your progress"
+      "Knowledge"
+      "0"
+      "XP"
+      ""
+      "0"
+      "day"
+      "s"
+  heading "Answer queued" [level=1]
+    "Answer queued"
+  status
+    "You are offline, so your answer is queued exactly as you gave it. It is checked when you reconnect, and any progress it earns is added then - not before."
+button "Back to the lesson"

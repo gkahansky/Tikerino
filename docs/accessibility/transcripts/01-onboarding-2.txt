@@ -1,0 +1,16 @@
+# Onboarding, step 2
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    "Tikerino"
+  heading "Make the call, see the grade" [level=1]
+    "Make the call, see the grade"
+  paragraph
+    "Every exercise cuts a practice chart at one moment. You call what the chart is telling you, and the grade lands straight away - XP broken down by base, difficulty and speed."
+  list "Step 2 of 3"
+    listitem [level=1]
+    listitem [level=1]
+    listitem [level=1]
+button "Next"
+button "Skip"

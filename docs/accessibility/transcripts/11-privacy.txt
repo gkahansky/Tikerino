@@ -1,0 +1,33 @@
+# Privacy
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Profile"
+      ""
+      "Profile"
+    button "Knowledge 6 XP, 1 day persistence. Your progress"
+      "Knowledge"
+      "6"
+      "XP"
+      ""
+      "1"
+      "day"
+  heading "Privacy policy" [level=1]
+    "Privacy policy"
+  heading "Every chart here is made up" [level=2]
+    "Every chart here is made up"
+  paragraph
+    "Tikerino generates its practice charts. No real companies, no real prices, no real dates - just the shapes, so you can learn to read them. Any resemblance to a real security is coincidence."
+  heading "Progress stays on your device" [level=2]
+    "Progress stays on your device"
+  paragraph
+    "Your XP, streak and lesson progress live in this browser, on this device. There are no accounts and no sign-in, so there is nothing personal to sync or leak."
+  heading "What the server keeps" [level=2]
+    "What the server keeps"
+  paragraph
+    "When you answer an exercise, the answer goes to the server for grading. The server keeps an audit record of graded answers - which exercise, which answer, right or wrong - so a retry never counts twice. That record is tied to a random id from your device, not to your name or an account."
+  heading "No tracking" [level=2]
+    "No tracking"
+  paragraph
+    "No analytics, no advertising, no third-party trackers, no cookies beyond what the app itself needs to run."

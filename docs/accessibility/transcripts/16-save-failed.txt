@@ -1,0 +1,47 @@
+# Reveal when the save fails
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    heading "Correct" [level=1]
+      "Correct"
+    "+10 XP"
+  paragraph
+    "Right - the bottom axis is time. Charts always read oldest to newest, left to right, so the latest moment is the last candle on the right."
+  heading "What happened next" [level=2]
+    "What happened next"
+  figure
+    group "Practice chart with the candles after the cut point revealed, scrollable chart"
+      image "Practice chart with the candles after the cut point revealed. Practice chart - generated data, not a real stock. 1 day per candle."
+    Figcaption
+      "1 day per candle"
+    group
+      DisclosureTriangle "Read the candles as text"
+  region "Exercise score"
+    heading "Exercise score" [level=2]
+      "Exercise score"
+    DescriptionList
+      term "Base"
+      definition
+        "10"
+      term "Difficulty"
+      definition
+        "×"
+        "1"
+      term "Speed bonus"
+      definition
+        "+"
+        "2"
+      term "Score"
+      definition
+        "12"
+  paragraph
+    "Knowledge Index"
+    "10"
+    "XP"
+    "· Exercise score +"
+    "12"
+    "·"
+    "1"
+    "day persistence"
+button "Next question"

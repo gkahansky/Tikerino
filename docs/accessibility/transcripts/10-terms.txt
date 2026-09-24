@@ -1,0 +1,29 @@
+# Terms of use
+# Chrome accessibility tree in reading order (what VoiceOver/TalkBack are given). Not a device recording.
+
+main
+  sectionheader
+    button "Profile"
+      ""
+      "Profile"
+    button "Knowledge 6 XP, 1 day persistence. Your progress"
+      "Knowledge"
+      "6"
+      "XP"
+      ""
+      "1"
+      "day"
+  heading "Terms of use" [level=1]
+    "Terms of use"
+  heading "What Tikerino is" [level=2]
+    "What Tikerino is"
+  paragraph
+    "Tikerino is a practice game. It teaches you to read what a chart already shows - one small principle at a time, on generated practice charts."
+  heading "Nothing here is advice" [level=2]
+    "Nothing here is advice"
+  paragraph
+    "Tikerino will never tell you what to buy or sell, and no pattern predicts the future. Nothing in the app is investment advice, a recommendation, or an offer of any kind. Decisions about real money are yours alone, and if you want advice, speak to a licensed adviser."
+  heading "No warranties" [level=2]
+    "No warranties"
+  paragraph
+    "The app is provided as is, without warranties of any kind. To the fullest extent permitted by law, Tikerino is not liable for any loss or damage connected with using it."

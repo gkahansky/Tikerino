@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { xpCreditedByAnswer } from '@tikerino/state';
 
@@ -32,6 +32,29 @@ export function App(): JSX.Element {
   const [route, setRoute] = useState<Route>({ name: 'path' });
   // The exercise screen owns the window it fetched; the reveal needs it too.
   const [lastWindow, setLastWindow] = useState<WindowResponse | null>(null);
+
+  // WCAG 2.4.3 / 4.1.3: a screen swap removes the control that had focus, so
+  // screen readers were left on <body> and announced nothing. Move focus to the
+  // new screen's heading and start it at the top.
+  const firstRender = useRef(true);
+  const routeKey = route.name === 'exercise' || route.name === 'reveal' ? `${route.name}-${route.lessonId}-${route.index}` : route.name;
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    window.scrollTo(0, 0);
+    let frames = 0;
+    let handle = 0;
+    const focusHeading = () => {
+      const heading = document.querySelector<HTMLElement>('main h1');
+      if (heading) {
+        if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+      } else if (frames++ < 60) {
+        handle = requestAnimationFrame(focusHeading);
+      }
+    };
+    handle = requestAnimationFrame(focusHeading);
+    return () => cancelAnimationFrame(handle);
+  }, [routeKey, progress.onboardingComplete]);
 
   const onGraded = useCallback(
     (lessonId: string, index: number, result: AnswerResponse, hintUsed: boolean) => {
