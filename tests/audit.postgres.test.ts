@@ -83,6 +83,11 @@ describeIfPg('PostgresAuditStore', () => {
     expect(await store.size()).toBe(1);
     expect(await store.find(legacy.subjectId,legacy.exerciseId,legacy.assignmentSnapshotAt)).toEqual(legacy);
     expect((await pool.query('SELECT count(*)::int AS n FROM audit_records')).rows[0]!.n).toBe(1);
+    // AUDIT_SCHEMA's guard checks public.audit_records unconditionally, so a
+    // leaked table here would flip that guard for every later store.migrate()
+    // in this run - including in a different schema, since the INSERT it
+    // guards is unqualified and follows search_path, not the guard's check.
+    await pool.query('DROP TABLE audit_records');
   });
 
   it('round-trips every field of a record', async () => {

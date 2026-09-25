@@ -26,7 +26,9 @@
     "icons": "node scripts/make-icons.mjs",
     "test:browser": "node tests/a11y/full-loop.mjs",
     "test:play-all": "tsx tests/a11y/play-all.mjs",
+    "test:offline": "node tests/a11y/offline-recovery.mjs",
     "shots": "node tests/a11y/shots.mjs",
+    "staging": "node scripts/staging.mjs",
     "a11y:audit": "node tests/a11y/audit.mjs && node tests/a11y/contrast.mjs && node tests/a11y/matrix.mjs",
     "perf:budget": "node scripts/check-perf-budget.mjs",
     "perf:vitals": "node tests/perf/vitals.mjs"
