@@ -117,6 +117,12 @@ export function App(): JSX.Element {
           total={exercises.length}
           onWindowLoaded={setLastWindow}
           onGraded={(result, hintUsed) => onGraded(route.lessonId, route.index, result, hintUsed)}
+          onRevealResolved={(result) => {
+            // Progress was recorded by the flush; this is the reveal it owed.
+            if (lastWindow) {
+              setRoute({ name: 'reveal', lessonId: route.lessonId, index: route.index, result, window: lastWindow });
+            }
+          }}
           onBack={() => setRoute({ name: 'lesson', lessonId: route.lessonId })}
           onOpenProfile={() => setRoute({ name: 'profile' })}
         />

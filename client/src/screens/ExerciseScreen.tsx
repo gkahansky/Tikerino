@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { describeCandles } from '@tikerino/engine';
 import type { AnswerPayload } from '@tikerino/grading';
+import { pendingKey } from '@tikerino/state';
 
 import { OfflineError, fetchWindow, submitAnswer, type AnswerResponse, type WindowResponse } from '../api';
 import { useAppState } from '../app-state';
@@ -18,6 +19,7 @@ export function ExerciseScreen({
   total,
   onWindowLoaded,
   onGraded,
+  onRevealResolved,
   onBack,
   onOpenProfile,
 }: {
@@ -28,10 +30,17 @@ export function ExerciseScreen({
   /** The reveal screen renders the same window, so it is lifted on load. */
   onWindowLoaded: (response: WindowResponse) => void;
   onGraded: (response: AnswerResponse, hintUsed: boolean) => void;
+  /**
+   * Show the reveal for an answer the offline queue already flushed. Separate
+   * from onGraded because the flush already recorded progress via
+   * applyConfirmedAnswer - this only catches the screen up with the result.
+   */
+  onRevealResolved: (response: AnswerResponse) => void;
   onBack: () => void;
   onOpenProfile: () => void;
 }): JSX.Element {
-  const { progress, displayStreak, subjectId, queueOffline } = useAppState();
+  const { progress, displayStreak, subjectId, queueOffline, resolvedAnswers, clearResolvedAnswer } =
+    useAppState();
   const exercise = getExercise(exerciseId);
 
   const [phase, setPhase] = useState<Phase>('loading');
@@ -76,6 +85,18 @@ export function ExerciseScreen({
     // onWindowLoaded is a stable setState from the parent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exerciseId]);
+
+  /**
+   * The answer given offline has come back graded. Until this existed the
+   * flush landed silently: XP and the streak moved while this screen went on
+   * saying the reveal happens when you reconnect, and the learner never saw it.
+   */
+  const resolved = resolvedAnswers[pendingKey({ exerciseId, assignmentSnapshotAt: assignedAt.current })];
+  useEffect(() => {
+    if (phase !== 'offline-locked' || !resolved) return;
+    clearResolvedAnswer(pendingKey({ exerciseId, assignmentSnapshotAt: assignedAt.current }));
+    onRevealResolved(resolved);
+  }, [phase, resolved, exerciseId, clearResolvedAnswer, onRevealResolved]);
 
   const descriptions = useMemo(
     () =>

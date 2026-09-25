@@ -8,6 +8,7 @@ import {
   ensureSubjectId,
   loadProgress,
   mergeProgress,
+  pendingKey,
   persistProgress,
   queuePendingAnswer,
   recordAnswer,
@@ -19,7 +20,7 @@ import {
   type StorageAdapter,
 } from '@tikerino/state';
 
-import { ApiError, submitAnswer, OfflineError } from './api';
+import { ApiError, submitAnswer, OfflineError, type AnswerResponse } from './api';
 import { getLesson, orderedLessonIds } from './content';
 
 const browserStorage: StorageAdapter = {
@@ -52,6 +53,15 @@ interface AppStateValue {
   syncState: 'idle' | 'queued' | 'confirming';
   /** The last save to this device failed; progress since then is not durable. */
   saveFailed: boolean;
+  /**
+   * Grading results for answers captured offline and since confirmed. The
+   * locked exercise screen has no other way to learn its own answer came back
+   * - progress already moved via applyConfirmedAnswer, this is only the reveal
+   * that was owed. Keyed by pendingKey, deliberately not persisted: worth
+   * showing to the learner still on the screen, not worth restoring later.
+   */
+  resolvedAnswers: Record<string, AnswerResponse>;
+  clearResolvedAnswer: (key: string) => void;
   completeOnboarding: () => void;
   applyGradedAnswer: (input: GradedAnswerInput) => void;
   queueOffline: (pending: PendingAnswer) => void;
@@ -68,6 +78,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
   );
 
   const [saveFailed, setSaveFailed] = useState(false);
+  const [resolvedAnswers, setResolvedAnswers] = useState<Record<string, AnswerResponse>>({});
 
   // Merge-before-save: another tab may have saved since this one loaded. Adopt
   // the merged result so both tabs converge instead of overwriting each other.
@@ -153,6 +164,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
               xp: response.xp.total,
             }),
           );
+          // Leave the result where the locked screen can find it. Without this
+          // the flush is invisible: XP and the streak move, and the learner
+          // keeps reading "the reveal happens when you reconnect".
+          setResolvedAnswers((current) => ({ ...current, [pendingKey(pending)]: response }));
         } catch (error) {
           // A 4xx will never be accepted; keeping it would jam the queue forever.
           if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
@@ -182,9 +197,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
     };
   }, [progress.pending.length, flushPending]);
 
+  const clearResolvedAnswer = useCallback((key: string) => {
+    setResolvedAnswers((current) => {
+      if (!(key in current)) return current;
+      const { [key]: _shown, ...rest } = current;
+      return rest;
+    });
+  }, []);
+
   const reset = useCallback(() => {
     clearProgress(browserStorage);
     setProgress(emptyProgress(subjectId));
+    setResolvedAnswers({});
   }, [subjectId]);
 
   const value = useMemo<AppStateValue>(
@@ -197,13 +221,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }): J
       pendingCount: progress.pending.length,
       syncState: progress.pending.length === 0 ? 'idle' : confirming ? 'confirming' : 'queued',
       saveFailed,
+      resolvedAnswers,
+      clearResolvedAnswer,
       completeOnboarding,
       applyGradedAnswer,
       queueOffline,
       flushPending,
       reset,
     }),
-    [subjectId, progress, saveFailed, confirming, setLessonMode, completeOnboarding, applyGradedAnswer, queueOffline, flushPending, reset],
+    [
+      subjectId,
+      progress,
+      saveFailed,
+      confirming,
+      resolvedAnswers,
+      clearResolvedAnswer,
+      setLessonMode,
+      completeOnboarding,
+      applyGradedAnswer,
+      queueOffline,
+      flushPending,
+      reset,
+    ],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
