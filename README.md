@@ -27,13 +27,21 @@ streak updated.
 ### Verifying it
 
 ```sh
-npm run verify         # typecheck, 156 unit/integration tests, regenerate every pack chart
+npm run verify         # typecheck, 256 unit/integration tests, regenerate every pack chart
 npm run test:browser   # full loop in a real browser + axe on every screen
 npm run test:play-all  # play every starter exercise through the UI, checking each reveal
+npm run test:offline   # answer with the network cut, then restore it (needs a running app)
 npm run shots          # phone-sized screenshots of each screen
 ```
 
-`npm run test:browser` and `npm run test:play-all` need `npm run dev` running.
+`npm run test:browser`, `npm run test:play-all` and `npm run test:offline` need `npm run dev`
+running - or a staging origin, via `CLIENT_URL` (see "Staging it" below).
+
+Twelve of those 256 need a database - the Postgres audit-store suite and the two migration
+tests that insert through it - and skip themselves when `TEST_DATABASE_URL` is unset. That is
+right for a contributor without a database, and it is why CI fails the build if it sees the
+skip notice: a lost service container would otherwise look exactly like a pass. Against a
+database it is 256 passed; without one, 243 passed and 13 skipped.
 
 ### Working in parallel
 
@@ -76,6 +84,48 @@ Two deployment facts worth knowing before the first attempt:
   `GET /api/exercises/ex-001/window` as the readiness check - it exercises content
   loading and chart generation, which is a better check than a bare `200 OK` anyway.
 
+### Staging it
+
+```sh
+npm ci
+npm run build --workspace @tikerino/client
+DATABASE_URL=postgres://... npm run staging     # http://127.0.0.1:4173
+```
+
+One command, the deployment shape: it builds on the client already being built, starts the
+server, and serves both on one origin - `client/dist` static, `/api` proxied to the server -
+which is the default deployment described above. A shape nobody can re-create is not
+something you can point a reviewer at.
+
+Three things it does the way a deployment does them, rather than the way development does:
+
+- **It runs on Postgres.** `DATABASE_URL` is required, because the JSONL store is
+  single-process by construction and staging on it would exercise a different audit store
+  than the one that records real answers. `npm run staging -- --jsonl` says out loud that
+  you are accepting the file-backed store for a screens-only pass.
+- **Readiness is `GET /api/exercises/ex-001/window`**, the same check a deployment uses,
+  for the same reason: there is no health endpoint on purpose.
+- **The bundle is the built one**, not a dev server, so the service worker is real. On
+  `127.0.0.1` - a secure context - it registers, which makes the PWA shell testable here.
+  It will not over plain http on any other host, and that is the one thing staging cannot
+  tell you about production.
+
+The browser suites take a `CLIENT_URL`, so the same evidence can be gathered against
+staging instead of the dev server:
+
+```sh
+CLIENT_URL=http://127.0.0.1:4173 npm run test:browser
+CLIENT_URL=http://127.0.0.1:4173 npm run test:play-all
+CLIENT_URL=http://127.0.0.1:4173 npm run test:offline
+```
+
+`STAGING_PORT` moves the origin; `PORT` moves the server behind it. One caveat found while
+verifying this: the narrated lesson's auto-playing audio has been observed to stall against
+the built bundle in at least one sandboxed headless-Chromium environment (not reproduced
+against `npm run dev`, which is what CI drives) - `npm run test:offline` and
+`npm run test:play-all` route around it by switching to text mode, the same way a learner
+can. If you hit it, that is what is happening.
+
 ### The audit store
 
 Every graded answer is recorded with the full audit identity of its chart
@@ -96,6 +146,37 @@ A deployment sets `DATABASE_URL`. The schema is created on boot and the migratio
 idempotent, so every replica can run it. If `DATABASE_URL` is set and the database is
 unreachable the server refuses to start — it will not fall back to a file nobody is
 going to look at.
+
+A production database whose answers predate this repository's flattened schema keeps them
+in `audit_records` - one row per answer, the identity in a `record` JSONB column, rather
+than `audit_answers`'s typed columns. `AUDIT_SCHEMA` (`server/src/audit.ts`) carries an
+automatic, idempotent copy for exactly that case: on boot, if `audit_records` exists, every
+row it holds is copied into `audit_answers` via `ON CONFLICT DO NOTHING`, and the source is
+never modified. This runs on every boot without an operator present, which is right for a
+routine deploy and not enough on its own for a first migration of a live production
+database: there is no backup gate, no dry-run, and no report of what was found.
+
+For that first run, `scripts/migrate-audit-records-to-answers.mjs` does the same copy under
+operator control:
+
+```sh
+DATABASE_URL=postgres://... npx tsx scripts/migrate-audit-records-to-answers.mjs --dry-run
+DATABASE_URL=postgres://... npx tsx scripts/migrate-audit-records-to-answers.mjs \
+  --backup="pg_dump custom, <where>, restore-verified <when>"
+```
+
+It only ever reads `audit_records` (rollback is redeploying the previous build against a
+source that was never written to), refuses to write until the operator states the backup
+they took, stops rather than copying a record missing audit identity, `--dry-run` reports
+what would be inserted and writes nothing, and it reads one migrated record back
+field-by-field to prove the round trip. `tests/audit.migration.test.ts` guards the mapping
+rule and the Postgres round trip in CI. Verified end to end against a scratch database
+seeded to production's shape (never against production, which this environment still has no
+credential or network route to reach): the backup gate refuses without one; `--dry-run` maps
+every row and writes nothing; a real run inserts cleanly and verifies the round trip; a
+second run inserts zero and skips every row already present; a row missing required identity
+stops the run before it writes anything new; the source table holds every original row
+afterward, unmodified.
 
 To carry an existing JSONL log across:
 
@@ -181,6 +262,13 @@ and the reveal is deferred; when the connection returns the queue is flushed and
 is shown. Retries are idempotent on `(subjectId, exerciseId, assignmentSnapshotAt)`, so a
 resent answer never double-counts — the recorded result is replayed, even if the retry
 carries a different answer.
+
+The reveal half of that was not always true: the flush recorded progress correctly, but the
+locked exercise screen had no way to learn its own answer had come back, so a learner could
+sit on a screen that still said "checked when you reconnect" underneath a pill that had
+already moved. The flush now leaves the graded result where the locked screen can find it
+(keyed by the same idempotency key), and `npm run test:offline` drives exactly that
+end-to-end in a browser and runs in CI on every pull request, so it cannot quietly come back.
 
 ---
 
