@@ -10,6 +10,10 @@ disclaimer bolted on at the end — it is the reason the engine exists.
 Day one covers two topics (trading fundamentals, candlestick reading), 9 lessons and 16
 exercises, on 6 phone-sized screens. Content pack v0.2.0.
 
+**New here?** `ARCHITECTURE.md` is the orientation map — where code, content, design tokens
+and specs live, how a request flows, and the feature roadmap with per-feature status. This
+file is the *reasoning*; that one is the *layout*.
+
 ---
 
 ## Running it
