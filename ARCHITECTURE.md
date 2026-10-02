@@ -6,8 +6,10 @@ reasoning behind individual decisions. This document says *where everything is* 
 
 - Updated: 2 October 2026
 - Branch this was written from: `claude/tikerino-narrated-lessons-legal-ui` (3607356)
+- **Requirements live outside this repo**, in the Drive *Tikerino Product Bible v0.2*.
+  See §11 for the full document hierarchy and where the Bible and the code diverge.
 - Related docs: `README.md` (rationale, decisions, integrity contract),
-  `specs/DECISIONS.md` (product rulings and open owner decisions),
+  `specs/DECISIONS.md` (product rulings as of 11 Sep — now behind the Bible),
   `PRODUCTION-BASELINE.md` (production/main reconciliation — on branch
   `claude/tikerino-github-coordination-d3v1uf`, PR #2)
 
@@ -625,32 +627,68 @@ default when `DATABASE_URL` is unset, so dev and CI still need no database.
 
 ---
 
-## 11. Where the decisions are recorded
+## 11. Document hierarchy — which document is authoritative for what
 
-- `README.md` → "Decisions made where the specs were silent" — 22 numbered engineering
-  calls made where a spec was ambiguous, each with its reasoning. Read this before
-  arguing with a design choice; most of them have a non-obvious cause.
-- `README.md` → "Content defects found, and closed" — five real content defects, four
-  invisible until the engine could render a seed. Kept because the history is the useful
-  part.
-- `specs/DECISIONS.md` — product rulings, locks, recorded dissent and open owner
-  decisions.
-- `PRODUCTION-BASELINE.md` (PR #2) — production vs `main`, the schema divergence, and
-  migration/rollback options.
+**The requirements document is not in this repository.** It is the *Tikerino Product
+Bible | Product behavior and features v0.2* (25 September 2026, owner Guy Kahansky), in
+Google Drive:
+
+> https://docs.google.com/document/d/1c-psUs0EjnbjbQhlL4O8VgHoxR07QNJAiQ0PFERmL2E/edit
+
+It states its own standing: "This is the single source for the intended product
+experience." Every claim in it is tagged **Decided / Current / Planned / Open** and traced
+to a dated decision source. Read it before proposing product behaviour; a tag of `Open`
+is explicitly "not permission to fill it by assumption."
+
+| Document | Authoritative for | Location |
+|---|---|---|
+| **Product Bible v0.2** | **Product requirements.** Promise, boundaries, learner journey, XP rules, course direction, profile, visual/accessibility rules, future boundaries. | Drive |
+| Living Chart detailed spec (Bible ref S2) | Design depth for the journey and visual experience. Its unresolved proposals stay unresolved. | Drive |
+| `specs/tikerino-engine-grading-spec-v1.md` | Implementation contract: generator, candle rules, grading, XP mechanics, the two endpoints, audit record fields. | this repo |
+| `specs/tikerino-content-schema-v1.md` | Implementation contract: the content/code boundary. | this repo |
+| `specs/tikerino-design-tokens-v1.css` | The design system as shipped. | this repo |
+| `specs/DECISIONS.md` | Product rulings and open owner decisions **as of 11 Sep 2026** — predates the Bible and is now behind it. Where the two differ, the Bible wins. | this repo |
+| `README.md` | As-built reasoning: the 22 engineering calls made where a spec was silent, and the content-defect history. | this repo |
+| `ARCHITECTURE.md` | As-built layout: this document. | this repo |
+| `PRODUCTION-BASELINE.md` | Production vs `main`, the audit-schema divergence, migration and rollback options. | PR #2 |
+| ARCHIVE Product Bible v0.1; Full Curriculum Plan; `product-and-architecture-v0.7.html` | **Superseded.** Historical reference only — the Bible says v0.1 is "an archive, not as current approval." | Drive |
+
+Note: some Bible detail links point at `files.instinct.com`, which this project's cloud
+sessions cannot reach (the egress proxy refuses the CONNECT). Drive and Docs links work.
+
+### Where the Bible and this codebase currently diverge
+
+Verified against the Bible on 2 October 2026. These are requirements, not bugs — but they
+are not implemented, and nothing in the repo says so:
+
+| Bible requirement | Tag | Shipped state |
+|---|---|---|
+| Core proficiency path is **PROF-1 + PROF-2 + PROF-3** (D6) | Decided | No assessment layer exists. Note this contradicts the PROF-1+2-only core in the curriculum decision package under review. |
+| **Curriculum map v2** — 29 modules, 188 titles (22 core / 7 badge); **I1 Technical indicators in the core**; **P9 Investor protection (Israel)** (D5, D8) | Decided | Shipped content is 2 topics / 9 lessons / 16 exercises. |
+| MVP assessment is **multiple-choice, automatically graded**; the map's 80% cut, critical-item rule and retry cadence are **not approved** (D6) | Decided | Matches: both shipped exercise types are auto-graded. |
+| XP: lesson **+25**, daily practice **+10** with a +2/day ladder capped at +20, skill mastery **+40**, module exam **+150** (D7) | Decided | Not implemented. The code awards per-*exercise* XP (base 10 × tier + speed bonus, halved for a hint), which the Bible does not describe. |
+| **Google sign-in and a saved profile** (theme, narration preference, progress, points, streak) (D3) | Decided MVP target | Device-local anonymous `subjectId`; no accounts. |
+| **Dark chart as the primary theme**, with a complete light equivalent; final choice still Guy's (S2) | Planned | Light only. |
+| **Living Chart** journey and **Knowledge Index** (S2) | Planned | Conventional lesson path. |
+| Offline answers stay queued and ungraded; reconnect reconciles **once**, no duplicate rewards (S1, S2) | Decided | Queue on `main`; the reveal-on-reconnect half is **In testing** on PR #2. |
+| Text is a complete route; narration is a preference that must not hide instruction (S2, S3) | Decided | `lessonMode` honours this; **In testing** on the narration branch. |
+| Head-only bull as primary logo (S2) | Planned | Text wordmark placeholder. `specs/DECISIONS.md` still describes three candidates awaiting a pick — the Bible is newer. |
 
 ---
 
 ## 12. First week checklist
 
-1. `npm install && npm run dev`, open at 390×844, play the whole loop.
-2. `npm run verify` — note the real test count, not the one in a doc.
-3. Read `packages/engine/src/prng.ts` and its header comment. Understand why it is
+1. Read the **Product Bible v0.2** (§11) — it is the requirements document, and it is
+   ahead of everything in this repo.
+2. `npm install && npm run dev`, open at 390×844, play the whole loop.
+3. `npm run verify` — note the real test count, not the one in a doc.
+4. Read `packages/engine/src/prng.ts` and its header comment. Understand why it is
    frozen.
-4. Read `packages/content/src/load.ts` → `toClientPack()`. Understand what the browser
+5. Read `packages/content/src/load.ts` → `toClientPack()`. Understand what the browser
    is and is not allowed to hold, and why.
-5. Read `README.md` → "The integrity contract".
-6. Open devtools and confirm the bundle holds no `correctOptionId`, no `target`, no
+6. Read `README.md` → "The integrity contract".
+7. Open devtools and confirm the bundle holds no `correctOptionId`, no `target`, no
    exercise chart `seed`.
-7. Skim `README.md` → "Decisions made where the specs were silent".
-8. Before changing anything in `packages/*`: check you are not importing React or a Node
+8. Skim `README.md` → "Decisions made where the specs were silent".
+9. Before changing anything in `packages/*`: check you are not importing React or a Node
    built-in.
