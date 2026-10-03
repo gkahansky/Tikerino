@@ -1,4 +1,5 @@
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import {
@@ -70,8 +71,15 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   const audit: AuditStore =
     options.auditStore ?? new JsonlAuditStore(options.auditPath ?? DEFAULT_AUDIT_PATH);
 
-  const app = Fastify({ logger: options.logger ?? false });
-  app.register(cors, { origin: true });
+  const rawOrigins = process.env.CORS_ORIGINS ?? 'http://127.0.0.1:5173,http://localhost:5173';
+  const allowedOrigins = rawOrigins
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  const app = Fastify({ logger: options.logger ?? false, bodyLimit: 16 * 1024 });
+  app.register(cors, { origin: allowedOrigins });
+  app.register(rateLimit);
 
   // Handy for tests and for the two routes below.
   app.decorate('tikerinoContent', content);
@@ -123,136 +131,195 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   /* ---------------------------------------------------------------------- */
   /* 2. POST /api/answers                                                    */
   /* ---------------------------------------------------------------------- */
-  app.post<{ Body: AnswerRequestBody }>('/api/answers', async (request, reply) => {
-    const body = request.body ?? {};
+  app.post<{ Body: AnswerRequestBody }>(
+    '/api/answers',
+    {
+      config: {
+        rateLimit: {
+          // 60 requests per minute per IP allows a realistic offline queue flush
+          // (a learner may queue up to ~50 answers when reconnecting after being
+          // offline) plus margin for retries and network hiccups. Browser suites
+          // (test:browser, test:play-all) issue far fewer than 60 POST /api/answers
+          // within any 1-minute window because they are sequential with waits.
+          max: 60,
+          timeWindow: '1 minute',
+        },
+      },
+      schema: {
+        body: {
+          type: 'object',
+          required: [
+            'subjectId',
+            'exerciseId',
+            'answer',
+            'hintUsed',
+            'timeToAnswerMs',
+            'capturedOffline',
+            'assignmentSnapshotAt',
+          ],
+          additionalProperties: false,
+          properties: {
+            subjectId: { type: 'string', minLength: 1, maxLength: 100 },
+            exerciseId: { type: 'string', minLength: 1, maxLength: 50 },
+            answer: {
+              oneOf: [
+                {
+                  type: 'object',
+                  required: ['selectedOptionId'],
+                  additionalProperties: false,
+                  properties: {
+                    selectedOptionId: { type: 'string', minLength: 1, maxLength: 100 },
+                  },
+                },
+                {
+                  type: 'object',
+                  required: ['selectedCandleIndex'],
+                  additionalProperties: false,
+                  properties: {
+                    selectedCandleIndex: { type: 'integer', minimum: 0, maximum: 200 },
+                  },
+                },
+              ],
+            },
+            hintUsed: { type: 'boolean' },
+            timeToAnswerMs: { type: 'integer', minimum: 0, maximum: 3_600_000 },
+            capturedOffline: { type: 'boolean' },
+            assignmentSnapshotAt: { type: 'string', minLength: 1, maxLength: 50 },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const body = request.body ?? {};
 
-    const subjectId = typeof body.subjectId === 'string' ? body.subjectId : null;
-    const exerciseId = typeof body.exerciseId === 'string' ? body.exerciseId : null;
-    const assignmentSnapshotAt =
-      typeof body.assignmentSnapshotAt === 'string' ? body.assignmentSnapshotAt : null;
+      const subjectId = typeof body.subjectId === 'string' ? body.subjectId : null;
+      const exerciseId = typeof body.exerciseId === 'string' ? body.exerciseId : null;
+      const assignmentSnapshotAt =
+        typeof body.assignmentSnapshotAt === 'string' ? body.assignmentSnapshotAt : null;
 
-    if (!subjectId || !exerciseId || !assignmentSnapshotAt) {
-      return reply.code(400).send({
-        error: 'invalid_request',
-        detail: 'subjectId, exerciseId and assignmentSnapshotAt are required strings',
-      });
-    }
-
-    const exercise = content.index.exerciseById.get(exerciseId);
-    if (!exercise) {
-      return reply.code(404).send({ error: 'unknown_exercise', exerciseId });
-    }
-
-    const answer = body.answer as AnswerPayload | undefined;
-    if (!answer || (!isOptionAnswer(answer) && !isCandleAnswer(answer))) {
-      return reply.code(400).send({
-        error: 'invalid_request',
-        detail: 'answer must be { selectedOptionId } or { selectedCandleIndex }',
-      });
-    }
-    if (exercise.type === 'multiple_choice' && !isOptionAnswer(answer)) {
-      return reply
-        .code(400)
-        .send({ error: 'invalid_request', detail: 'this exercise expects { selectedOptionId }' });
-    }
-    if (exercise.type === 'pick_the_candle' && !isCandleAnswer(answer)) {
-      return reply
-        .code(400)
-        .send({ error: 'invalid_request', detail: 'this exercise expects { selectedCandleIndex }' });
-    }
-
-    const hintUsed = body.hintUsed === true;
-    const capturedOffline = body.capturedOffline === true;
-    const timeToAnswerMs =
-      typeof body.timeToAnswerMs === 'number' && Number.isFinite(body.timeToAnswerMs)
-        ? Math.max(0, body.timeToAnswerMs)
-        : 0;
-
-    // Regenerate from the pack ref. The client's copy of the chart is never trusted.
-    const series = seriesFor(exercise);
-    if (series) {
-      assertSeriesInvariants(series.candles, series.windowSize, series.revealSize);
-    }
-    const windowCandles = series ? cutWindow(series) : [];
-    const revealCandles = series ? cutReveal(series) : [];
-
-    const target = resolveTarget(exercise, windowCandles);
-
-    // A pick_the_candle answer outside the window is a client bug, not a wrong answer.
-    if (isCandleAnswer(answer) && series) {
-      const index = answer.selectedCandleIndex;
-      if (index < 0 || index > series.windowSize - 1) {
+      if (!subjectId || !exerciseId || !assignmentSnapshotAt) {
         return reply.code(400).send({
           error: 'invalid_request',
-          detail: `selectedCandleIndex ${index} is outside the window 0..${series.windowSize - 1}`,
+          detail: 'subjectId, exerciseId and assignmentSnapshotAt are required strings',
         });
       }
-    }
 
-    const previous = await audit.find(subjectId, exerciseId, assignmentSnapshotAt);
+      const exercise = content.index.exerciseById.get(exerciseId);
+      if (!exercise) {
+        return reply.code(404).send({ error: 'unknown_exercise', exerciseId });
+      }
 
-    // Idempotent retry: recompute from the recorded inputs rather than grading
-    // again, so a resent offline answer never double-counts.
-    const graded = previous
-      ? {
-          correct: previous.correct,
-          target,
-          xp: computeXp({
-            correct: previous.correct,
-            difficultyTier: exercise.difficultyTier,
-            hintUsed: previous.hintUsed,
-            timeToAnswerMs: previous.timeToAnswerMs,
-            exerciseType: exercise.type,
-          }),
+      const answer = body.answer as AnswerPayload | undefined;
+      if (!answer || (!isOptionAnswer(answer) && !isCandleAnswer(answer))) {
+        return reply.code(400).send({
+          error: 'invalid_request',
+          detail: 'answer must be { selectedOptionId } or { selectedCandleIndex }',
+        });
+      }
+      if (exercise.type === 'multiple_choice' && !isOptionAnswer(answer)) {
+        return reply
+          .code(400)
+          .send({ error: 'invalid_request', detail: 'this exercise expects { selectedOptionId }' });
+      }
+      if (exercise.type === 'pick_the_candle' && !isCandleAnswer(answer)) {
+        return reply
+          .code(400)
+          .send({ error: 'invalid_request', detail: 'this exercise expects { selectedCandleIndex }' });
+      }
+
+      const hintUsed = body.hintUsed === true;
+      const capturedOffline = body.capturedOffline === true;
+      const timeToAnswerMs =
+        typeof body.timeToAnswerMs === 'number' && Number.isFinite(body.timeToAnswerMs)
+          ? Math.max(0, body.timeToAnswerMs)
+          : 0;
+
+      // Regenerate from the pack ref. The client's copy of the chart is never trusted.
+      const series = seriesFor(exercise);
+      if (series) {
+        assertSeriesInvariants(series.candles, series.windowSize, series.revealSize);
+      }
+      const windowCandles = series ? cutWindow(series) : [];
+      const revealCandles = series ? cutReveal(series) : [];
+
+      const target = resolveTarget(exercise, windowCandles);
+
+      // A pick_the_candle answer outside the window is a client bug, not a wrong answer.
+      if (isCandleAnswer(answer) && series) {
+        const index = answer.selectedCandleIndex;
+        if (index < 0 || index > series.windowSize - 1) {
+          return reply.code(400).send({
+            error: 'invalid_request',
+            detail: `selectedCandleIndex ${index} is outside the window 0..${series.windowSize - 1}`,
+          });
         }
-      : gradeAndScore({
-          type: exercise.type,
+      }
+
+      const previous = await audit.find(subjectId, exerciseId, assignmentSnapshotAt);
+
+      // Idempotent retry: recompute from the recorded inputs rather than grading
+      // again, so a resent offline answer never double-counts.
+      const graded = previous
+        ? {
+            correct: previous.correct,
+            target,
+            xp: computeXp({
+              correct: previous.correct,
+              difficultyTier: exercise.difficultyTier,
+              hintUsed: previous.hintUsed,
+              timeToAnswerMs: previous.timeToAnswerMs,
+              exerciseType: exercise.type,
+            }),
+          }
+        : gradeAndScore({
+            type: exercise.type,
+            answer,
+            target,
+            difficultyTier: exercise.difficultyTier,
+            hintUsed,
+            timeToAnswerMs,
+          });
+
+      if (!previous) {
+        const record: AuditRecord = {
+          subjectId,
+          exerciseId,
+          syntheticSeriesId: exercise.chart?.syntheticSeriesId ?? null,
+          scenarioSpecVersion: content.pack.scenarioSpecVersion,
+          generatorVersion: GENERATOR_VERSION,
+          curriculumVersion: content.pack.curriculumVersion,
           answer,
-          target,
-          difficultyTier: exercise.difficultyTier,
           hintUsed,
           timeToAnswerMs,
-        });
+          capturedOffline,
+          assignmentSnapshotAt,
+          serverReceivedAt: new Date().toISOString(),
+          correct: graded.correct,
+          xpTotal: graded.xp.total,
+        };
+        await audit.append(record);
+      }
 
-    if (!previous) {
-      const record: AuditRecord = {
-        subjectId,
+      return reply.send({
         exerciseId,
-        syntheticSeriesId: exercise.chart?.syntheticSeriesId ?? null,
-        scenarioSpecVersion: content.pack.scenarioSpecVersion,
-        generatorVersion: GENERATOR_VERSION,
-        curriculumVersion: content.pack.curriculumVersion,
-        answer,
-        hintUsed,
-        timeToAnswerMs,
-        capturedOffline,
-        assignmentSnapshotAt,
-        serverReceivedAt: new Date().toISOString(),
         correct: graded.correct,
-        xpTotal: graded.xp.total,
-      };
-      await audit.append(record);
-    }
-
-    return reply.send({
-      exerciseId,
-      correct: graded.correct,
-      target: graded.target,
-      xp: graded.xp,
-      feedback: exercise.feedback,
-      reveal: {
-        // Exactly revealSize post-T candles, or [] when there is no chart.
-        candles: revealCandles,
-        disclaimer: content.pack.meta.revealDisclaimer,
-      },
-      audit: {
-        syntheticSeriesId: exercise.chart?.syntheticSeriesId ?? null,
-        scenarioSpecVersion: content.pack.scenarioSpecVersion,
-        generatorVersion: GENERATOR_VERSION,
-        curriculumVersion: content.pack.curriculumVersion,
-      },
-    });
-  });
+        target: graded.target,
+        xp: graded.xp,
+        feedback: exercise.feedback,
+        reveal: {
+          // Exactly revealSize post-T candles, or [] when there is no chart.
+          candles: revealCandles,
+          disclaimer: content.pack.meta.revealDisclaimer,
+        },
+        audit: {
+          syntheticSeriesId: exercise.chart?.syntheticSeriesId ?? null,
+          scenarioSpecVersion: content.pack.scenarioSpecVersion,
+          generatorVersion: GENERATOR_VERSION,
+          curriculumVersion: content.pack.curriculumVersion,
+        },
+      });
+    },
+  );
 
   return app;
 }
