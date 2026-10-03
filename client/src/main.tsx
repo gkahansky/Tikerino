@@ -2,8 +2,13 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import './styles/index.css';
+import { requestPersistentStorage } from './persistent-storage';
 
 const root = createRoot(document.getElementById('root')!);
+
+// Ask the browser to keep this origin's storage (progress lives in localStorage).
+// Fire and forget: it must never delay or break rendering.
+void requestPersistentStorage();
 
 // Upgrade bridge: old root-scoped service workers used the learner shell as a
 // navigation fallback for every path, including the later server-owned /ops

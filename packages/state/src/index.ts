@@ -88,6 +88,8 @@ export interface ProgressState {
 }
 
 const STORAGE_KEY = 'tikerino.progress.v1';
+/** Unreadable progress is copied to `${BACKUP_KEY_PREFIX}<content id>`; see backupUnreadableProgress. */
+export const PROGRESS_BACKUP_KEY_PREFIX = 'tikerino.progress.backup.v1.';
 
 export function emptyProgress(subjectId: string): ProgressState {
   return {
@@ -401,12 +403,60 @@ export function xpCreditedByAnswer(state: ProgressState, lessonId: string, exerc
   return lessonXpCreditedByAnswer(state, lessonId, exerciseId) + (daily ? daily.xp : 0);
 }
 
-export function loadProgress(storage: StorageAdapter, subjectId: string): ProgressState {
+/** cyrb53: a fast, well-mixed 53-bit string hash. Names a backup; it is not a security boundary. */
+function contentId(raw: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  const id = 4294967296 * (2097151 & h2) + (h1 >>> 0);
+  return `${id.toString(36)}-${raw.length.toString(36)}`;
+}
+
+const MAX_BACKUP_PROBES = 20;
+
+/**
+ * Copy a stored blob that could not be loaded, byte for byte, to a key of its
+ * own, so the save that follows a failed load cannot destroy it.
+ *
+ * Never overwrites: the key is derived from the content, and if that key already
+ * holds different bytes (a hash collision) the next suffix is tried. If an
+ * identical backup is already there nothing is written, so the repeated loads
+ * of one corrupt blob (start-up, merge-before-save, storage events) leave one
+ * backup, while two different corruptions leave two. Never throws.
+ */
+function backupUnreadableProgress(storage: StorageAdapter, raw: string, reason: string): void {
   try {
-    const raw = storage.getItem(STORAGE_KEY);
+    const base = `${PROGRESS_BACKUP_KEY_PREFIX}${contentId(raw)}`;
+    for (let attempt = 0; attempt < MAX_BACKUP_PROBES; attempt++) {
+      const key = attempt === 0 ? base : `${base}.${attempt}`;
+      const existing = storage.getItem(key);
+      if (existing === raw) return;
+      if (existing === null) {
+        storage.setItem(key, raw);
+        console.warn(`[tikerino] Stored progress was unreadable (${reason}); a copy was kept under "${key}".`);
+        return;
+      }
+    }
+    console.warn(`[tikerino] Stored progress was unreadable (${reason}) and could not be backed up: no free backup key.`);
+  } catch (error) {
+    console.warn(`[tikerino] Stored progress was unreadable (${reason}) and could not be backed up.`, error);
+  }
+}
+
+export function loadProgress(storage: StorageAdapter, subjectId: string): ProgressState {
+  let raw: string | null = null;
+  try {
+    raw = storage.getItem(STORAGE_KEY);
     if (!raw) return emptyProgress(subjectId);
     const parsed = JSON.parse(raw) as ProgressState;
     if (parsed.version !== 1 || typeof parsed.subjectId !== 'string') {
+      backupUnreadableProgress(storage, raw, 'unknown version or invalid shape');
       return emptyProgress(subjectId);
     }
     const lessonAwards = normaliseLessonAwards(parsed.lessonAwards, parsed.lessons);
@@ -434,7 +484,9 @@ export function loadProgress(storage: StorageAdapter, subjectId: string): Progre
       knowledgeIndexXp: sumLessonAwards(lessonAwards, dailyAwards),
     };
   } catch {
-    // Corrupt or unreadable storage must not brick the app; start clean.
+    // Corrupt or unreadable storage must not brick the app; start clean, but keep
+    // the bytes we could not read (a failed getItem leaves raw null: nothing to keep).
+    if (raw) backupUnreadableProgress(storage, raw, 'parse or validation failure');
     return emptyProgress(subjectId);
   }
 }
