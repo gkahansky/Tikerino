@@ -1,0 +1,124 @@
+## design context: 64 files, ~81,437 tokens
+
+- docs/01-product-bible-v0.2.md (12,675 B)
+- docs/02-living-chart-progression-spec.md (9,033 B)
+- docs/03-full-curriculum-plan-historical.md (3,156 B)
+- docs/04-bull-character-animation-brief.md (4,746 B)
+- docs/05-journey-path-two-concepts.md (2,333 B)
+- docs/06-design-template-library.md (5,095 B)
+- docs/07-design-workstream-charter.md (4,893 B)
+- docs/08-learning-app-pattern-study.md (2,746 B)
+- docs/09-design-spec-tokens-v2-motion-annotations.md (5,021 B)
+- docs/10-game-design-playbook.md (4,267 B)
+- docs/11-architecture-record.md (4,067 B)
+- docs/12-video-pipeline.md (2,094 B)
+- docs/README.md (1,165 B)
+- design/live/index.md (838 B)
+- design/stitch-2752353384096587514/index.md (33,731 B)
+- design/stitch-4394499492415802116/index.md (26,170 B)
+- repo/README.md (19,242 B)
+- repo/specs/DECISIONS.md (10,608 B)
+- repo/specs/tikerino-content-schema-v1.md (7,170 B)
+- repo/specs/tikerino-design-tokens-v1.css (3,262 B)
+- repo/specs/tikerino-tailwind.config.js (1,541 B)
+- repo/docs/accessibility/INVENTORY.md (2,326 B)
+- repo/docs/accessibility/MATRIX.md (22,947 B)
+- repo/docs/accessibility/RELEASE_BAR.md (4,215 B)
+- repo/docs/accessibility/transcripts/01-onboarding-1.txt (522 B)
+- repo/docs/accessibility/transcripts/01-onboarding-2.txt (792 B)
+- repo/docs/accessibility/transcripts/01-onboarding-3.txt (687 B)
+- repo/docs/accessibility/transcripts/02-path-new.txt (3,123 B)
+- repo/docs/accessibility/transcripts/03-lesson-card.txt (1,091 B)
+- repo/docs/accessibility/transcripts/04-guided-example.txt (1,101 B)
+- repo/docs/accessibility/transcripts/04-guided-narrated.txt (1,121 B)
+- repo/docs/accessibility/transcripts/04b-guided-text.txt (999 B)
+- repo/docs/accessibility/transcripts/05-exercise-choice.txt (1,221 B)
+- repo/docs/accessibility/transcripts/05b-exercise-hint.txt (1,267 B)
+- repo/docs/accessibility/transcripts/05c-exercise-selected.txt (1,321 B)
+- repo/docs/accessibility/transcripts/06-reveal-correct.txt (1,328 B)
+- repo/docs/accessibility/transcripts/07-reveal-wrong.txt (938 B)
+- repo/docs/accessibility/transcripts/08-path-progress.txt (3,164 B)
+- repo/docs/accessibility/transcripts/09-profile.txt (1,286 B)
+- repo/docs/accessibility/transcripts/10-terms.txt (1,200 B)
+- repo/docs/accessibility/transcripts/11-privacy.txt (1,485 B)
+- repo/docs/accessibility/transcripts/12-return-after-gap.txt (3,238 B)
+- repo/docs/accessibility/transcripts/13-legacy-path.txt (3,075 B)
+- repo/docs/accessibility/transcripts/14-exercise-pick-candle.txt (3,278 B)
+- repo/docs/accessibility/transcripts/14b-exercise-percent.txt (810 B)
+- repo/docs/accessibility/transcripts/14c-exercise-pick-candle-text.txt (6,416 B)
+- repo/docs/accessibility/transcripts/15-offline-queued.txt (592 B)
+- repo/docs/accessibility/transcripts/15b-path-queued.txt (3,175 B)
+- repo/docs/accessibility/transcripts/16-save-failed.txt (1,274 B)
+- repo/client/index.html (2,776 B)
+- repo/client/tailwind.config.cjs (238 B)
+- repo/client/src/screens/ExerciseScreen.tsx (7,719 B)
+- repo/client/src/screens/LegalScreen.tsx (3,183 B)
+- repo/client/src/screens/LessonCard.tsx (7,067 B)
+- repo/client/src/screens/Onboarding.tsx (2,894 B)
+- repo/client/src/screens/PathHome.tsx (6,209 B)
+- repo/client/src/screens/Profile.tsx (3,914 B)
+- repo/client/src/screens/RevealScreen.tsx (5,364 B)
+- repo/client/src/components/CandleChart.tsx (14,668 B)
+- repo/client/src/components/ui.tsx (3,004 B)
+- repo/client/src/styles/index.css (7,846 B)
+- repo/client/src/App.tsx (5,281 B)
+- repo/client/src/content.ts (2,423 B)
+- repo/client/src/narration.ts (4,734 B)
+
+Images (56):
+- design/live/01-onboarding-1.png
+- design/live/01-onboarding-2.png
+- design/live/01-onboarding-3.png
+- design/live/02-path-full.png
+- design/live/02-path.png
+- design/live/03-lesson-card.png
+- design/live/04-guided-narrated.png
+- design/live/05-guided-text.png
+- design/live/06-exercise.png
+- design/live/07-exercise-selected.png
+- design/stitch-2752353384096587514/screens/bullissimo-brand-splash-screen.png
+- design/stitch-2752353384096587514/screens/exercise-correct-answer-feedback-dark-mode.png
+- design/stitch-2752353384096587514/screens/exercise-correct-answer-feedback-mobile.png
+- design/stitch-2752353384096587514/screens/exercise-correct-answer-feedback.png
+- design/stitch-2752353384096587514/screens/exercise-incorrect-answer-feedback-mobile.png
+- design/stitch-2752353384096587514/screens/exercise-incorrect-answer-feedback.png
+- design/stitch-2752353384096587514/screens/learning-path-candlestick-ridge.png
+- design/stitch-2752353384096587514/screens/learning-path-candlestick-summit-map.png
+- design/stitch-2752353384096587514/screens/learning-path-journey-centered.png
+- design/stitch-2752353384096587514/screens/learning-path-reading-charts-3a47.png
+- design/stitch-2752353384096587514/screens/learning-path-reading-charts.png
+- design/stitch-2752353384096587514/screens/learning-path-tikerino-centered.png
+- design/stitch-2752353384096587514/screens/learning-path-tikerino.png
+- design/stitch-2752353384096587514/screens/lesson-support-and-resistance.png
+- design/stitch-2752353384096587514/screens/market-exam.png
+- design/stitch-2752353384096587514/screens/mascot-body-options-6490.png
+- design/stitch-2752353384096587514/screens/mascot-body-options-four-legged-study.png
+- design/stitch-2752353384096587514/screens/mascot-body-options.png
+- design/stitch-2752353384096587514/screens/mascot-refinement-upright-variants.png
+- design/stitch-2752353384096587514/screens/mascot-v3-connected-silhouette-directions.png
+- design/stitch-2752353384096587514/screens/onboarding-registration-mobile.png
+- design/stitch-2752353384096587514/screens/onboarding-registration.png
+- design/stitch-2752353384096587514/screens/onboarding-welcome-screen.png
+- design/stitch-2752353384096587514/screens/settings-account-menu-mobile.png
+- design/stitch-2752353384096587514/screens/settings-account-menu.png
+- design/stitch-2752353384096587514/screens/status-progress-hub-mobile.png
+- design/stitch-2752353384096587514/screens/status-progress-hub.png
+- design/stitch-2752353384096587514/screens/the-living-chart-light.png
+- design/stitch-2752353384096587514/screens/the-living-chart.png
+- design/stitch-2752353384096587514/screens/tickerino-splash-screen.png
+- design/stitch-2752353384096587514/screens/tradisimo-brand-splash-screen.png
+- design/stitch-4394499492415802116/screens/concept-a-exchange-floor-75f0.png
+- design/stitch-4394499492415802116/screens/concept-a-exchange-floor-v2-curriculum-refined.png
+- design/stitch-4394499492415802116/screens/concept-a-exchange-floor-v3-ratified-curriculum.png
+- design/stitch-4394499492415802116/screens/concept-a-exchange-floor.png
+- design/stitch-4394499492415802116/screens/concept-b-market-district-af4a.png
+- design/stitch-4394499492415802116/screens/concept-b-market-district.png
+- design/stitch-4394499492415802116/screens/concept-c-trading-desk-expedition-9c3f.png
+- design/stitch-4394499492415802116/screens/concept-c-trading-desk-expedition.png
+- design/stitch-4394499492415802116/screens/full-mobile-screen-vertical-game-map-illustration-of-a-dayli.png
+- design/stitch-4394499492415802116/screens/full-mobile-screen-vertical-game-map-illustration-of-a-tangi.png
+- design/stitch-4394499492415802116/screens/full-mobile-screen-vertical-game-map-illustration-of-an-auth-488f.png
+- design/stitch-4394499492415802116/screens/full-mobile-screen-vertical-game-map-illustration-of-an-auth-9824.png
+- design/stitch-4394499492415802116/screens/full-mobile-screen-vertical-game-map-illustration-of-an-auth.png
+- design/stitch-4394499492415802116/screens/full-vertical-mobile-game-map-illustration-9-16-portrait-rat.png
+- design/stitch-4394499492415802116/screens/vertical-mobile-game-map-illustration-390x844-ratio-of-a-bri.png
