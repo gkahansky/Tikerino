@@ -66,7 +66,7 @@ function seriesFor(exercise: Exercise) {
   });
 }
 
-export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
+export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
   const content: LoadedContent = loadContent(options.contentPackPath);
   const audit: AuditStore =
     options.auditStore ?? new JsonlAuditStore(options.auditPath ?? DEFAULT_AUDIT_PATH);
@@ -77,9 +77,38 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
-  const app = Fastify({ logger: options.logger ?? false, bodyLimit: 16 * 1024 });
-  app.register(cors, { origin: allowedOrigins });
-  app.register(rateLimit);
+  // trustProxy:1 (default) tells Fastify the immediate client is 1 hop away (Railway edge proxy).
+  // This makes request.ip the real end-user IP so per-IP rate limits and any future IP-based
+  // features see the learner, not the proxy. Set TRUST_PROXY=true or a hop count for other
+  // environments; 0 means "do not trust any proxy".
+  const trustProxy: boolean | string = (() => {
+    const v = process.env.TRUST_PROXY;
+    if (v === 'true' || v === '1') return true;
+    if (v != null) {
+      const n = Number(v);
+      return Number.isFinite(n) ? String(n) : '1';
+    }
+    return true; // default: trust 1 hop (Railway)
+  })();
+
+  const app = Fastify({
+    logger: options.logger ?? false,
+    bodyLimit: 16 * 1024,
+    trustProxy,
+    // Disable Fastify/Ajv's default coercion and removal so schema violations are 400s
+    // (unknown fields, wrong types) rather than silent drops or coerced values.
+    // Existing GET routes have no body schemas so unaffected.
+    ajv: {
+      customOptions: {
+        removeAdditional: false,
+        coerceTypes: false,
+      },
+    },
+  });
+  await app.register(cors, { origin: allowedOrigins });
+  // global:false so only routes that declare config.rateLimit are limited; window and
+  // static assets stay unlimited. We await so route-level config.rateLimit is active.
+  await app.register(rateLimit, { global: false });
 
   // Handy for tests and for the two routes below.
   app.decorate('tikerinoContent', content);
@@ -136,13 +165,12 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     {
       config: {
         rateLimit: {
-          // 60 requests per minute per IP allows a realistic offline queue flush
-          // (a learner may queue up to ~50 answers when reconnecting after being
-          // offline) plus margin for retries and network hiccups. Browser suites
-          // (test:browser, test:play-all) issue far fewer than 60 POST /api/answers
-          // within any 1-minute window because they are sequential with waits.
-          max: 60,
-          timeWindow: '1 minute',
+          // 120 requests per 10s per IP.
+          // Starter pack has 16 exercises. A realistic offline queue flush sends the pending
+          // answers back-to-back on reconnect (plus occasional retries). 120 in 10s gives
+          // generous headroom. Browser suites issue ~16 spaced answers and will not hit.
+          max: 120,
+          timeWindow: '10 seconds',
         },
       },
       schema: {
@@ -162,29 +190,25 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
             subjectId: { type: 'string', minLength: 1, maxLength: 100 },
             exerciseId: { type: 'string', minLength: 1, maxLength: 50 },
             answer: {
-              oneOf: [
-                {
-                  type: 'object',
-                  required: ['selectedOptionId'],
-                  additionalProperties: false,
-                  properties: {
-                    selectedOptionId: { type: 'string', minLength: 1, maxLength: 100 },
-                  },
-                },
-                {
-                  type: 'object',
-                  required: ['selectedCandleIndex'],
-                  additionalProperties: false,
-                  properties: {
-                    selectedCandleIndex: { type: 'integer', minimum: 0, maximum: 200 },
-                  },
-                },
-              ],
+              type: 'object',
+              additionalProperties: false,
+              minProperties: 1,
+              maxProperties: 1,
+              properties: {
+                selectedOptionId: { type: 'string', minLength: 1, maxLength: 100 },
+                selectedCandleIndex: { type: 'integer', minimum: 0, maximum: 200 },
+              },
             },
             hintUsed: { type: 'boolean' },
-            timeToAnswerMs: { type: 'integer', minimum: 0, maximum: 3_600_000 },
+            timeToAnswerMs: { type: 'integer', minimum: 0, maximum: 86_400_000 },
             capturedOffline: { type: 'boolean' },
-            assignmentSnapshotAt: { type: 'string', minLength: 1, maxLength: 50 },
+            assignmentSnapshotAt: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 50,
+              // Loose ISO-8601-ish (matches what the client emits); ENGINEERING_REVIEW wanted bounds here.
+              pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,3})?Z?$',
+            },
           },
         },
       },
@@ -231,7 +255,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
       const capturedOffline = body.capturedOffline === true;
       const timeToAnswerMs =
         typeof body.timeToAnswerMs === 'number' && Number.isFinite(body.timeToAnswerMs)
-          ? Math.max(0, body.timeToAnswerMs)
+          ? Math.min(86_400_000, Math.max(0, body.timeToAnswerMs))
           : 0;
 
       // Regenerate from the pack ref. The client's copy of the chart is never trusted.
