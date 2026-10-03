@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investing Education Game — Product &amp; Architecture v0.7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#10B981;--navy:#0F2B46;--coral:#FF6B57;--sun:#FFB020;--paper:#FAFAF7;--mint-soft:#E7F8F1;--sun-soft:#FFF4DD;--line:#E8E4DB}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--navy);font-family:'Nunito',system-ui,sans-serif;line-height:1.65;font-size:15.5px}
+  .wrap{max-width:720px;margin:0 auto;padding:0 22px 80px}
+  .topbar{display:flex;align-items:center;gap:10px;padding:20px 0 4px;font-weight:700;font-size:12.5px;letter-spacing:.4px;color:#5B7186}
+  .topbar a{color:#5B7186;text-decoration:none}
+  .topbar a:hover{color:var(--green)}
+  h1{font-family:'Baloo 2',cursive;font-weight:800;font-size:29px;line-height:1.2;margin:16px 0 12px}
+  h2{font-family:'Baloo 2',cursive;font-weight:700;font-size:22px;margin:38px 0 10px;padding-top:14px;border-top:3px solid var(--mint-soft)}
+  h3{font-family:'Baloo 2',cursive;font-weight:700;font-size:17px;margin:24px 0 8px}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0 10px 22px}
+  li{margin:5px 0}
+  strong{font-weight:800}
+  code{background:var(--mint-soft);border-radius:6px;padding:1px 6px;font-size:13.5px;font-family:ui-monospace,Menlo,monospace}
+  a{color:#0B7B5C;word-break:break-all}
+  table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin:14px 0;font-size:12.5px;display:block;overflow-x:auto}
+  th{background:var(--navy);color:#fff;text-align:left;padding:10px 12px;font-family:'Baloo 2';font-weight:700;font-size:12px;white-space:nowrap}
+  td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+  tr:nth-child(even) td{background:#FCFBF8}
+  hr{border:none;border-top:1px solid var(--line);margin:26px 0}
+  del{color:#94A3B3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="8" fill="#10B981"/><rect x="6" y="11" width="3.4" height="9" rx="1.2" fill="#0F2B46"/><rect x="11.3" y="7" width="3.4" height="13" rx="1.2" fill="#0F2B46"/><rect x="16.6" y="4" width="3.4" height="16" rx="1.2" fill="#fff" opacity=".95"/></svg>
+    <a href="/">investing game · design system</a>&nbsp;·&nbsp;product &amp; architecture doc
+  </div>
+  <h1>Investing Education Game — Product &amp; Architecture Package</h1>
+  <p><strong>Working title:</strong> <strong>Tikerino</strong> (provisional, not locked — see §13)
+  <strong>Version:</strong> v0.7 — 11 Sep 2026: panel review rulings and architecture hardening (§§6–18). v0.6: trading-oriented logo candidates, MVP scope locks, synthetic-data path, React web/React Native direction, and dormant experiment architecture. v0.5: experiment architecture added; original green + violet locked as the first palette experiment (§12, §14). v0.4b: Stitch design pass and trade-dress assessment. v0.4: naming round 2. v0.3: Phase 0 lock #1 (audience fork: <strong>Fork B locked by Guy</strong>, WhatsApp 10 Sep 18:16 IDT; Fork A becomes a later expansion track). Locks recorded in §16.
+  <strong>Author:</strong> Tony (Instinct) for Guy · <strong>Reviewers:</strong> Bobby Critic panel
+  <strong>Status:</strong> DRAFT. Open decisions are marked <code>DECISION NEEDED</code>. Nothing here is final.</p>
+  <hr />
+  <h2>0. Context and what changed</h2>
+  <p>Guy&rsquo;s earlier concept (&ldquo;beat the index&rdquo; trading levels) is replaced by a stronger one, in his words: <strong>&ldquo;Like Duolingo, but for investing. Learn technical and fundamental analysis through a game. Pattern recognition, value analysis, etc. You learn one small principle, then practice it through a game in a mobile app.&rdquo;</strong></p>
+  <p>Why this shape is stronger (already aligned with Guy on WhatsApp, 10 Sep 10:28):
+  1. The user goal is to <strong>learn a skill</strong>, not to get lucky over one simulated month.
+  2. The game scores <strong>correct identification and understanding</strong>, so it is far less exposed to luck, multiple comparisons, and overfitting than P&amp;L-based play.
+  3. It is native to mobile: a 2–3 minute lesson + a short exercise batch.
+  4. TradeSim&rsquo;s SimEngine stays useful in a new role: <strong>generating real point-in-time historical exercises and grading the user&rsquo;s decision without revealing what happened next.</strong></p>
+  <hr />
+  <h2>1. Product positioning</h2>
+  <p><strong>One-liner:</strong> A mobile game that teaches you to read markets the way Duolingo teaches languages — one tiny principle at a time, practiced on real historical charts, with instant feedback.</p>
+  <p><strong>Category:</strong> investing-education game (not a broker, not a simulator with real-money hooks, not a signals product).</p>
+  <p><strong>What makes it defensible:</strong>
+  - MVP exercises use <strong>synthetic, generator-authored chart sequences</strong>, cut point-in-time — the learner never sees the future until after committing to an answer. This avoids redistribution licensing in MVP while preserving the reveal and audit discipline; licensed real-ticker data is a post-MVP path (§6–7).
+  - A <strong>grading engine with audit identity</strong> (every exercise carries dataSnapshotId + generator version) inherited from TradeSim&rsquo;s locked architecture principles.
+  - A pedagogical spine (structured curriculum + spaced review), not just a drill tool.</p>
+  <p><strong>Competitive landscape (indicative web check, 10 Sep 2026 — not exhaustive):</strong>
+  - CandleDojo — &ldquo;the chart-reading gym&rdquo;, markets itself as <em>&ldquo;Duolingo for chart reading&rdquo;</em> — real historical charts, long/short calls. https://candledojo.app/
+  - ChartDojo — replay real market data, AI feedback. https://chartdojo.io/ (also an open-source &ldquo;Chart Dojo&rdquo; XP/streak trainer: https://github.com/michaelsboost/ChartDojo)
+  - CHART QUEST (CRAZYSTOCK, Japan) — RPG-style chart-learning game; appears delisted as of Aug 2026. https://applion.jp/チャートクエスト/android-com.crazystock.game.chartquest/
+  - ChartLingo — step-by-step chart learning for adults + kids&rsquo; &ldquo;chart academy&rdquo;. https://www.chartlingo.ai/
+  - TradePal — &ldquo;Learn Investing&rdquo; gamified lessons. https://play.google.com/store/apps/details?id=com.zay.traderpal
+  - TradingPal — AI trading coach. https://tradingpalapp.com/
+  - patternIQ — interactive trading / financial literacy. https://apps.apple.com/us/app/patterniq/id6751753909
+  - Stack — bite-sized lessons + $10k virtual portfolio. https://www.stackinvest.app/
+  - Learn by MyWallSt — text-lesson investing course. https://play.google.com/store/apps/details?id=rubicoin.rubicoinlearn
+  - Up With Stocks — gamified market lessons. https://upwithstocks.com/
+  - ChartGame / Stock Chart Trading Game — chart-replay trading practice. https://apps.apple.com/us/app/chartgame-trading-simulator/id6761395602</p>
+  <p><strong>Read on the field:</strong> the &ldquo;Duolingo for charts&rdquo; framing is already contested (CandleDojo, ChartLingo). Nobody clearly owns <strong>structured curriculum + rigorous no-look-ahead grading + friendly consumer design</strong>. That is the wedge: pedagogy and integrity, not more drills.</p>
+  <hr />
+  <h2>2. Target users — the fork is still open (DECISION NEEDED)</h2>
+  <p>Guy was asked (10:28, unanswered when this package was commissioned): <strong>who is this for first?</strong></p>
+  <p><strong>Fork A — Total beginner.</strong> Has never invested. Does not know what a candle, a share, or a P/E multiple is.
+  - Needs: Lesson 0 glossary track, slower ramp, no assumed vocabulary, heavier motivation scaffolding.
+  - Upside: bigger market, cleaner Duolingo analogy (starts from zero).
+  - Cost: lessons 1–3 become 2 tracks (concept + pattern), MVP grows ~30%.</p>
+  <p><strong>Fork B — Beginner investor.</strong> Knows what a stock/candle/multiple is, has maybe bought something, cannot read a chart.
+  - Needs: skip glossary, jump straight to pattern skill.
+  - Upside: MVP stays tight; matches the 10-lesson curriculum below as written.
+  - Cost: smaller top of funnel; &ldquo;too basic&rdquo; risk for anyone intermediate.</p>
+  <p><strong>LOCKED (Guy, 10 Sep 2026 18:16 IDT, WhatsApp):</strong> <strong>Fork B — beginner investor.</strong> Fork A (total beginner) is not dropped: it becomes a later expansion track (Phase 3). The panel-required minimal Lesson 0 stays in the MVP.</p>
+  <p><strong>Critic Phase C panel position:</strong> Fork B is <strong>defensible only if a minimal &ldquo;Lesson 0&rdquo; (markets 101: what a stock, a chart, and a ticker are) is included</strong>. The panel agrees the fork is the first thing to lock. Confirmed by Guy as Fork B on 10 Sep 2026.</p>
+  <p>Secondary assumption (also open): adult learners (18+), English-first UI with Hebrew localization planned (Guy&rsquo;s market). Mobile-first, iOS + Android.</p>
+  <hr />
+  <h2>3. Core game loop (mobile)</h2>
+  <p>One loop = 2–4 minutes. Already presented to Guy and not objected to:</p>
+  <ol>
+  <li><strong>Learn</strong> — one small principle as a single card (≤60 words + one annotated mini-chart). Example: &ldquo;support and resistance&rdquo;.</li>
+  <li><strong>Guided example</strong> — the principle applied to one real historical chart, step by step.</li>
+  <li><strong>Practice</strong> — 5–10 real historical charts <strong>cut before the outcome</strong>. The learner marks the pattern, drags a level, or picks an action, and (optionally) says how confident they are.</li>
+  <li><strong>Instant feedback</strong> — what was identified correctly, what was missed, then the reveal: the chart animates forward to show what actually happened.</li>
+  <li><strong>Progress</strong> — XP, streak, lesson crown level; tough exercises auto-bookmark into the spaced-review queue.</li>
+  <li><strong>Market exam</strong> — every few lessons, a no-hints mixed set on symbols/dates never seen in training.</li>
+  </ol>
+  <p>Design rules for the loop: one idea per screen; the chart is the hero; feedback ≤40 words plus the visual reveal; no dashboards or tables on a phone screen (lesson learned from TradeSim Stitch v1, which Guy rejected as too dense).</p>
+  <hr />
+  <h2>4. MVP curriculum — two locked topics</h2>
+  <p><strong>Scope lock (Guy, 11 Sep 15:53 IDT):</strong> MVP content covers exactly two topic families:</p>
+  <ol>
+  <li><strong>Topic 1 — Trading fundamentals (מושגי יסוד במסחר):</strong> what a security/ticker/chart is; price and percentage change; bid/ask and spread at an educational level; market versus limit order concepts; long versus short as vocabulary only; volume; timeframe; and the difference between historical observation and a recommendation.</li>
+  <li><strong>Topic 2 — Candlestick reading (קריאת נרות):</strong> OHLC, body, upper/lower wick, bullish/bearish candle conventions, candle range and body size, single-candle interpretation in context, and short sequences that teach what can and cannot be inferred.</li>
+  </ol>
+  <p>Each topic uses the core loop: short principle card → guided example → synthetic chart exercises → immediate explanation and forward reveal → mixed exam. The content pack may contain multiple levels inside these two topics, but no third topic enters MVP.</p>
+  <p><strong>Out of MVP:</strong> support/resistance, named multi-candle patterns, indicators, fundamental/company analysis, options, crypto, broker connection, live trading, real-money mechanics, real-ticker datasets, and A/B content variants. These may enter only after friends/family feedback and a scope decision (§11).</p>
+  <hr />
+  <h2>5. Progression, scoring, feedback</h2>
+  <p><strong>Progression:</strong> Duolingo-style path map; each lesson has crown levels 0–5 (mastery via spaced review, not one-shot completion). Daily streak. Weekly market exam.</p>
+  <p><strong>Scoring (anti-luck by design):</strong>
+  - Base 10 XP per correct identification; difficulty multiplier ×1–2 by exercise clarity tier.
+  - Hint costs 50% of the exercise&rsquo;s XP.
+  - Small speed bonus, hard-capped — speed is never worth more than accuracy.
+  - ~~Calibration score~~ <strong>DEFERRED from MVP (Critic Phase C: Reject/defer — added complexity, low marginal teaching value at MVP scale).</strong> Post-MVP backlog: optional self-rated confidence vs outcome, Brier-style. Teaches honest self-assessment — the meta-skill of trading.
+  - We score <strong>identification quality, not trade P&amp;L.</strong> No leaderboard of &ldquo;returns&rdquo; in MVP.</p>
+  <p><strong>Feedback grammar (every exercise):</strong>
+  1. What you saw (correct marks).
+  2. What you missed (unmarked pattern elements).
+  3. What happened next (animated forward reveal).
+  All copy ≤40 words, pattern name repeated, one &ldquo;why&rdquo; sentence.</p>
+  <p><strong>Retention mechanics allowed in MVP:</strong> streaks, crowns, spaced review, exam unlocks. <strong>Not allowed:</strong> loot boxes, pay-to-skip, loss-streak punishment, real-money hooks of any kind.</p>
+  <hr />
+  <h2>6. Exercise generation — point-in-time, no look-ahead</h2>
+  <p>The integrity core. MVP uses synthetic generated charts while inheriting TradeSim&rsquo;s locked principles: point-in-time reveal discipline, deterministic generation, and full audit identity.</p>
+  <ul>
+  <li><strong>MVP exercise = (syntheticSeriesId, window_end T).</strong> Learner sees generated candles through T only. The generator creates the complete sequence, but the client receives post-T candles only after answer lock; reveal covers the configured synthetic horizon.</li>
+  <li><strong>Server-side window cutting:</strong> the client bundle never contains post-T data; the reveal is fetched only after the answer is recorded. No look-ahead by construction, not by convention.</li>
+  <li><strong>Generation and sampling:</strong> the reused SimEngine produces deterministic OHLCV-like sequences from a versioned scenario specification and seeded RNG. Scenario families cover trend/range, volatility, liquidity/spread examples, candle anatomy, noise, and ambiguous cases. Seeds and parameters are persisted so every exercise replays bit-for-bit.</li>
+  <li><strong>No implied market provenance:</strong> synthetic charts are clearly labeled educational/generated data. They must not carry a real ticker, company, date, or claim to reproduce an actual episode. Plausibility QA checks OHLC consistency, gaps, volatility, volume shape, and lesson-target visibility.</li>
+  <li><strong>Content QA pipeline:</strong> automated invariant and clarity checks → human review of a sampled render set. Each exercise carries <code>exerciseId + syntheticSeriesId + scenarioSpecVersion + seed + generatorVersion + curriculumVersion</code>. The reserved <code>dataSnapshotId</code> field remains nullable in MVP and becomes mandatory only for licensed real-data exercises later.</li>
+  <li><strong>Real-data compatibility:</strong> the exercise interface retains a future source discriminator (<code>synthetic | licensed-market-data</code>) and the <code>dataSnapshotId</code> audit slot. Split/dividend adjustment policy applies only when licensed real data is introduced.</li>
+  <li><strong>Presentation:</strong> MVP charts show no ticker or date because they are synthetic. When real data is later licensed, anonymized ticker/date presentation remains the default candidate until learning, disclosure, and license requirements are reviewed.</li>
+  <li><strong>Offline rule — deferred reveal:</strong> a graded item may be answered offline, but the answer locks locally and the reveal waits for reconnect and server acknowledgement. The client never caches post-T bars. Store <code>capturedOffline</code> and <code>assignmentSnapshotAt</code> with the answer; retries are idempotent.</li>
+  <li><strong>Integrity detection:</strong> CI runs a reveal-before-lock negative test and scans every exercise payload for any bar after T. A production replay canary continuously regenerates a fixed seed set and compares content/grading hashes; any mismatch blocks release or triggers the §18 kill path.</li>
+  </ul>
+  <hr />
+  <h2>7. Content &amp; data architecture</h2>
+  <ul>
+  <li><strong>Lessons:</strong> versioned JSON content packs (principle cards, guided examples, exercise manifests). Downloadable for offline play; curriculumVersion pinned per user until they opt into an update.</li>
+  <li><strong>Future localization model (deferred; MVP is English only):</strong> language-neutral records own <code>conceptId</code>, answer schema, grading rule, chart/exercise references, and difficulty metadata. Localized content is keyed by BCP 47 locale and stable content IDs: <code>question[locale][promptVariantId]</code>, <code>explanation[locale]</code>, <code>hint[locale]</code>, glossary terms, and accessibility labels. When localization is activated, a release manifest pins every localized asset and rejects publication when a required key is missing; there is no silent fallback inside a graded exercise.</li>
+  <li><strong>MVP chart source:</strong> deterministic synthetic generation only. Scenario specs, seeds, generated series, and render manifests are versioned and stored as immutable exercise inputs. No vendor market-data feed is required for MVP.</li>
+  <li><strong>Licensing decision path (locked for MVP):</strong> synthetic charts mean zero third-party market-data redistribution and no data-license dependency for MVP. Real-ticker exercises are deferred. Before any real vendor data is ingested or shown to friends/family, research each candidate vendor&rsquo;s exact display, derived-data, storage, and redistribution terms and price the required tier; only a vendor/license explicitly covering the intended product use may pass the gate.</li>
+  <li><strong>Storage:</strong> Postgres (users, progress, content manifests, grading records) + object storage (chart window payloads, rendered assets).</li>
+  </ul>
+  <hr />
+  <h2>8. App &amp; backend architecture</h2>
+  <ul>
+  <li><strong>Client (locked direction):</strong> ship MVP as a mobile-first <strong>React web PWA</strong> in TypeScript. Use responsive, touch-first candlestick components and installable/offline-safe lesson shells. The final product direction is <strong>React Native</strong>. Keep exercise generation, grading, progression/state machines, localization keys, analytics events, audit identity, and domain types in framework-neutral TypeScript packages shared by both clients; only the screen/navigation/platform-adapter layer is rewritten for React Native.</li>
+  <li><strong>Engine role:</strong> reuse and narrow TradeSim&rsquo;s SimEngine as a deterministic synthetic scenario generator, not as a backtest or live-market simulator. It owns seeded chart generation, scenario invariants, future-reveal payloads, difficulty parameters, and replay metadata. Grading remains concept-specific and deterministic outside the generator.</li>
+  <li><strong>MVP locale:</strong> English only. Hebrew and all i18n delivery are deferred.</li>
+  <li><strong>Hebrew-readiness checklist (future phase, not MVP):</strong> keep user-facing copy behind stable keys; choose fonts with complete Hebrew glyphs and compatible metrics; use semantic start/end layout primitives; define bidi isolation for mixed Hebrew, Latin, symbols, and numbers; maintain a bilingual trading glossary; mirror navigation, cards, directional icons, gestures, and transitions while preserving chronological chart-axis direction; require RTL screenshots, screen-reader checks, and fluent editorial review before enabling <code>he-IL</code>.</li>
+  <li><strong>Backend (Node/TypeScript):</strong></li>
+  <li><code>content-service</code> — lesson packs, versioning.</li>
+  <li><code>exercise-service</code> — sampler + PIT window cutter (server-side reveal gating).</li>
+  <li><code>grading-service</code> — deterministic per-pattern grading rules with tolerances; no LLM in the grading hot path (LLM only in content QA and explanations).</li>
+  <li><code>progress-service</code> — XP, crowns, streaks, spaced-review scheduler.</li>
+  <li><code>analytics</code> — event sink (see §10).</li>
+  <li><strong>Determinism &amp; audit:</strong> every graded answer stores exerciseId + source identity (syntheticSeriesId or dataSnapshotId) + generatorVersion + curriculumVersion + answer payload + capturedOffline + assignmentSnapshotAt. Replays are bit-for-bit reproducible (TradeSim engine-audit standard).</li>
+  <li><strong>Infra posture:</strong> PWA hosting + managed API/storage, feature flags, and server-driven content toggles. No vendor market feed, real ticker, or real-time market data anywhere in MVP. Preserve a clean boundary so licensed immutable snapshots can be added later without changing grading contracts.</li>
+  </ul>
+  <hr />
+  <h2>9. Safety &amp; education boundaries</h2>
+  <ul>
+  <li><strong>Education, not advice.</strong> Persistent framing: patterns are historical tendencies, not profit promises. No &ldquo;buy/sell now&rdquo; language, ever.</li>
+  <li><strong>No real money:</strong> no broker linking, no live trading, no deposits, no paper-portfolio with real-time prices in MVP.</li>
+  <li><strong>Disclaimers:</strong> past performance / simulation notice on every exam screen and on the reveal screen, not just at onboarding.</li>
+  <li><strong>Audience protection:</strong> 18+ gate assumed pending the audience decision; if a kids/teens track ever appears (ChartLingo plays there), it needs a separate design and legal pass.</li>
+  <li><strong>Honest difficulty:</strong> ambiguous windows stay in the curriculum labeled as ambiguous — the app teaches that sometimes the right answer is &ldquo;unclear&rdquo;, which most competitors avoid teaching.</li>
+  <li><strong>Privacy and erasure:</strong> analytics/audit records use pseudonymous <code>subjectId</code>, never email as the join key. Keep the identity-to-subject mapping separately access-controlled. Publish purpose, consent basis, and retention windows; on GDPR/Israel PPL erasure, delete identity/profile/content where required and either delete or irreversibly de-identify retained aggregate/audit records. &ldquo;Immutable&rdquo; means tamper-evident while lawfully retained, not exempt from erasure law.</li>
+  </ul>
+  <hr />
+  <h2>10. Analytics</h2>
+  <ul>
+  <li><strong>Events:</strong> lesson_started/completed, exercise_answered (pattern family, correct, time-to-answer, hints, confidence), reveal_viewed, exam_completed (score + calibration), streak_maintained/broken, review_queue_served.</li>
+  <li><strong>North-star:</strong> Week-1 retention × exam-accuracy improvement over a learner&rsquo;s first 10 exams.</li>
+  <li><strong>Guardrail metrics:</strong> hint dependency rate, rage-quit points (drop-off by exercise), ambiguous-exercise complaint rate.</li>
+  <li>All analytics are product analytics; <strong>no trading behavior data is sold or shared.</strong></li>
+  </ul>
+  <p><strong>Learner model and mastery service</strong></p>
+  <ul>
+  <li>A <code>mastery-service</code> owns a versioned skill DAG: trading vocabulary → candle anatomy → contextual interpretation. Items declare the skills they teach/test; prerequisites gate progression.</li>
+  <li>MVP starts with rubric/heuristic item calibration, then moves to a 1PL/Rasch-style model when response volume supports stable difficulty estimates. Adaptive serving targets a 70–85% success band so practice is effortful without becoming random failure.</li>
+  <li>Spaced review uses a named algorithm: <strong>FSRS</strong>, with parameters versioned and tuned only after enough retention observations. Mastery estimates and scheduling versions remain replayable.</li>
+  <li><strong>Explicit content cost:</strong> plan roughly 400–800 calibrated items per locale for a mature two-topic bank, plus the sealed exam bank. Every added locale multiplies authoring, review, accessibility, QA, and calibration work; this is one reason Hebrew is deferred.</li>
+  </ul>
+  <hr />
+  <h2>11. Locked delivery path</h2>
+  <ol>
+  <li><strong>MVP build:</strong> mobile-first React web PWA; English only; the two locked topics in §4; synthetic generated charts; one default palette, one logo, one English wording per item, and a fixed introductory difficulty path. Experiment plumbing exists but is dormant (§18).</li>
+  <li><strong>Friends/family feedback — explicitly not an experiment:</strong> everyone receives the same build. Collect first impressions of UX and find obvious bugs only. No assignment, variants, holdout, experiment metrics, or promotion gate applies in this phase.</li>
+  <li><strong>Post-MVP expansion:</strong> activate selected variants, begin controlled learning experiments, add marketing work, and add more levels/topics based on evidence. Real-ticker exercises remain behind the per-vendor redistribution-license gate.</li>
+  <li><strong>Final client after validation:</strong> build the production screen/navigation layer in React Native after PWA validation. Reuse the framework-neutral TypeScript engine, logic, state, content, localization, grading, analytics, and audit packages; rewrite only the screen and platform-adapter layer.</li>
+  </ol>
+  <hr />
+  <h2>12. Visual &amp; design system</h2>
+  <p>Direction from Guy: <strong>clean, simple to understand, young and fun — not heavy or dense.</strong></p>
+  <p><strong>Principles</strong>
+  1. One idea per screen. If a screen needs a scrollbar on a phone, it is two screens.
+  2. The chart is the hero: full-bleed, generous whitespace, zero chrome competing with it.
+  3. Big tap targets (≥48px), thumb-zone actions, max 3 text styles per screen.
+  4. Celebrate: spring-motion reveals (150–250ms), haptic tick on correct, confetti only on exam passes.
+  5. Friendly voice: short sentences, zero jargon before it is taught.</p>
+  <p><strong>Tokens</strong>
+  - <strong>Token namespaces:</strong> <code>brand.*</code> controls navigation, CTAs, rewards, surfaces, and identity; <code>data.*</code> controls chart meaning. Palette changes may change <code>brand.*</code> only.
+  - <strong>Frozen data colors (Guy, 11 Sep 16:14 IDT):</strong> bullish candles are always green and bearish candles always red, independent of brand palette. Freeze <code>data.candle.up</code> / <code>data.candle.down</code> and pair color with non-color encoding: hollow/filled bodies, direction glyph/label, and screen-reader text. Never retint data encoding in a palette experiment.
+  - Shared brand colors: ink navy <code>#0F2B46</code>, coral <code>#FF6B57</code>, sunshine <code>#FFB020</code>, paper <code>#FAFAF7</code>. Dark mode deferred.
+  - <strong>Locked future brand-palette pair:</strong> <code>palette.original-green</code> (<code>#10B981</code> primary) and <code>palette.violet</code> (<code>#7C3AED</code> primary). Claude&rsquo;s violet-primary preference is recorded dissent, not a changed lock. MVP uses one selected brand palette; experimentation stays dormant (§18).
+  - Type: rounded geometric sans — Baloo 2 or Nunito (both free/OFL); tabular numerals on charts.
+  - Iconography: chunky rounded candlesticks; a small, explicitly non-avian mascot guides lessons (final form follows the name decision).</p>
+  <p><strong>Interaction accessibility:</strong> chart canvas exposes an ordered screen-reader alternative (candle-by-candle OHLC, direction, range, and question-relevant annotations). Every drag/line-placement task has a motor-accessible alternative using tap/select and stepper controls, with full keyboard/switch navigation and the same grading tolerance.</p>
+  <p><strong>Screen inventory (MVP):</strong> Onboarding (3 cards) · Path home · Lesson card · Guided example · Exercise · Reveal/feedback · Market exam · Profile/streak. Eight screens, no tab bar deeper than 3.</p>
+  <hr />
+  <h2>13. Working name — Tikerino (PROVISIONAL, NOT LOCKED)</h2>
+  <p><strong>Current direction from Guy (WhatsApp, 11 Sep 15:22 IDT):</strong> use <strong>Tikerino</strong> for now, spelled without a &ldquo;c&rdquo;. This is the current working name, <strong>not a final lock</strong>; it may change later. The deciding filter in this round was domain availability: <strong>tikerino.com is available</strong>, while tickerino.com is taken. Domain registration remains pending Guy&rsquo;s separate decision.</p>
+  <p><strong>Status:</strong> product copy, mockups, files, and future wordmarks should use <strong>Tikerino</strong> until replaced. A formal trademark screen (USPTO + Israel TM database + exact app-store match) remains required before final lock or public launch. Availability is point-in-time and does not reserve the domain.</p>
+  <p><strong>Retired candidates:</strong> Tradisimo!, Tickerino, Bullissimo, and Compundo are no longer active candidates. Their evaluation history remains in the v0.4 change log (§16) for auditability. Kachingo and the round-1 names remain rejected.</p>
+  <hr />
+  <h2>14. Visual identity — commissioned to Bobby&rsquo;s web designer (11 Sep 2026)</h2>
+  <p><strong>Commission (Guy, WhatsApp 11 Sep 11:23 IDT):</strong> &ldquo;I&rsquo;d really like to see designs of how it will look like. Logo, color, schemes screens. Please ask Bobby to get our web designer on the job.&rdquo; Deliverables: logo + color scheme + key screens. The round-1 logo directions below (A/B/C, SVG + PNG) are <strong>reference inputs for the designer, not finalists</strong>; the name/logo pairing rule from round 1 no longer applies (round-2 names may carry new concepts). Name lock waits for these visuals (§13). <strong>Commission email sent to Bobby 11 Sep 11:24 IDT</strong>, with a detailed design brief (screen list, name-agnostic wordmark variations per round-2 candidate, style direction) sent as a follow-up on the same thread.</p>
+  <p><strong>Update (11 Sep 11:45 IDT):</strong> Bobby hit its daily/monthly quota, so Guy routed the first design pass through <strong>Google Stitch</strong> instead (his call). Run via the Stitch API: 6 core screens (onboarding, path home, lesson card, exercise with cut chart, reveal/feedback, market exam) + wordmark splashes for Tradisimo! / Tickerino / Bullissimo, all generated against the §12 design system. Screenshots reviewed and delivered to Guy; historical wordmark splashes used the then-active candidates. The current working name is Tikerino (§13). Project: Stitch &ldquo;Investing Education Game - MVP (mobile)&rdquo;. The Bobby/designer route stays open as a follow-up pass, not retired.</p>
+  <p><strong>Palette decision (Guy, 11 Sep 12:47 IDT):</strong> keep both the original green and violet directions. They are the locked first future color-variant pair for the experiment system in §18; variants are out of the MVP build. Ocean blue is not in the initial pair. This palette lock does not close the name, logo, licensing-timing, or calibration-veto decisions.</p>
+  <p><strong>Logo steering (Guy, 11 Sep 12:48 IDT):</strong> change the logo or test an alternative with a stronger trading orientation. The two candidates below are name-agnostic, palette-tokenized, and intentionally non-avian. Logo is <strong>not</strong> an experiment dimension: Guy will pick one once. Panel input: Grok preferred Level Finder; Claude proposed a third concept, &ldquo;The Cut&rdquo;. That suggestion is recorded for the one-time decision, not added as a new candidate without Guy&rsquo;s choice.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:16px 0 22px">
+    <div style="border:1px solid #E8E4DB;border-radius:20px;padding:18px;background:#fff">
+      <svg role="img" aria-labelledby="logo-a-title" viewBox="0 0 320 220" style="display:block;width:100%;height:auto"><title id="logo-a-title">Trading logo candidate A, Breakout Candle</title><rect x="26" y="18" width="168" height="168" rx="44" fill="#0F2B46"/><g stroke="#FAFAF7" stroke-width="8" stroke-linecap="round"><line x1="72" y1="112" x2="72" y2="154"/><line x1="110" y1="80" x2="110" y2="145"/><line x1="148" y1="46" x2="148" y2="121"/></g><rect x="60" y="121" width="24" height="24" rx="6" fill="#FF6B57"/><rect x="98" y="95" width="24" height="37" rx="6" fill="#10B981"/><rect x="136" y="61" width="24" height="47" rx="6" fill="#7C3AED"/><path d="M68 98 L108 72 L143 48 L171 32" fill="none" stroke="#FFB020" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M156 31 L174 29 L170 47" fill="none" stroke="#FFB020" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><text x="26" y="214" font-family="Nunito, sans-serif" font-size="22" font-weight="900" fill="#0F2B46">A · BREAKOUT CANDLE</text></svg>
+      <p><strong>A — Breakout Candle.</strong> Three candlesticks plus a rising breakout arrow. Strongest immediate trading read and clearest app-icon silhouette. The live variant uses one palette primary at a time; the split colors here show token compatibility only.</p>
+    </div>
+    <div style="border:1px solid #E8E4DB;border-radius:20px;padding:18px;background:#fff">
+      <svg role="img" aria-labelledby="logo-b-title" viewBox="0 0 320 220" style="display:block;width:100%;height:auto"><title id="logo-b-title">Trading logo candidate B, Level Finder</title><rect x="26" y="18" width="168" height="168" rx="44" fill="#FAFAF7" stroke="#0F2B46" stroke-width="8"/><path d="M54 70 H166 M54 138 H166" stroke="#FF6B57" stroke-width="7" stroke-linecap="round" stroke-dasharray="13 11"/><g stroke="#0F2B46" stroke-width="7" stroke-linecap="round"><line x1="75" y1="88" x2="75" y2="151"/><line x1="111" y1="51" x2="111" y2="117"/><line x1="147" y1="77" x2="147" y2="154"/></g><rect x="64" y="103" width="22" height="31" rx="5" fill="#10B981"/><rect x="100" y="67" width="22" height="34" rx="5" fill="#7C3AED"/><rect x="136" y="97" width="22" height="39" rx="5" fill="#10B981"/><circle cx="111" cy="70" r="16" fill="none" stroke="#FFB020" stroke-width="7"/><path d="M122 81 L140 99" stroke="#FFB020" stroke-width="7" stroke-linecap="round"/><text x="26" y="214" font-family="Nunito, sans-serif" font-size="22" font-weight="900" fill="#0F2B46">B · LEVEL FINDER</text></svg>
+      <p><strong>B — Level Finder.</strong> Candles between support and resistance, with a compact finder lens. More educational and analytical; less momentum-coded than A, but more detailed at small sizes.</p>
+    </div>
+  </div>
+  <p><strong>One-time logo decision:</strong> choose one logo once; no rotating logo and no logo A/B test. Current rendered choices remain A — Breakout Candle and B — Level Finder. Panel notes: Grok preferred B; Claude suggested a possible C — &ldquo;The Cut&rdquo;. Candidate changes wait for Guy&rsquo;s separate decision.</p>
+  <p><strong>Round-1 reference directions — editable SVG + PNG previews:</strong></p>
+  <ul>
+  <li><strong>Direction A — &ldquo;The Learner&rdquo; (Chartling):</strong> a small round creature perched on chunky candlesticks, mid-climb. Friendliest, most Duolingo-like; mascot extensible (reactions, outfits, exam judge).</li>
+  <li><strong>Direction B — &ldquo;The Campfire Wick&rdquo; (CandleCamp):</strong> a candlestick whose upper wick becomes a campfire flame, tent lines at the base. The cleverest visual pun; strongest as an app icon at small sizes.</li>
+  <li><strong>Direction C — &ldquo;The Trek&rdquo; (TickerTrek):</strong> a dotted trail climbing like a price line to a flag at the summit. Most energetic/game-like; reads instantly as a journey.</li>
+  </ul>
+  <p>Each is delivered as layered SVG (editable colors/shapes) plus a rendered PNG on light background. Final typeface pairing: Baloo 2 / Nunito wordmark (mockups use a fallback system sans).</p>
+  <p><strong>Critic Phase C panel read (round 1):</strong> preferred Direction B (Campfire Wick); panel Web Designer leaned Direction A (Chartling creature). Surfaced for the commissioned designer as prior art, not as a constraint.</p>
+  <hr />
+  <h2>15. What we ask from Bobby&rsquo;s Critic panel</h2>
+  <p>Run the full package through the Critic with the multi-model panel (Gemini, ChatGPT, Claude, Grok + Bobby&rsquo;s own read), weighted consensus as usual:</p>
+  <ol>
+  <li><strong>Verdict per section</strong> (Keep / Keep with patches / Rework), ranked patch list.</li>
+  <li>Specific calls we want pressure-tested:
+     - The audience fork (§2): is Fork-B-first defensible, or does the panel see Fork A as the real market?
+     - MVP scope lock: technical-only, 10 lessons, no fundamentals (§4).
+     - PIT exercise integrity design (§6): anything that still leaks the future?
+     - Licensing gate timing (§7): is &ldquo;before any external account&rdquo; too early/late?
+     - Scoring: is calibration scoring worth the complexity in MVP (§5)?
+     - Name risk reads (§13): does the panel catch collisions we missed?
+     - Logo direction pick (§14) with one-line rationale.</li>
+  <li>Where models disagree, we want the disagreement surfaced, not averaged away.</li>
+  </ol>
+  <p>— Tony (Instinct) for Guy</p>
+  <hr />
+  <h2>16. Critic Phase C outcome (10 Sep 2026)</h2>
+  <p><strong>Coverage honestly reported:</strong> Gemini, ChatGPT, Grok — <strong>Keep with patches, 3/3</strong>. <strong>Claude missing</strong> (Anthropic API 401 — the panel did not invent its vote). Architect note: Keep with patches (reveal gating, offline PIT, license ToS). Web Designer informal lean: logo A (surfaced, not averaged). The full consensus file lives on Bobby&rsquo;s machine (<code>/workspace/investing-game/reviews/phase-c-consensus.md</code>) and was not attached to the reply; the summary above is what arrived.</p>
+  <p><strong>Consensus keeps:</strong> game loop (§3) · technical 10-lesson MVP (§4) · server-side PIT exercise generation (§6).</p>
+  <p><strong>Patches applied in v0.2 (non-decision, editorial):</strong>
+  1. §4 — Lesson 0 (Markets 101) added; required by the panel under either audience fork.
+  2. §5 — calibration scoring deferred from MVP to the post-MVP backlog.
+  3. §6 — anonymized ticker/date presentation added (anti-lookup + licensing surface).
+  4. §7 — licensing timing reframed: F&amp;F carve-out now, full gate before public (presented as decision, not locked).
+  5. §11 — Phase 1 updated to lessons 0–3 + anonymized exercises + carve-out condition.</p>
+  <p><strong>Phase 0 choices that remain Guy&rsquo;s (nothing locked by the panel or by me):</strong>
+  1. ~~<strong>Audience fork</strong>~~ <strong>LOCKED by Guy 10 Sep 18:16 IDT: Fork B (beginner investor); A later as an expansion track.</strong>
+  2. <strong>Name — Tikerino, provisional</strong> — Guy selected Tikerino as the working name 11 Sep 15:22 IDT because tikerino.com was available; not locked and may change. Domain registration remains pending; formal TM screen still required before lock.
+  3. <strong>Logo / visual identity — commissioned</strong> (11 Sep) to Bobby&rsquo;s web designer: logo + color scheme + screens. Round-1 directions A/B/C are reference inputs, not finalists.
+  4. <strong>Licensing timing</strong> — F&amp;F carve-out + gate before public (panel) vs strict gate before any external account (original TradeSim lock).
+  5. <strong>Veto check</strong> — calibration deferral (§5) was applied editorially; Guy can restore it to MVP.</p>
+  <p><strong>Log — 11 Sep 2026 (v0.4):</strong> naming round 2 after Guy&rsquo;s rejection of round 1; Tradisimo! evaluated (AMBER-RED); Tickerino / Bullissimo / Compundo / Kachingo added with indicative collision checks; visual-identity commission to Bobby&rsquo;s web designer recorded. Bobby Critic re-review of round-2 naming deferred until Guy shortlists.</p>
+  <h2><strong>Log — 11 Sep 2026 (v0.4b):</strong> first design pass executed on Google Stitch after Bobby quota ran out (Guy&rsquo;s routing decision); 6 core screens + 3 wordmark splashes generated against the §12 tokens and sent to Guy for review. Designer-via-Bobby remains the refinement route.</h2>
+  <h2>17. Duolingo look-and-feel exposure — orientation (11 Sep 2026)</h2>
+  <p>Guy asked (11 Sep 11:47 IDT): the Stitch screens feel very Duolingo — is there lawsuit risk? <strong>Orientation for a founder decision, not legal advice.</strong> Formal IP counsel (US + Israel) is required before launch and before any name lock (§13).</p>
+  <p><strong>What Duolingo protects, and how actively:</strong>
+  - Documented, deliberate identity: Feather Green (#58CC02), Duo the owl, Feather Bold type, illustrated character system — published brand guidelines (https://design.duolingo.com/identity).
+  - Registered marks, incl. the owl logo (USPTO serial 88703483: https://www.trademarkelite.com/trademark/trademark-detail/88703483/logo).
+  - <strong>Active trademark enforcement:</strong> Duolingo, Inc. (Latham &amp; Watkins) opposed the mark <strong>&ldquo;UGO LINGO&rdquo;</strong> at the USPTO TTAB — opposition 91304428 (https://ttabvue.uspto.gov/ttabvue/v?pno=91304428&amp;pty=OPP); the opposed application was abandoned after the inter-partes decision. Reading: Duolingo polices &ldquo;-LINGO&rdquo; names. The current working name Tikerino avoids the suffix.
+  - Copyright enforcement exists but targets piracy: DMCA takedown of a cracked Duolingo app repo (GitHub, Apr 2025: https://github.com/github/dmca/blob/master/2025/04/2025-04-23-duolingo.md). No public record found of Duolingo suing a look-alike learning app.</p>
+  <p><strong>Legal shape of the risk:</strong>
+  - Learning-game <strong>mechanics</strong> (streaks, XP, crowns, winding path, hearts) are industry-wide conventions; Khan Academy, Memrise, Zogo and dozens of &ldquo;Duolingo for X&rdquo; apps coexist. Mechanics are not ownable.
+  - <strong>Trade dress</strong> protects a product&rsquo;s total look only when distinctive, non-functional, and confusingly similar. Exposure concentrates in specific expression: green-heavy palette + owl-like mascot + &ldquo;-lingo&rdquo; name + &ldquo;Duolingo for X&rdquo; marketing copy.
+  - Platform precedent: NYT had Wordle clones pulled via DMCA (AP: https://apnews.com/article/new-york-times-wordle-clones-takedown-dmca-35d32b7548f7312ea74a2065b2cd31a6) — those copied exact expression, not just mechanics. 2026 commentary treats look-alike &ldquo;dupes&rdquo; as a rising trademark battleground (https://ipwatchdog.com/2026/01/12/run-dont-walk-dupe-culture-trade-dress-growing-fight-brand-identity/, https://www.mondaq.com/unitedstates/trademark/1746440).</p>
+  <p><strong>Our exposure as designed (v0.4b Stitch pass): LOW-MODERATE.</strong> The screens borrow mechanics (path, streaks, crowns), but the mascot is non-avian, names avoid &ldquo;-lingo&rdquo;, and the palette system tests original green against violet rather than using Feather Green or copying Duolingo&rsquo;s exact identity stack.</p>
+  <p><strong>Mitigations (in motion + standing):</strong>
+  1. Use independently specified palette tokens: original growth green <code>#10B981</code> and violet <code>#7C3AED</code> are the locked first experiment pair (§12, §18); neither uses Duolingo Feather Green <code>#58CC02</code>. Monitor the total identity stack, not color in isolation.
+  2. Mascot stays non-avian with a distinct silhouette.
+  3. No &ldquo;-LINGO&rdquo; name — holds for all current candidates; Duolingo&rsquo;s UGO LINGO opposition shows why this matters.
+  4. &ldquo;Duolingo for investing&rdquo; remains internal shorthand only — never in store listings, ads, or PR.
+  5. Keep independent-design evidence (this doc, Stitch project history, dated artifacts).
+  6. Before public launch: formal IP counsel pass (US + Israel) + TM screen on the locked name.</p>
+  <hr />
+  <h2>18. Experiment architecture — dormant registry and post-MVP controls</h2>
+  <p><strong>Current-stage scope.</strong> MVP and friends/family use no variants. Implement only the deterministic assignment contract, immutable variant registry, persisted audit fields, and kill-test hooks now. Activate experiments only after the UX/bug phase and a passing power calculation.</p>
+  <p><strong>Experiment classes</strong></p>
+  <ul>
+  <li><strong>Brand:</strong> <code>brand.*</code> palette/theme only. Logo is excluded and picked once. <code>data.*</code> chart colors are immutable.</li>
+  <li><strong>Pedagogy:</strong> question phrasing or difficulty. At most <strong>one live pedagogy experiment</strong> at a time. Within-subject phrasing randomization remains an open design question; do not implement it without Guy&rsquo;s ruling.</li>
+  <li><strong>Integrity:</strong> controlled validation of delivery/audit mechanisms, never relaxation of PIT, grading, privacy, safety, or data-license rules.</li>
+  </ul>
+  <p><strong>Canonical deterministic assignment</strong></p>
+  <ul>
+  <li>Create a random stable <code>installId</code> on first launch; use it as <code>subjectId</code> while anonymous. On signup, atomically merge install history into the account&rsquo;s canonical pseudonymous subject and persist an alias/merge record so a learner is not double-counted or reassigned.</li>
+  <li>Each immutable <code>ExperimentDefinition</code> stores <code>experimentId</code>, class, eligibility, variants, integer allocation ranges, frozen per-experiment salt, <code>assignmentSecretVersion</code>, metrics, power plan, guardrails, and lifecycle. A material change creates a new ID.</li>
+  <li>Canonical input uses length-prefixed UTF-8 fields in this exact order: <code>experimentId | subjectId | assignmentContext | frozenSalt</code>. Compute <code>HMAC-SHA256(secret[assignmentSecretVersion], canonicalBytes)</code>; interpret the first 64 unsigned bits as big-endian and reduce modulo 10,000. Variant weights are integer basis points summing to the experiment&rsquo;s eligible range; variants map to contiguous half-open ranges in registry order.</li>
+  <li>Persist an <code>AssignmentRecord</code> before exposure: subject, experiment/variant, bucket, eligibility snapshot, assignment context, salt, secret version, algorithm version, assignedAt, and <code>assignmentSnapshotAt</code>. Assignment is sticky and replayable.</li>
+  <li>Ramps use a <strong>monotonic eligible bucket range</strong> (for example [0,500) → [0,2500)); existing subjects never leave or change variants when traffic grows. Keep a permanent 5% global holdout excluded from all product experiments.</li>
+  </ul>
+  <p><strong>Audit identity, offline, and privacy</strong></p>
+  <ul>
+  <li>Exercise/answer identity: <code>exerciseId + source identity + generatorVersion + curriculumVersion + subjectId + experimentId/variantId + assignmentAlgorithmVersion + assignmentSecretVersion + locale + localizationVersion + capturedOffline + assignmentSnapshotAt + answer payload/hash</code>. Dormant MVP experiment fields are null/none.</li>
+  <li>Offline answers lock until reconnect; reveal occurs only after server acknowledgement. The saved assignment snapshot travels with the answer. Replay resolves exact registry/content/generator versions.</li>
+  <li>Subject IDs are pseudonymous; identity mapping, retention, consent, and erasure follow §9. Audit immutability does not override GDPR or Israel PPL rights.</li>
+  </ul>
+  <p><strong>Learning measurement</strong></p>
+  <ul>
+  <li>No experiment is defined or launched without a passing power/MDE calculation and preregistered primary outcome, harm boundary, exposure window, and slice plan. Use group-sequential boundaries or always-valid inference for planned monitoring; do not repeatedly peek at ordinary fixed-horizon p-values.</li>
+  <li>Difficulty tests use a common, treatment-invariant, frozen, sealed holdout exam bank: separate seed, no reveal, no hints, no XP, inaccessible to training selection, and chance-corrected scoring. Refreshing the bank creates a new version and analysis boundary.</li>
+  <li>Primary outcomes are holdout identification quality, transfer, and delayed retention. Engagement cannot win while learning crosses the harm boundary. Monitor sample-ratio mismatch (SRM) continuously; confirmed SRM automatically freezes ramp and new assignments.</li>
+  </ul>
+  <p><strong>Rollout and kill detection</strong></p>
+  <ul>
+  <li>Post-MVP rollout may progress 5% → 25% → 50% → 100% only after power, accessibility, replay, allocation, and guardrail checks. The 5% global holdout remains untouched.</li>
+  <li><strong>Automated kill triggers:</strong> SRM; CI/canary reveal-before-lock failure; payload scan finds any bar after T; replay canary hash mismatch; incomplete audit identity; wrong grading; privacy/license/safety breach; or accessibility blocker. Freeze new assignments, preserve incident evidence lawfully, revert to safe control, and open an incident.</li>
+  <li><strong>Statistical rollback:</strong> apply the preregistered group-sequential/always-valid rule. Roll back when the confidence sequence crosses the harm boundary for learning or a declared high-risk slice, regardless of engagement.</li>
+  </ul>
+  <p><strong>Implementation boundary.</strong> Keep the experiment registry/assignment module separate behind stable interfaces; whether the backend ships as a modular monolith or separate service remains an open architecture decision. Feature flags are emergency delivery controls, not experiment definitions.</p>
+  <p><strong>Log — 11 Sep 2026 (v0.7):</strong> logo removed from experiments; MVP English-only with Hebrew readiness deferred; brand/data token namespaces split with forever-fixed green/red candle encoding; friends/family defined as non-experimental UX/bug feedback; deterministic assignment, offline audit, power/holdout/SRM, sealed difficulty exam, learner model, privacy, accessibility, and automated integrity kill mechanisms hardened from panel review. Open: name, logo pick, within-subject phrasing design, and modular-monolith structure.</p>
+  <hr />
+  <h2>19. Business model direction</h2>
+  <p><strong>Current lead:</strong> freemium — trading fundamentals and basic candlestick learning remain free; advanced levels, deeper practice, and advanced content are paid. Exact packaging and pricing remain open.</p>
+  <p><strong>Alternatives under consideration:</strong> (1) a full Duolingo-style consumer subscription, and (2) B2B white-label licensing for brokers or banks. These are directions for the pending business-plan analysis, not locked launch commitments.</p>
+  <p><strong>Decision dependency:</strong> the business plan is pending the panel return. MVP architecture must keep entitlement boundaries clean, but payment, subscription, ads, broker integrations, and white-label tenancy are not MVP build scope.</p>
+  <p><strong>Log — 11 Sep 2026 (v0.6, MVP locks 15:53 IDT):</strong> MVP narrowed to trading fundamentals + candlestick reading; synthetic charts remove MVP licensing dependency; React web PWA first, React Native final client with shared engine/logic/state; experiments retained as dormant infrastructure; friends/family feedback precedes variants, marketing, and more levels; freemium set as the lead business-model direction.</p>
+  <hr>
+  <p style="font-size:12.5px;color:#7C8DA0">Live companion: <a href="/">design system — principles, tokens, logo directions</a> · Rendered from PRODUCT-AND-ARCHITECTURE.md v0.7 · Tony (Instinct) for Guy</p>
+</div>
+</body>
+</html>
