@@ -53,8 +53,9 @@ export class OfflineError extends Error {
   }
 }
 
+/** Error from the API (4xx/5xx). Carries the HTTP status for callers that need it. */
 export class ApiError extends Error {
-  readonly status: number;
+  status: number;
   constructor(status: number, message: string) {
     super(message);
     this.name = 'ApiError';
@@ -63,19 +64,21 @@ export class ApiError extends Error {
 }
 
 /**
- * Where the API lives.
+ * Resolve the configured API base (or the empty string for same-origin).
  *
- * Empty - the default - means same origin: the client asks for `/api/...` and
- * whatever serves the built files serves or proxies the API too. That is the
- * simplest deployment, and the one `npm run dev` reproduces via the Vite proxy.
+ * The common case is a single-origin deployment: the client bundle is served
+ * by the same server that answers /api/..., so the browser uses a relative
+ * path and no extra CORS configuration is required.
+ *
+ * The simplest deployment, and the one `npm run dev` reproduces via the Vite proxy.
  *
  * Set `VITE_API_BASE_URL` to an absolute origin to split the two apart - static
  * hosting for the client, a container for the server. Vite inlines it at build
  * time, so it is a build input and not a runtime setting: a client built for one
  * API origin cannot be repointed at another without rebuilding.
  *
- * The server already answers with permissive CORS, so no server change is needed
- * to go cross-origin.
+ * CORS is now restricted to the origins listed in the server's CORS_ORIGINS
+ * (or the dev defaults). When splitting origins you must configure both sides.
  */
 export function resolveApiBaseUrl(raw: string | undefined): string {
   const value = (raw ?? '').trim();
@@ -87,16 +90,16 @@ export function resolveApiBaseUrl(raw: string | undefined): string {
   } catch {
     throw new Error(
       `VITE_API_BASE_URL must be an absolute http(s) URL or empty, got "${value}". ` +
-        'A bare host or a relative path will not do.',
+        'Relative paths are not allowed here because the client inlines the value at build time.',
     );
   }
+
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new Error(`VITE_API_BASE_URL must be http or https, got "${parsed.protocol}"`);
+    throw new Error(
+      `VITE_API_BASE_URL must be http or https, got "${value}".`,
+    );
   }
 
-  // Worth failing loudly on: the browser blocks an http request from an https
-  // page, fetch rejects, and the catch below would report it as OfflineError -
-  // so a misconfigured build would look to the learner like a dead network.
   if (
     typeof location !== 'undefined' &&
     location.protocol === 'https:' &&
