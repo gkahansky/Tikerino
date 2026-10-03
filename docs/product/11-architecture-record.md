@@ -1,41 +1,48 @@
-<!-- Snapshot of Google Doc "Tikerino Architecture" (Drive), taken 2026-10-03. Living record dated 12-13 Sep 2026; the repo README and git history may be newer. -->
+TIKERINO ARCHITECTURE  
+Living architecture record. State as of 12 September 2026, 22:19 IDT. Supersedes the deployment-relevant parts of product-and-architecture-v0.7.html (the product spec of record, unchanged). Owner: Guy Kahansky.
 
-# TIKERINO ARCHITECTURE (living record, state as of 12-13 Sep 2026)
+1\. WHAT IS LIVE  
+\- App: https\://app-production-ed2d.up.railway.app \- narrated pilot LIVE since 12 Sep 22:00 IDT (Guy's deploy word, 21:59). tikerino.com registered (Porkbun, paid through 2027-09-12); DNS/ TLS wiring in progress \- see section 8\.  
+\- Platform: Railway, agent-operated account (login via email code to the Instinct mailbox). One project "tikerino", two services: app (Node) \+ Postgres (managed).  
+\- Cost: \$0 during trial (\$5 credit / 30 days); then Hobby \$5/mo which covers this app's size. Render was rejected (free services sleep; free Postgres expires after 30 days), Fly.io (card required at signup).
 
-## 1. What is live
-- App on Railway (app service + managed Postgres), custom domain https://tikerino.com (TLS valid; www redirects to apex). Narrated pilot live since 12 Sep.
-- Cost: Railway Hobby ~$5/mo. Render rejected (sleeping free services, expiring Postgres); Fly.io rejected (card at signup).
+2\. DEPLOYMENT SHAPE  
+\- One origin: a single Fastify process serves the built client (client/dist, SPA fallback) and the API on the same host. No VITE\_API\_BASE\_URL in production.  
+\- Two-endpoint lock holds: GET /api/exercises/:id/window and POST /api/answers. The engine spec allows exactly these two; legal pages and static assets are not endpoints. Readiness check: GET /api/exercises/ex-001/window (no /healthz, deliberately).  
+\- Build: npm ci; npm run build \--workspace @tikerino/client. Start: HOST=0.0.0.0, PORT from the platform, npm run start \--workspace @tikerino/server. tsx is a runtime dependency (production builds prune devDependencies).  
+\- Repo truth gap (known): two commits exist only in the Railway deploy and as a patch held by Instinct \- (1) Railway deploy \+ Postgres audit log, (2) walkthrough rework. GitHub is read-only for Instinct today; pushing is an open question for Guy/Claude.
 
-## 2. Deployment shape
-- One origin: a single Fastify process serves the built client (client/dist, SPA fallback) and the API.
-- Two-endpoint lock: GET /api/exercises/:id/window and POST /api/answers. Readiness check: GET /api/exercises/ex-001/window (no /healthz, deliberately).
-- Build: npm ci; build @tikerino/client. Start @tikerino/server with HOST=0.0.0.0 and platform PORT. tsx is a runtime dependency.
-- Known gap at the time: two commits existed only in the Railway deploy (Postgres audit log, walkthrough rework); GitHub push permissions were an open question.
+3\. AUDIT LOG \- MANAGED POSTGRES (replaces JSONL, decided by Guy 12 Sep: "the right solution from day one")  
+\- Table audit\_records: id BIGSERIAL PK; subject\_id, exercise\_id, assignment\_snapshot\_at (the idempotency key, UNIQUE); record JSONB (the full audit identity: syntheticSeriesId, scenarioSpecVersion, generatorVersion, curriculumVersion, answer, grading inputs, result).  
+\- Boot rebuilds the in-memory idempotency index from the table \- a restart cannot double-count an answer (verified live: "1 answers already recorded" after a forced redeploy).  
+\- Inserts are awaited before the answer response and use ON CONFLICT DO NOTHING as the database-level idempotency guard.  
+\- The file backend (JSONL) remains the default for local dev and all 162 tests; DATABASE\_URL selects Postgres in production.
 
-## 3. Audit log - managed Postgres
-- Table audit_records: id BIGSERIAL PK; subject_id, exercise_id, assignment_snapshot_at (idempotency key, UNIQUE); record JSONB (syntheticSeriesId, scenarioSpecVersion, generatorVersion, curriculumVersion, answer, grading inputs, result).
-- Boot rebuilds the in-memory idempotency index from the table; restarts cannot double-count. Inserts awaited before responding; ON CONFLICT DO NOTHING.
-- JSONL file backend remains default for local dev and tests; DATABASE_URL selects Postgres.
+4\. INTEGRITY CONTRACT (unchanged, still enforced)  
+\- Deterministic generation (FNV-1a \+ mulberry32; golden-seed replay pins 30 series).  
+\- Cut point: post-T candles exist only on the server; CI scans every serialized payload for leaks; client gets a sanitised pack (no seeds, no answers).  
+\- Grading is server-side; the client's chart copy is never trusted; offline answers lock and flush idempotently.
 
-## 4. Integrity contract
-- Deterministic generation (FNV-1a + mulberry32; golden-seed replay pins 30 series).
-- Post-cut candles exist only on the server; CI scans every serialized payload for leaks; client gets a sanitised pack (no seeds, no answers).
-- Grading is server-side; the client's chart copy is never trusted; offline answers lock and flush idempotently.
+5\. WALKTHROUGH \+ LEGAL (12 Sep, Guy's directive)  
+\- Onboarding sells the loop: card 1 (read markets, one small idea at a time), card 2 "Make the call, see the grade" (learn loop \+ XP breakdown), card 3 "Build your streak, climb the path" (streaks/progression).  
+\- Disclaimers moved out of the walkthrough into client-side Terms of use ("Nothing here is advice") and Privacy policy ("Every chart here is made up" \+ what the audit log stores), linked from the profile.  
+\- Legal text lives ONLY in Terms of use and Privacy policy (Guy, 12 Sep 21:47-21:48 IDT): the 'generated practice data' caption chips were removed from every chart (walkthrough, narration, exercises), the reveal-screen disclaimer paragraph was removed ('Take it down as well'), and the profile storage note no longer appends the label. The chart's accessible name still carries the label for screen readers; e2e now asserts the lesson/exercise/reveal screens carry no legal text and that Terms \+ Privacy carry it.
 
-## 5. Walkthrough + legal
-- Onboarding: 3 cards (read markets one idea at a time; make the call, see the grade; build your streak, climb the path).
-- Legal text lives ONLY in Terms of use and Privacy policy (linked from profile). No disclaimer chips on charts; the chart's accessible name still carries the "generated practice data" label for screen readers; e2e asserts this.
+6\. BRAND (locked 12 Sep)  
+\- Guy's hand-drawn bull is the logo: green squircle face, navy horns sweeping up, white muzzle with horseshoe nose-ring, on Soft Mint tile. Vector-traced master SVG \+ one-color variant \+ PNG set (1024/512/192/180/32 \+ favicon) exist; fills snapped to brand hexes (Growth Green \#10B981, Ink Navy \#0F2B46, Soft Mint \#E7F8F1, Paper \#FAFAF7, Sunshine \#FFB020). Fonts: Baloo 2 (display), Nunito (body).
 
-## 6. Brand
-Guy's hand-drawn bull is the logo (green squircle face, navy horns, white muzzle, Soft Mint tile). Master SVG + PNG set. Growth Green #10B981, Ink Navy #0F2B46, Soft Mint #E7F8F1, Paper #FAFAF7, Sunshine #FFB020. Fonts: Baloo 2 (display), Nunito (body).
+7\. NEW DIRECTION \- NARRATED ANIMATED LESSONS (decided 12 Sep, Guy)  
+\- What changes: the LESSON phase only (principle card \+ guided example). Reading text and cross-referencing static drawings is confusing; lessons become narrated animated walkthroughs: the chart draws itself candle by candle while pre-generated narration audio explains what to look at, in-app (no video files). The exercise/quiz loop is explicitly untouched \- the graded call is the product.  
+\- Phases: (1) pilot on lesson 1 to prove the format; (2) all 16 lessons if the pilot lands; (3) optional Remotion MP4 pipeline (\~a week) only if downloadable/shareable video is wanted \- in-app playback never needs it.  
+\- Voice LOCKED: Nova (Guy's pick, 12 Sep 21:52 IDT, from the 3 samples). OpenAI stock TTS voice, gpt-4o-mini-tts, generated with Guy's own API key. Licensing basis: OpenAI business terms 4.1 \- the customer owns all Output and OpenAI assigns its rights; API output is commercial-use clean and API customers carry an IP indemnity on Output. Caveat: ownership covers OpenAI's rights only \- voice-cloning a real person would need written consent, and that is not what we did. Sources: https\://openai.com/policies/may-2025-business-terms/ and https\://openai.com/terms (the non-commercial voice restriction there applies to the ChatGPT consumer app, not the API). ElevenLabs remains the warmer-sounding fallback (\~\$5/mo).  
+\- Honest cost: narration doubles the cost of every content edit (edit lesson \-\> regenerate audio \-\> resync animation). Fine at 16 lessons, real friction at 200\.  
+\- Design constraints carried in: text alternative stays (the transcript/candle-text remains an equal input for accessibility \- narration is additive, never the only channel); mobile autoplay rules require a user gesture to start audio (the lesson open tap counts); audio must be precacheable by the service worker so lessons still work offline; Hebrew/RTL narration is out of scope for the pilot (MVP is English only per v0.7).  
+\- Pilot shipped 12 Sep (DEPLOYED 12 Sep 22:00 IDT on Guy's word): lesson 1 'Meet the chart' offers the narrated walkthrough \- the principle read over a candle-by-candle draw-in, then each guided step as a spotlighted segment; pause/resume, watch again, then practise. Client-side build: narration plan derived from the lesson pack (client/src/narration.ts), a playback driver (useNarration), and a drawCount mode on CandleChart (layout computed from the full set, so nothing rescales mid-draw). Audio GENERATED in Nova: one mp3 per segment at client/public/audio/lessons/lesson-0-meet-the-chart/ (intro 14.4s \+ steps 6.1/5.4/5.9s); the draw is timed to the real audio duration (loadedmetadata), with silent estimated timing only as a no-audio fallback. The service worker precaches the mp3s, so a narrated lesson plays fully offline (workbox globPatterns \+ mp3). Sync browser-verified: 4 segments play in order, each spotlight lands on its candle, step 1 arrives as the intro audio ends. 179/179 tests green (17 new narration/preference tests), browser e2e axe-clean.  
+\- Lesson mode is an explicit user preference (Guy, 12 Sep: 'audio is not always an option'): text vs narrated lives in profile state (lessonMode on ProgressState, persisted on-device, default text, backfilled for pre-existing progress), settable on the profile screen AND mid-lesson both ways \- 'Switch to narrated lesson' / 'Switch to text only' land on the equivalent position (principle card \<-\> intro segment; manual step k \<-\> segment k+1). Narrated mode auto-plays the walkthrough on lesson entry (once per lesson view). NARRATED is the default since 22:16 IDT (Guy: 'Narration should be default') \- a user who never picks a mode gets the narrated walkthrough auto-played; an explicit pick (profile or mid-lesson switch) always wins. Note: progress saved while text was the default (a \~40-minute window tonight) keeps text until the user switches.  
+13 Sep 2026 update \- ONE AUDIO SPRITE PER LESSON (iOS fix, pending Guy deploy word): Guy live report (15:56 IDT): only the first narrated segment voiced on his device, the rest silent text. Root cause: per-segment src swaps on one audio element \- iOS Safari treats a new src outside a user gesture as a new media load and blocks play(), so segments 2-4 fell back to silent estimated timing. Chromium verified unaffected (instrumented probe vs production: all 4 play() resolved, walkthrough completes). Fix: walkthrough.mp3 sprite per lesson (segments back to back); the player SEEKS between ffprobe-measured offsets on the one gesture-blessed element. Regenerate with scripts/build-audio-sprite.mjs; vitest cross-checks offsets against the real mp3s. Hardened in the same pass: intro chart draw uses measured durations (never waits on audio metadata \- a stalled pipeline cannot freeze the lesson), stall guard \+ silent fallback, and the service worker answers Range requests for audio (iOS media loader). Scope ambiguity recorded: the report also admits the reading "only lesson 1 is narrated" (true by pilot design); the sprite stands as iOS hardening either way.
 
-## 7. Narrated animated lessons (decided 12 Sep)
-- Lesson phase only (principle card + guided example) becomes a narrated walkthrough: the chart draws itself while pre-generated narration explains. Exercise/quiz loop untouched.
-- Voice locked: OpenAI "Nova" (gpt-4o-mini-tts), commercial-use clean under OpenAI business terms. ElevenLabs is the fallback.
-- Narration doubles the cost of every content edit (edit -> regenerate audio -> resync).
-- Constraints: text alternative stays equal; mobile autoplay needs a user gesture; audio precached by the service worker for offline; Hebrew/RTL out of scope.
-- Pilot (lesson 1 "Meet the chart"): narration plan derived from the lesson pack (client/src/narration.ts), playback driver (useNarration), drawCount mode on CandleChart. Lesson mode (text vs narrated) is a profile preference, switchable mid-lesson both ways; NARRATED is the default.
-- 13 Sep iOS fix: one audio sprite per lesson (walkthrough.mp3), player seeks between ffprobe-measured offsets on one gesture-blessed audio element (iOS blocked play() after src swaps). scripts/build-audio-sprite.mjs; vitest cross-checks offsets. Stall guard + silent fallback; service worker answers Range requests for audio.
-
-## 8. Open (at the time)
-Push of deploy commits to GitHub; voice pick then pilot review then go/no-go on all 16 lessons; post-MVP: real-data vendor/license, React Native client, Hebrew/RTL, freemium packaging.
+8\. OPEN  
+\- Custom domain DONE (12 Sep 22:08 IDT): tikerino.com registered at Porkbun (\$11.08, paid through 2027-09-12, auto-renew ON); ALIAS @ \-\> f0sn7am7.up.railway.app and \_railway-verify TXT set and propagated (Railway: DNS\_RECORD\_STATUS\_PROPAGATED, verified). TLS issued and VALID (Let's Encrypt, CN=tikerino.com, expires 11 Dec 2026); https\://tikerino.com serves the app (API \+ narration audio verified); www\.tikerino.com 302-redirects to the apex via Porkbun URL forward (the Railway plan's 1-custom-domain limit). One known corner: https\://www (typed directly) depends on the forward's own cert, revisit only if Guy cares.  
+\- Push of the two deploy commits to GitHub (permissions question).  
+\- Voice pick, then pilot review, then go/no-go on all-16.  
+\- Post-MVP items per v0.7: real-data vendor/license, React Native client, Hebrew/RTL, freemium packaging.  

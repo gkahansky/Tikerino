@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investing Game — Design System v0.4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#10B981; --navy:#0F2B46; --coral:#FF6B57; --sun:#FFB020; --paper:#FAFAF7;
+    --mint-soft:#E7F8F1; --coral-soft:#FFEDE9; --sun-soft:#FFF4DD; --line:#E8E4DB;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--navy);font-family:'Nunito',system-ui,sans-serif;line-height:1.55}
+  .wrap{max-width:480px;margin:0 auto;padding:0 20px 64px}
+  .topbar{display:flex;align-items:center;gap:10px;padding:18px 0 6px;font-weight:700;font-size:13px;letter-spacing:.4px;color:#5B7186}
+  .topbar .mark{width:26px;height:26px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center}
+  .badge{display:inline-block;background:var(--sun-soft);color:#8a5a00;border:1px solid #F2D9A0;font-size:12px;font-weight:800;letter-spacing:.6px;padding:5px 12px;border-radius:999px;text-transform:uppercase}
+  h1{font-family:'Baloo 2',cursive;font-weight:800;font-size:34px;line-height:1.15;margin:14px 0 10px}
+  .sub{font-size:16px;color:#42566B;margin-bottom:10px}
+  .meta{font-size:13px;color:#7C8DA0;margin-bottom:26px}
+  h2{font-family:'Baloo 2',cursive;font-weight:700;font-size:22px;margin:38px 0 6px}
+  .sect-sub{font-size:14px;color:#7C8DA0;margin-bottom:16px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px}
+  .pr{display:flex;gap:14px;align-items:flex-start}
+  .pr .n{flex:0 0 34px;height:34px;border-radius:12px;background:var(--mint-soft);color:var(--green);font-weight:900;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .pr b{display:block;font-size:15px}
+  .pr span{font-size:13.5px;color:#5B7186}
+  .swatches{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sw{border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#fff}
+  .sw .c{height:74px}
+  .sw .t{padding:10px 12px;font-size:13px}
+  .sw .t b{display:block}
+  .sw .t span{color:#7C8DA0;font-size:12px}
+  .type-sample{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px}
+  .type-sample .lbl{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7C8DA0;margin-bottom:6px}
+  .loop{list-style:none}
+  .loop li{display:flex;gap:14px;position:relative;padding-bottom:18px}
+  .loop li:before{content:"";position:absolute;left:16px;top:36px;bottom:0;width:3px;background:var(--mint-soft);border-radius:2px}
+  .loop li:last-child:before{display:none}
+  .loop .dot{flex:0 0 34px;height:34px;border-radius:50%;background:var(--green);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:1}
+  .loop b{display:block;font-size:15px}
+  .loop span{font-size:13.5px;color:#5B7186}
+  .screens{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .scr{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;font-size:13.5px;font-weight:700}
+  .scr .ic{font-size:20px;display:block;margin-bottom:6px}
+  .pill{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.5px;padding:4px 10px;border-radius:999px;text-transform:uppercase}
+  .pill.low{background:var(--mint-soft);color:#067a55}
+  .pill.amb{background:var(--sun-soft);color:#8a5a00}
+  .pill.red{background:var(--coral-soft);color:#b3341f}
+  .name-card b.nm{font-family:'Baloo 2',cursive;font-size:19px;display:block;margin-bottom:2px}
+  .name-card p{font-size:13.5px;color:#5B7186;margin:6px 0 10px}
+  .logo-card{text-align:center}
+  .logo-card svg{width:170px;height:auto;margin:4px auto 8px;display:block}
+  .logo-card .rat{font-size:13px;color:#5B7186;text-align:left}
+  .logo-card .rat b{color:var(--navy)}
+  .foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:#7C8DA0}
+  .lock{display:inline-block;background:var(--mint-soft);color:#067a55;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px}
+  .doclink{display:block;background:var(--navy);color:#fff;text-align:center;border-radius:16px;padding:14px;font-weight:800;text-decoration:none;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="mark"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="6" width="3.4" height="7" rx="1.2" fill="#0F2B46"/><rect x="6.6" y="3" width="3.4" height="10" rx="1.2" fill="#0F2B46"/><rect x="11.2" y="1" width="3.4" height="12" rx="1.2" fill="#fff" opacity=".95"/></svg></div>
+    investing game · design system · v0.4 · 11 sep 2026
+  </div>
+
+  <span class="badge">Proposal — name &amp; logo not final</span>
+  <h1>Learn investing like a game.</h1>
+  <p class="sub">Duolingo-style mobile learning for reading markets: one small principle, then practice on real historical charts, cut before the outcome.</p>
+  <p class="meta">Tony for Guy · status: Phase 0 · audience locked (beginner investor) · name, logo, licensing, calibration open</p>
+  <a class="doclink" href="/doc/">Read the full product &amp; architecture doc →</a>
+
+  <h2>Principles</h2>
+  <p class="sect-sub">What "clean, young, fun — not heavy" means in practice.</p>
+  <div class="card pr"><div class="n">1</div><div><b>One idea per screen</b><span>If a phone screen needs a scrollbar, it becomes two screens.</span></div></div>
+  <div class="card pr"><div class="n">2</div><div><b>The chart is the hero</b><span>Full-bleed charts, generous whitespace, zero competing chrome.</span></div></div>
+  <div class="card pr"><div class="n">3</div><div><b>Thumb-first</b><span>Tap targets ≥48px, actions in the thumb zone, max 3 text styles per screen.</span></div></div>
+  <div class="card pr"><div class="n">4</div><div><b>Celebrate progress</b><span>Spring reveals, a haptic tick on correct, confetti reserved for exam passes.</span></div></div>
+  <div class="card pr"><div class="n">5</div><div><b>Friendly voice</b><span>Short sentences. No jargon before it has been taught.</span></div></div>
+
+  <h2>Colors</h2>
+  <p class="sect-sub">Locked first experiment pair: original green and violet. Shared semantic tokens stay constant; assignment and measurement are specified in §18 of the architecture doc.</p>
+  <div class="swatches">
+    <div class="sw"><div class="c" style="background:#10B981"></div><div class="t"><b>Original green</b><span>#10B981 · variant A primary</span></div></div>
+    <div class="sw"><div class="c" style="background:#7C3AED"></div><div class="t"><b>Violet</b><span>#7C3AED · variant B primary</span></div></div>
+    <div class="sw"><div class="c" style="background:#0F2B46"></div><div class="t"><b>Ink navy</b><span>#0F2B46 · text/charts</span></div></div>
+    <div class="sw"><div class="c" style="background:#FF6B57"></div><div class="t"><b>Coral</b><span>#FF6B57 · accent/alerts</span></div></div>
+    <div class="sw"><div class="c" style="background:#FFB020"></div><div class="t"><b>Sunshine</b><span>#FFB020 · rewards</span></div></div>
+    <div class="sw"><div class="c" style="background:#FAFAF7"></div><div class="t"><b>Paper</b><span>#FAFAF7 · background</span></div></div>
+  </div>
+
+  <h2>Type</h2>
+  <p class="sect-sub">Rounded geometric sans. Baloo 2 for display, Nunito for text. Free/OFL.</p>
+  <div class="type-sample"><div class="lbl">Display · Baloo 2 800</div><div style="font-family:'Baloo 2';font-weight:800;font-size:28px">Spot the pattern</div></div>
+  <div class="type-sample"><div class="lbl">Title · Baloo 2 700</div><div style="font-family:'Baloo 2';font-weight:700;font-size:20px">Lesson 3 — Support &amp; resistance</div></div>
+  <div class="type-sample"><div class="lbl">Body · Nunito 400</div><div style="font-size:15px">Price has memory. Levels it bounced from before tend to matter again.</div></div>
+
+  <h2>The game loop</h2>
+  <p class="sect-sub">One loop = 2–4 minutes.</p>
+  <ul class="loop">
+    <li><div class="dot">1</div><div><b>Learn</b><span>One small principle on a single card — ≤60 words + one annotated chart.</span></div></li>
+    <li><div class="dot">2</div><div><b>Guided example</b><span>The principle applied to one real historical chart, step by step.</span></div></li>
+    <li><div class="dot">3</div><div><b>Practice</b><span>5–10 real charts, cut before the outcome. Mark the pattern or pick an action.</span></div></li>
+    <li><div class="dot">4</div><div><b>Instant feedback</b><span>What you saw, what you missed, then the chart animates forward.</span></div></li>
+    <li><div class="dot">5</div><div><b>Progress</b><span>XP, streaks, crowns. Tough exercises return via spaced review.</span></div></li>
+    <li><div class="dot">6</div><div><b>Market exam</b><span>No hints, unseen symbols and dates. Pass it to level up.</span></div></li>
+  </ul>
+
+  <h2>Screens</h2>
+  <p class="sect-sub">Eight screens in the whole MVP. No deep tab bar.</p>
+  <div class="screens">
+    <div class="scr"><span class="ic">👋</span>Onboarding · 3 cards</div>
+    <div class="scr"><span class="ic">🗺️</span>Path home</div>
+    <div class="scr"><span class="ic">💡</span>Lesson card</div>
+    <div class="scr"><span class="ic">🧭</span>Guided example</div>
+    <div class="scr"><span class="ic">📈</span>Exercise</div>
+    <div class="scr"><span class="ic">🎬</span>Reveal &amp; feedback</div>
+    <div class="scr"><span class="ic">🏁</span>Market exam</div>
+    <div class="scr"><span class="ic">🔥</span>Profile &amp; streak</div>
+  </div>
+
+  <h2>Name proposals</h2>
+  <p class="sect-sub">Indicative web/app-store/DNS checks only — a formal trademark screen is still required before any lock.</p>
+  <div class="card name-card">
+    <b class="nm">CandleCamp</b>
+    <span class="pill low">low–amber risk</span>
+    <p>Candlestick + camp: a friendly place you go to train. No app-store or trading-education collision found; panel's preference. Weakest instant "investing" signal.</p>
+  </div>
+  <div class="card name-card">
+    <b class="nm">TickerTrek</b>
+    <span class="pill low">low–amber risk</span>
+    <p>A journey through the market. Only non-commercial student projects collide. Strong quest energy.</p>
+  </div>
+  <div class="card name-card">
+    <b class="nm">Chartling</b>
+    <span class="pill red">high collision</span>
+    <p>A little creature learning charts. The panel flags ChartLingo.ai — a near-identical chart-learning product — as too close.</p>
+  </div>
+
+  <h2>Logo directions</h2>
+  <p class="sect-sub">Three directions, each paired with its name. Editable SVGs exist behind these previews.</p>
+
+  <div class="card logo-card">
+    <svg viewBox="0 0 512 660" xmlns="http://www.w3.org/2000/svg">
+      <rect width="512" height="660" fill="#FAFAF7"/>
+      <defs><linearGradient id="mintp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34D399"/><stop offset="1" stop-color="#0EA371"/></linearGradient></defs>
+      <g transform="translate(56,40)">
+        <rect width="400" height="400" rx="92" fill="url(#mintp)"/>
+        <g stroke="#0F2B46" stroke-width="10" stroke-linecap="round"><line x1="100" y1="225" x2="100" y2="345"/><line x1="170" y1="195" x2="170" y2="335"/><line x1="240" y1="170" x2="240" y2="295"/></g>
+        <g fill="#0F2B46"><rect x="80" y="248" width="40" height="72" rx="13"/><rect x="150" y="218" width="40" height="92" rx="13"/><rect x="220" y="190" width="40" height="82" rx="13"/></g>
+        <ellipse cx="305" cy="145" rx="82" ry="76" fill="#FFFFFF"/><ellipse cx="276" cy="205" rx="20" ry="14" fill="#FFFFFF"/><ellipse cx="334" cy="205" rx="20" ry="14" fill="#FFFFFF"/>
+        <line x1="305" y1="46" x2="305" y2="58" stroke="#0F2B46" stroke-width="7" stroke-linecap="round"/><rect x="293" y="58" width="24" height="26" rx="7" fill="#0F2B46"/>
+        <circle cx="278" cy="135" r="13" fill="#0F2B46"/><circle cx="332" cy="135" r="13" fill="#0F2B46"/><circle cx="282" cy="131" r="4.5" fill="#FFFFFF"/><circle cx="336" cy="131" r="4.5" fill="#FFFFFF"/>
+        <path d="M 279 168 Q 305 190 331 168" stroke="#0F2B46" stroke-width="9" fill="none" stroke-linecap="round"/>
+        <circle cx="256" cy="158" r="8" fill="#FFB020" opacity="0.55"/><circle cx="354" cy="158" r="8" fill="#FFB020" opacity="0.55"/>
+      </g>
+      <text x="256" y="575" text-anchor="middle" font-family="Baloo 2, Nunito, sans-serif" font-size="58" font-weight="bold" fill="#0F2B46">chartling</text>
+    </svg>
+    <div class="rat"><b>A — The Learner.</b> Friendliest and most mascot-extensible (reactions, outfits, exam judge). The panel's web designer leans here.</div>
+  </div>
+
+  <div class="card logo-card">
+    <svg viewBox="0 0 512 660" xmlns="http://www.w3.org/2000/svg">
+      <rect width="512" height="660" fill="#FAFAF7"/>
+      <g transform="translate(56,40)">
+        <rect width="400" height="400" rx="92" fill="#0F2B46"/>
+        <circle cx="90" cy="80" r="5" fill="#FAFAF7" opacity="0.8"/><circle cx="320" cy="60" r="4" fill="#FAFAF7" opacity="0.6"/><circle cx="345" cy="130" r="5" fill="#FAFAF7" opacity="0.7"/><circle cx="60" cy="170" r="4" fill="#FAFAF7" opacity="0.5"/>
+        <g stroke="#FF6B57" stroke-width="20" stroke-linecap="round"><line x1="140" y1="300" x2="260" y2="330"/><line x1="260" y1="300" x2="140" y2="330"/></g>
+        <rect x="156" y="150" width="88" height="150" rx="24" fill="#34D399"/>
+        <line x1="200" y1="118" x2="200" y2="150" stroke="#FAFAF7" stroke-width="9" stroke-linecap="round"/>
+        <path d="M 200 42 C 226 74 224 104 200 116 C 176 104 174 74 200 42 Z" fill="#FF9F1C"/>
+        <path d="M 200 74 C 213 90 212 104 200 110 C 188 104 187 90 200 74 Z" fill="#FFD166"/>
+        <ellipse cx="200" cy="338" rx="92" ry="10" fill="#0A1B2E"/>
+      </g>
+      <text x="256" y="575" text-anchor="middle" font-family="Baloo 2, Nunito, sans-serif" font-size="52" font-weight="bold" fill="#0F2B46">candlecamp</text>
+    </svg>
+    <div class="rat"><b>B — The Campfire Wick.</b> The candle's wick becomes a campfire flame over crossed logs. Cleverest pun, strongest as a small app icon. The Critic panel's pick.</div>
+  </div>
+
+  <div class="card logo-card">
+    <svg viewBox="0 0 512 660" xmlns="http://www.w3.org/2000/svg">
+      <rect width="512" height="660" fill="#FAFAF7"/>
+      <defs><linearGradient id="skyp" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#38BDF8"/></linearGradient></defs>
+      <g transform="translate(56,40)">
+        <rect width="400" height="400" rx="92" fill="url(#skyp)"/>
+        <path d="M 62 322 L 148 262 L 116 202 L 218 152 L 302 112" stroke="#FFFFFF" stroke-width="11" fill="none" stroke-linecap="round" stroke-dasharray="0.1 24"/>
+        <circle cx="62" cy="322" r="13" fill="#FFFFFF"/>
+        <line x1="302" y1="112" x2="302" y2="52" stroke="#FAFAF7" stroke-width="9" stroke-linecap="round"/>
+        <path d="M 302 52 L 356 68 L 302 88 Z" fill="#FF6B57"/>
+        <path d="M 96 330 L 116 292 L 136 330 Z" fill="#0F2B46"/><path d="M 150 344 L 166 314 L 182 344 Z" fill="#0F2B46"/>
+        <path d="M 336 180 l 6 14 l 14 6 l -14 6 l -6 14 l -6 -14 l -14 -6 l 14 -6 Z" fill="#FFFFFF" opacity="0.9"/>
+      </g>
+      <text x="256" y="575" text-anchor="middle" font-family="Baloo 2, Nunito, sans-serif" font-size="58" font-weight="bold" fill="#0F2B46">tickertrek</text>
+    </svg>
+    <div class="rat"><b>C — The Trek.</b> A dotted trail climbing like a price line to a summit flag. Most energetic; reads instantly as a journey.</div>
+  </div>
+
+  <div class="foot">
+    <span class="lock">Locked: audience — beginner investor first</span><br><br>
+    Open Phase 0 choices: name · logo · licensing timing · calibration veto.<br>
+    Built by Tony (Instinct) for Guy · v0.3 · after Bobby Critic Phase C (Keep with patches, 3/3).
+  </div>
+
+</div>
+</body>
+</html>
